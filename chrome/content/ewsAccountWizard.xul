@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+
+<wizard id="AccountWizard" title="New Account"
+        onwizardcancel="return onCancel();"
+        onwizardfinish="return FinishAccount();"
+        onload="exchangeEws.AccountWizard.onAccountWizardLoad();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://messenger/content/amUtils.js"/>
+  <script type="application/javascript" src="chrome://messenger/content/accountUtils.js"/>
+  <script type="application/javascript" src="chrome://messenger/content/ispUtils.js"/>
+  <script type="application/javascript" src="chrome://messenger/content/AccountWizard.js"/>
+  <script type="application/javascript" src="chrome://exchangeews/content/ewsAccountWizard.js"/>
+  <script type="application/javascript" src="chrome://messenger/content/aw-done.js"/>
+
+  <!-- Identity page : Collects user's login and email address -->
+  <wizardpage id="identitypage" pageid="identitypage"
+              label="Add Account"
+              onpageshow="exquilla.AW.identityPageValidate();"
+              onpageadvanced="return exchangeEws.AccountWizard.identityPageUnload();">
+    <vbox flex="1">
+      <grid>
+        <columns>
+          <column />
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <label class="label, serverLabel"  id="emailFieldLabel" value="email" control="email"/>
+            <textbox mailtype="identity" name="email"
+                     placeholder="email address"
+                     id="email" flex="6" class="uri-element"/>
+          </row>
+          <row>
+            <label class="label, serverLabel" value="password"
+                   control="exchangePassword"  />
+            <textbox id="password" flex="6" type="password"
+                     class="uri-element" placeholder='password'/>
+          </row>
+
+          <row>
+            <label class="label, serverLabel" value="ews url"
+                   control="exchangeEwsUrl"  />
+            <textbox id="exchangeEwsUrl" flex="6" placeholder='URL'/>
+          </row>
+        </rows>
+      </grid>
+      <separator/>
+    </vbox>
+  </wizardpage>
+
+</wizard>

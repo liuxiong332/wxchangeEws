@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+/*
+ ***** BEGIN LICENSE BLOCK *****
+ * This file is part of ExQuilla by Mesquilla.
+ *
+ * Copyright 2010 R. Kent James. All Rights Reserved
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+-->
+
+<overlay id="exchange-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="messengerOverlay.js"/> 
+  <menubar id="mail-menubar">
+    <menu id='exchange-menu' label='exchange mail'>
+      <menupopup>
+        <menuitem label="New Account" oncommand="exchangeEws.msgOpenAccountWizard();"/>
+      </menupopup>
+    </menu>
+  </menubar>
+
+</overlay>
