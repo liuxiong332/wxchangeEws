@@ -24,5 +24,5 @@
 [scriptable, uuid(79d87edc-020e-48d4-8c04-b894edab4bd2)]
 interface mivExchangeMsgIncomingServer : nsIMsgIncomingServer
 {
-
+	attribute ACString ewsUrl;
 };
