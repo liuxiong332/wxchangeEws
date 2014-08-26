@@ -37,7 +37,11 @@ function mivExchangeMsgIncomingServer() {
 
 	this._userName = null;
 	this._hostName = null;
- 
+ 	this._rootFolder = null;
+ 	this._password = null;
+
+ 	this._msgStore = null;
+ 	this._filterList = null;
 	//the preference branch for the server
 	this._prefBranch = null;
 	resetPrefBranch();
@@ -50,6 +54,21 @@ var mivExchangeMsgIncomingServerGUID = "79d87edc-020e-48d4-8c04-b894edab4bd2";
 mivExchangeMsgIncomingServer.getBranch = function(branchName) {
 	return Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch(branchName);
 };
+
+mivExchangeMsgIncomingServer.createNewFile = function() {
+	return Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+}
+//create a new preference for the file and the relative key to the directory
+// @param file: nsIFile 
+// @param relativeToKey a directory service key for the directory
+mivExchangeMsgIncomingServer.newRelativeFilePref = function(file, relativeToKey) {
+	var local = Cc["@mozilla.org/pref-relativefile;1"].createInstance(Ci.nsIRelativeFilePref);
+	local.file = file;
+	local.relativeToKey = relativeToKey;
+	return local;
+}
+
+mivExchangeMsgIncomingServer.loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
 mivExchangeMsgIncomingServer.prototype = {
 
@@ -127,7 +146,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute AString constructedPrettyName;
 	get constructedPrettyName()
 	{
-		dump("get constructedPrettyName\n");
+		return this.prettyName;
 	},
 
   /**
@@ -162,12 +181,12 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute long port;
 	get port()
 	{
-		dump("get port\n");
+		return this.getIntValue("port");
 	},
 
 	set port(aValue)
 	{
-		dump("set port aValue:"+aValue+"\n");
+		this.setIntValue("port", aValue);
 	},
 
   /**
@@ -216,7 +235,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute AString accountManagerChrome;
 	get accountManagerChrome()
 	{
-		dump("get accountManagerChrome\n");
+		return "am-main.xul";
 	},
 
   /**
@@ -230,10 +249,14 @@ mivExchangeMsgIncomingServer.prototype = {
 		return "mailbox";
 	},
 
+	getProtocolInfo: function() {
+		var protocolStr = "@mozilla.org/messenger/protocol/info;type=" + this.type;
+		return Cc[protocolStr].getService(Ci.nsIMsgProtocolInfo);
+	},
   // Perform specific tasks (reset flags, remove files, etc) for account user/server name changes.
 //  void onUserOrHostNameChanged(in ACString oldName, in ACString newName,
 //                               in bool hostnameChanged);
-	onUserOrHostNameChanged: function _onUserOrHostNameChanged(oldName, newName, hostnameChanged)
+	onUserOrHostNameChanged: function _onUserOrHostNameChanged(oldName, newName, hostnameChanged) 
 	{
 		dump("function onUserOrHostNameChanged\n");
 	},
@@ -242,12 +265,12 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute ACString password;
 	get password()
 	{
-		dump("get password\n");
+		return this._password;
 	},
 
 	set password(aValue)
 	{
-		dump("set password aValue:"+aValue+"\n");
+		this._password = aValue;
 	},
 
   /**
@@ -270,100 +293,160 @@ mivExchangeMsgIncomingServer.prototype = {
 //                             in nsIMsgWindow aMsgWindow);
 	getPasswordWithUI: function _getPasswordWithUI(aPromptString, aPromptTitle, aMsgWindow)
 	{
-		dump("function getPasswordWithUI\n");
+		if(!this.password) {
+			this.getPasswordWithoutUI();
+		}
+		if(!this.password) {
+			var dialog = aMsgWindow.authPrompt;
+			var serverUrl = this.localStoreType + "://" + this.username + "@" + this.hostName;
+			var resPassword = {};
+			if(!dialog.promptPassword(aPromptTitle, aPromptString, serverUrl, 
+				dialog.SAVE_PASSWORD_PERMANENTLY, resPassword))
+				this.password = "";
+			else
+				this.password = resPassword.value;
+		}
+		return this.password;
 	},
 
+	getLoginInfos: function() {
+		var loginManager = mivExchangeMsgIncomingServer.loginManager;
+		var currentUrl = this.localStoreType + "://" + this.hostName;
+		return loginManager.findLogins({}, currentUrl, "", currentUrl);
+	},
+
+	//get password from the login manager
+	getPasswordWithoutUI: function() {
+		var logins = this.getLoginInfos();
+		var serverUserName = this.username;
+		var username;
+		for(var i = 0; i < logins.length; ++i) {
+			username = logins[i].username;
+			if(username == serverUserName) {
+				this.password =logins[i].password;
+				break;
+			}
+		}
+	},
   /* forget the password in memory and in single signon database */
 //  void forgetPassword();
-	forgetPassword: function _forgetPassword()
-	{
-		dump("function forgetPassword\n");
+	forgetPassword: function _forgetPassword() {
+		var loginManager = mivExchangeMsgIncomingServer.loginManager;
+		var logins = this.getLoginInfos();
+		for(var i = 0; i < logins.length; ++i) {
+			if(logins[i].username == this.username)
+				loginManager.removeLogin(logins[i]);
+		}
 	},
 
   /* forget the password in memory which is cached for the session */
 //  void forgetSessionPassword();
 	forgetSessionPassword: function _forgetSessionPassword()
 	{
-		dump("function forgetSessionPassword\n");
+		this.password = "";
 	},
 
   /* should we download whole messages when biff goes off? */
 //  attribute boolean downloadOnBiff;
 	get downloadOnBiff()
 	{
-		getBoolValue("download_on_biff");
+		return this.getBoolValue("download_on_biff");
 	},
 
 	set downloadOnBiff(aValue)
 	{
-		setBoolValue("download_on_biff", aValue);
+		this.setBoolValue("download_on_biff", aValue);
 	},
 
   /* should we biff the server? */
 //  attribute boolean doBiff;
 	get doBiff()
 	{
-		dump("get doBiff\n");
+		return this.getBoolValue("do_biff");
 	},
 
 	set doBiff(aValue)
 	{
-		dump("set doBiff aValue:"+aValue+"\n");
+		this.setBoolValue("do_biff", aValue);
 	},
 
   /* how often to biff */
 //  attribute long biffMinutes;
 	get biffMinutes()
 	{
-		return getIntValue("check_time");
+		return this.getIntValue("check_time");
 	},
 
 	set biffMinutes(aValue)
 	{
-		setIntValue("check_time", aValue);
+		this.setIntValue("check_time", aValue);
 	},
 
   /* current biff state */
 //  attribute unsigned long biffState;
 	get biffState()
 	{
-		dump("get biffState\n");
+		return this.getIntValue("biff_state");
 	},
 
 	set biffState(aValue)
 	{
-		dump("set biffState aValue:"+aValue+"\n");
+		this.setIntValue("biff_state", aValue);
 	},
 
   /* are we running a url as a result of biff going off? (different from user clicking get msg) */
 //  attribute boolean performingBiff; 
 	get performingBiff()
 	{
-		dump("get performingBiff\n");
+		return this.getBoolValue("performing_biff");
 	},
 
 	set performingBiff(aValue)
 	{
-		dump("set performingBiff aValue:"+aValue+"\n");
+		setBoolValue("performing_biff", aValue);
 	},
 
   /* the on-disk path to message storage for this server */
 //  attribute nsIFile localPath;
 	get localPath()
 	{
-		dump("get localPath\n");
+		var localPath = this.getFileValue("directory-rel", "directory");
+		if(localPath)
+			return localPath;
+		var protocolInfo = this.getProtocolInfo();
+		localPath = protocolInfo.defaultLocalPath;
+		//create the default local directory
+		localPath.create(defLocalPath.DIRECTORY_TYPE, 0755);
+		//the hostname as sub directory
+		localPath.append(this.hostName);
+		localPath.createUnique(localPath.DIRECTORY_TYPE, 0755);
+		this.localPath = localPath;
+		return localPath;
 	},
 
-	set localPath(aValue)
+	set localPath(localPath)
 	{
-		dump("set localPath aValue:"+aValue+"\n");
+		// nsIFile stand for the file path, the create function will create the file or directory 
+		//if they have not exist
+		localPath.create(localPath.DIRECTORY_TYPE, 0755);
+		//save the file path into the preference
+		this.setFileValue("directory-rel", "directory", localPath);
 	},
 
   /// message store to use for the folders under this server.
 //  readonly attribute nsIMsgPluggableStore msgStore;
 	get msgStore()
 	{
-		dump("get msgStore\n");
+		if(!this._msgStore) {
+			var storeContractId = this.getCharValue("storeContractID");
+			if(!storeContractId) {
+				storeContractId = "@mozilla.org/msgstore/berkeleystore;1";
+				this.setCharValue("storeContractID", storeContractId);
+			}
+
+			this._msgStore = Cc[storeContractId].createInstance(Ci.nsIMsgPluggableStore);
+		}
+		return this._msgStore;
 	},
 
   /* the RDF URI for the root mail folder */
@@ -377,20 +460,29 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute nsIMsgFolder rootFolder;
 	get rootFolder()
 	{
-		dump("get rootFolder\n");
+		if(!this._rootFolder)
+			this._rootFolder = createRootFolder();
+		return this._rootFolder;
 	},
 
-	set rootFolder(aValue)
+	set rootFolder(rootFloder)
 	{
-		dump("set rootFolder aValue:"+aValue+"\n");
+		this._rootFolder = rootFloder;
 	},
 
+	createRootFolder: function() {
+		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+		var serverResource = rdf.GetResource(this.serverURI);
+		return serverResource.QueryInterface(Ci.nsIMsgFolder);
+	}, 
   /* root folder for this account 
      - if account is deferred, root folder of deferred-to account */
 //  readonly attribute nsIMsgFolder rootMsgFolder;
 	get rootMsgFolder()
 	{
-		dump("get rootMsgFolder\n");
+		if(!this._rootFolder)
+			this._rootFolder = createRootFolder();
+		return this._rootFolder;
 	},
 
   /* are we already getting new Messages on the current server..
@@ -399,12 +491,12 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute boolean serverBusy;
 	get serverBusy()
 	{
-		dump("get serverBusy\n");
+		return this.getBoolValue("server_busy");
 	},
 
 	set serverBusy(aValue)
 	{
-		dump("set serverBusy aValue:"+aValue+"\n");
+		this.setBoolValue("server_busy", aValue);
 	},
 
   /**
@@ -413,7 +505,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute boolean isSecure;
 	get isSecure()
 	{
-		dump("get isSecure\n");
+		return true;
 	},
 
   /**
@@ -461,7 +553,6 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		setBoolValue("empty_trash_on_exit", aValue);
 	},
-
   /**
    * Get the server's list of filters.
    *
@@ -478,7 +569,36 @@ mivExchangeMsgIncomingServer.prototype = {
 //  nsIMsgFilterList getFilterList(in nsIMsgWindow aMsgWindow);
 	getFilterList: function _getFilterList(aMsgWindow)
 	{
-		dump("function getFilterList\n");
+		if(!this._filterList) {
+			var msgFolder = this.rootFolder;
+			var filterType = this.getCharValue("filter.type");
+			if(filterType === "default") {
+				var contractId = "@mozilla.org/filterlist;1?type=" + filterType;
+				this._filterList = Cc[contractId].createInstance(Ci.nsIMsgFilterList);
+				this._filterList.folder = msgFolder;
+				return this._filterList;
+			}
+
+			//judge if the msgFilterRules.dat exists
+			var filterFilePath = mivExchangeMsgIncomingServer.createNewFile();
+			filterFilePath.initWithFile(msgFolder.filePath);
+			filterFilePath.append("msgFilterRules.dat");
+
+			if(!filterFilePath.exists()) {
+				//if not exists, then judge if the rules.dat exists or not
+				var oldFilterFile = mivExchangeMsgIncomingServer.createNewFile();
+				oldFilterFile.initWithFile(msgFolder.filePath);
+				oldFilterFile.append("rules.dat");
+				if(oldFilterFile.exists()) {
+					//if rules.dat exists, then rename to msgFilterRules.dat
+					oldFilterFile.copyto(msgFolder.filePath, "msgFilterRules.dat");
+				}
+			}
+			var filterService = Cc["@mozilla.org/messenger/services/filters;1"]
+				.getService(Ci.nsIMsgFilterService);
+			this._filterList = filterService.OpenFilterList(filterFilePath, msgFolder, aMsgWindow);
+		}
+		return this._filterList;
 	},
 
   /**
@@ -493,7 +613,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  void setFilterList(in nsIMsgFilterList aFilterList);
 	setFilterList: function _setFilterList(aFilterList)
 	{
-		dump("function setFilterList\n");
+		this._filterList = aFilterList;
 	},
 
   /**
@@ -509,7 +629,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  nsIMsgFilterList getEditableFilterList(in nsIMsgWindow aMsgWindow);
 	getEditableFilterList: function _getEditableFilterList(aMsgWindow)
 	{
-		dump("function getEditableFilterList\n");
+		return this.getFilterList(aMsgWindow);
 	},
 
   /**
@@ -530,7 +650,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  void setDefaultLocalPath(in nsIFile aDefaultLocalPath);
 	setDefaultLocalPath: function _setDefaultLocalPath(aDefaultLocalPath)
 	{
-		dump("function setDefaultLocalPath\n");
+		this.protocolInfo.defaultLocalPath = aDefaultLocalPath;
 	},
 
   /**
@@ -558,14 +678,14 @@ mivExchangeMsgIncomingServer.prototype = {
 //                      in nsIUrlListener aUrlListener);
 	getNewMessages: function _getNewMessages(aFolder, aMsgWindow, aUrlListener)
 	{
-		dump("function getNewMessages\n");
+		aFolder.getNewMessages(aMsgWindow, aUrlListener);
 	},
 
   /* this checks if a server needs a password to do biff */
 //  readonly attribute boolean serverRequiresPasswordForBiff;
 	get serverRequiresPasswordForBiff()
 	{
-		dump("get serverRequiresPasswordForBiff\n");
+		return true;
 	},
 
   /* this gets called when the server is expanded in the folder pane */
@@ -616,49 +736,57 @@ mivExchangeMsgIncomingServer.prototype = {
 //  boolean getBoolValue(in string attr);
 	getBoolValue: function _getBoolValue(attr)
 	{
-		dump("function getBoolValue\n");
+		if(this._prefBranch.prefHasUserValue(attr))
+			return this._prefBranch.getBoolPref(attr);
+		return this._defaultPrefBranch.getBoolPref(attr);
 	},
 
 //  void setBoolValue(in string attr, in boolean value);
 	setBoolValue: function _setBoolValue(attr, value)
 	{
-		dump("function setBoolValue\n");
+		this._prefBranch.setBoolPref(attr, value);
 	},
 
 //  ACString getCharValue(in string attr);
 	getCharValue: function _getCharValue(attr)
 	{
-		dump("function getCharValue\n");
+		if(this._prefBranch.prefHasUserValue(attr))
+			return this._prefBranch.getCharPref(attr);
+		return this._defaultPrefBranch.getCharPref(attr);
 	},
 
 //  void setCharValue(in string attr, in ACString value);
 	setCharValue: function _setCharValue(attr, value)
 	{
-		dump("function setCharValue\n");
+		this._prefBranch.setCharValue(attr, value);
 	},
 
 //  AString getUnicharValue(in string attr);
 	getUnicharValue: function _getUnicharValue(attr)
 	{
-		dump("function getUnicharValue\n");
+		if(this._prefBranch.prefHasUserValue(attr))
+			return this._prefBranch.getComplexValue(attr, Ci.nsISupportsString).data;
+		return this._defaultPrefBranch.getComplexValue(attr, Ci.nsISupportsString).data;
 	},
 
 //  void setUnicharValue(in string attr, in AString value);
 	setUnicharValue: function _setUnicharValue(attr, value)
 	{
-		dump("function setUnicharValue\n");
+		this._prefBranch.setComplexValue(attr, Ci.nsISupportsString, value);
 	},
   
 //  long getIntValue(in string attr);
 	getIntValue: function _getIntValue(attr)
 	{
-		dump("function getIntValue\n");
+		if(this._prefBranch.prefHasUserValue(attr))
+			return this._prefBranch.getIntPref(attr);
+		return this._defaultPrefBranch.getIntPref(attr);
 	},
 
 //  void setIntValue(in string attr, in long value);
 	setIntValue: function _setIntValue(attr, value)
 	{
-		dump("function setIntValue\n");
+		this._prefBranch.setIntPref(attr, value);
 	},
 
   /** @} */
@@ -690,13 +818,22 @@ mivExchangeMsgIncomingServer.prototype = {
 //  nsIFile getFileValue(in string relpref, in string abspref);
 	getFileValue: function _getFileValue(relpref, abspref)
 	{
-		dump("function getFileValue\n");
+		var relFilePref = this._prefBranch.getComplexValue(relpref, Ci.nsIRelativeFilePref);
+		if(!relFilePref)
+			relFilePref = this._defaultPrefBranch.getComplexValue(relpref, Ci.nsIRelativeFilePref);
+		if(relFilePref) {
+			var file = relFilePref.file;
+			file.normalize();
+			return file;
+		}
+		return null;
 	},
 
 //  void setFileValue(in string relpref, in string abspref, in nsIFile aValue);
-	setFileValue: function _setFileValue(relpref, abspref, aValue)
+	setFileValue: function _setFileValue(relpref, abspref, file)
 	{
-		dump("function setFileValue\n");
+		var relFilePref = mivExchangeMsgIncomingServer.newRelativeFilePref(file, "ProfD");
+		this._prefBranch.setComplexValue(relpref, Ci.nsIRelativeFilePref, relFilePref);
 	},
 
   /** @} */
