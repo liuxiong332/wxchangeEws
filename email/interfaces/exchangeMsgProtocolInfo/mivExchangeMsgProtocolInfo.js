@@ -47,7 +47,7 @@ mivExchangeMsgProtocolInfo.prototype = {
 	classDescription : "Exchange EWS Msg Protocol Info",
 
 	classID : components.ID("{"+mivExchangeMsgProtocolInfoGUID+"}"),
-	contractID : "@mozilla.org/messenger/protocol/info;1?type=exchangeWebServiceMail",
+	contractID : "@mozilla.org/messenger/protocol/info;1?type=exchange",
 	flags : Ci.nsIClassInfo.THREADSAFE,
 	implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
@@ -76,6 +76,7 @@ mivExchangeMsgProtocolInfo.prototype = {
 		if (!file.exists()) {
 			file.create(file.DIRECTORY_TYPE, 0775);
 		}
+		return file;
 	},
 
 	set defaultLocalPath(aValue)
@@ -89,7 +90,7 @@ mivExchangeMsgProtocolInfo.prototype = {
 //    readonly attribute nsIIDPtr serverIID;
 	get serverIID()
 	{
-		return Cr.NS_ERROR_NOT_IMPLEMENTED;
+		return Ci.mivExchangeMsgIncomingServer;
 	},
 
     /**

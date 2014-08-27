@@ -42,7 +42,7 @@ function mivExchangeMsgIncomingServer() {
 
  	this._msgStore = null;
  	this._filterList = null;
-	//the preference branch for the server
+ 	//the preference branch for the server
 	this._prefBranch = null;
 	resetPrefBranch();
 	this._defaultPrefBranch = mivExchangeMsgIncomingServer.getBranch(
@@ -969,6 +969,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute boolean canBeDefaultServer;
 	get canBeDefaultServer()
 	{
+		return false;
 		dump("get canBeDefaultServer\n");
 	},
 
@@ -976,6 +977,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute boolean canSearchMessages;
 	get canSearchMessages()
 	{
+		return false;
 		dump("get canSearchMessages\n");
 	},
 
@@ -1027,6 +1029,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute long offlineSupportLevel;
 	get offlineSupportLevel()
 	{
+		return 10;
 		dump("get offlineSupportLevel\n");
 	},
 
@@ -1039,6 +1042,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  AString generatePrettyNameForMigration(); 
 	generatePrettyNameForMigration: function _generatePrettyNameForMigration()
 	{
+		return this.prettyName;
 		dump("function generatePrettyNameForMigration\n");
 	},
 
@@ -1046,6 +1050,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute boolean supportsDiskSpace;
 	get supportsDiskSpace()
 	{
+		return false;
 		dump("get supportsDiskSpace\n");
 	},
 
@@ -1116,6 +1121,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute boolean canCompactFoldersOnServer;
 	get canCompactFoldersOnServer()
 	{
+		return false;
 		dump("get canCompactFoldersOnServer\n");
 	},
 
@@ -1123,6 +1129,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute boolean canUndoDeleteOnServer;
 	get canUndoDeleteOnServer()
 	{
+		return false;
 		dump("get canUndoDeleteOnServer\n");
 	},
 
@@ -1137,6 +1144,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute nsMsgSearchScopeValue searchScope;
 	get searchScope()
 	{
+		return null;
 		dump("get searchScope\n");
 	},
 
@@ -1149,7 +1157,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute boolean passwordPromptRequired;
 	get passwordPromptRequired()
 	{
-		dump("get passwordPromptRequired\n");
+		return true;
 	},
 
   /**
@@ -1198,12 +1206,14 @@ mivExchangeMsgIncomingServer.prototype = {
 //  nsIMsgFolder getMsgFolderFromURI(in nsIMsgFolder aFolderResource, in ACString aURI);
 	getMsgFolderFromURI: function _getMsgFolderFromURI(aFolderResource, aURI)
 	{
-		dump("function getMsgFolderFromURI\n");
+		var rootMsgFolder = this.rootMsgFolder;
+		return rootMsgFolder.getChildWithURI(aURI, true, true);
 	},
 
 //  readonly attribute boolean isDeferredTo;
 	get isDeferredTo()
 	{
+		return false;
 		dump("get isDeferredTo\n");
 	},
 

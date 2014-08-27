@@ -2,7 +2,8 @@ content exchangeEws chrome/content/
 skin exchangeEws fugue chrome/skins/fugue/
 resource exchangeEws components/
 resource interfaces interfaces/
+resource email  email/
 
 overlay  chrome://messenger/content/messenger.xul chrome://exchangeEws/content/messengerOverlay.xul
 
-manifest interfaces/global/mivFunctions.manifest
+manifest chrome://email/resource/chrome.manifest
