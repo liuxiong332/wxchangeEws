@@ -2,8 +2,35 @@ content exchangeEws chrome/content/
 skin exchangeEws fugue chrome/skins/fugue/
 resource exchangeEws components/
 resource interfaces interfaces/
-resource email  email/
 
 overlay  chrome://messenger/content/messenger.xul chrome://exchangeEws/content/messengerOverlay.xul
 
-manifest chrome://email/resource/chrome.manifest
+manifest interfaces/exchangeCalendar/mivExchangeCalendar.manifest
+
+manifest interfaces/global/mivFunctions.manifest
+manifest interfaces/exchangeAccountManager/mivExchangeAccountManager.manifest
+manifest interfaces/exchangeStatistics/mivExchangeStatistics.manifest
+manifest interfaces/exchangeTimeZones/mivExchangeTimeZones.manifest
+manifest interfaces/exchangeBadCertListener2/mivExchangeBadCertListener2.manifest
+manifest interfaces/xml2jxon/mivIxml2jxon.manifest
+manifest interfaces/xml2jxon/mivNameSpaces.manifest
+manifest interfaces/xml2jxon/mivTagNames.manifest
+manifest interfaces/updater/mivUpdater.manifest
+manifest interfaces/exchangeLoadBalancer/mivExchangeLoadBalancer.manifest
+manifest interfaces/exchangeAuthPromptProvider/mivExchangeAuthPromptProvider.manifest
+manifest interfaces/exchangeAuthPrompt2/mivExchangeAuthPrompt2.manifest
+
+manifest interfaces/exchangeAttendee/mivExchangeAttendee.manifest
+manifest interfaces/exchangeBaseItem/mivExchangeBaseItem.manifest
+manifest interfaces/exchangeEvent/mivExchangeEvent.manifest
+manifest interfaces/exchangeTodo/mivExchangeTodo.manifest
+
+manifest interfaces/exchangeAddressBook/exchangeAddressBook.manifest
+
+manifest interfaces/exchangeRecurrenceInfo/mivExchangeRecurrenceInfo.manifest
+manifest interfaces/exchangeLightningNotifier/mivExchangeLightningNotifier.manifest
+
+manifest interfaces/exchangeAutoCompleteSearch/mivExchangeAutoCompleteSearch.manifest
+manifest interfaces/exchangeAutoCompleteResult/mivExchangeAutoCompleteResult.manifest
+
+manifest email/chrome.manifest

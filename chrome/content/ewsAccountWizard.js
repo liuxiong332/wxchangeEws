@@ -1,13 +1,11 @@
 
 
-if(!exchangeEws)
-  exchangeEws = {};
+if(!exchangeEws) {
+  var exchangeEws = {};
+}
 if(!exchangeEws.accountWizard)
   exchangeEws.accountWizard = {};
 
-exchangeEws.accountWizard.globalFunctions = 
-  Components.classes["@1st-setup.nl/global/functions;1"].getService(Components.interfaces.mivFunctions);
-  
 //AccountData for the exchange Account Data
 exchangeEws.accountWizard._ewsData = {
   'incomingServer': {
@@ -20,7 +18,7 @@ exchangeEws.accountWizard._ewsData = {
     'socketType': 3,
     'biffMinutes': 5,
     'doBiff': true,
-    'protocolInfo': { 'serverIID': Components.interfaces.msqIEwsIncomingServer },
+    'protocolInfo': { 'serverIID': Components.interfaces.mivExchangeMsgIncomingServer },
   },
   'identity': {
     'FccFolder': 'Sent Items'
@@ -69,6 +67,7 @@ exchangeEws.accountWizard.identityPageUnload = function() {
   setPageData(pageData, "login", "savePassword", true);
   setPageData(pageData, "server", "hostname", host);
   setPageData(pageData, "server", "ewsUrl", ewsUrl);
+  document.documentElement.canAdvance = true;
   return true;
 }; 
 
@@ -82,40 +81,18 @@ exchangeEws.accountWizard.overrideAccountWizard = function() {
         accountData.incomingServer["ServerType-exchange"] = {};
 
       // add the ewsURL to the server
-      if (pageData.server.ewsURL)
-        accountData.incomingServer["ServerType-exchange"].ewsURL = pageData.server.ewsURL.value;
-
-      // add domain if defined
-      if (pageData.login && pageData.login.domain)
-        accountData.incomingServer["ServerType-exchange"].domain = pageData.login.domain.value;
+      if (pageData.server.ewsUrl)
+        accountData.incomingServer["ServerType-exchange"].ewsUrl = pageData.server.ewsUrl.value;
 
       // set the appropriate user name
       if (pageData.login.username && pageData.login.username.value.length)
         accountData.incomingServer.username = pageData.login.username.value;
       else
         accountData.incomingServer.username = pageData.identity.email.value;
-
-      if (pageData.server.useMail)
-        accountData.incomingServer["ServerType-exchange"].useMail = pageData.server.useMail.value;
-      if (pageData.server.useAB)
-        accountData.incomingServer["ServerType-exchange"].useAB = pageData.server.useAB.value;
-      if (pageData.server.useCalendar)
-        accountData.incomingServer["ServerType-exchange"].useCalendar = pageData.server.useCalendar.value;
+ 
     }
   };
-  // override setDefaultCopiesAndFoldersPrefs to prevent creation of DBs for unused folders
-  this.oldSetDefaultCopiesAndFoldersPrefs = setDefaultCopiesAndFoldersPrefs;
-  setDefaultCopiesAndFoldersPrefs = function exquillaSetDefaultCopiesAndFoldersPrefs(identity, server, accountData)
-  {
-    if (server.type == 'exquilla')
-    {
-      return ewsSetDefaultCopiesAndFoldersPrefs(identity, server, accountData);
-    }
-    else
-    {
-      return this.oldSetDefaultCopiesAndFoldersPrefs(identity, server, accountData);
-    }
-  }
+
 };
 
 window.addEventListener("load", function(event) {

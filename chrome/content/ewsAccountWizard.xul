@@ -11,14 +11,13 @@
   <script type="application/javascript" src="chrome://messenger/content/accountUtils.js"/>
   <script type="application/javascript" src="chrome://messenger/content/ispUtils.js"/>
   <script type="application/javascript" src="chrome://messenger/content/AccountWizard.js"/>
-  <script type="application/javascript" src="chrome://exchangeews/content/ewsAccountWizard.js"/>
+  <script type="application/javascript" src="chrome://exchangeEws/content/ewsAccountWizard.js"/>
   <script type="application/javascript" src="chrome://messenger/content/aw-done.js"/>
 
   <!-- Identity page : Collects user's login and email address -->
   <wizardpage id="identitypage" pageid="identitypage"
               label="Add Account"
-              onpageshow="exquilla.AW.identityPageValidate();"
-              onpageadvanced="return exchangeEws.AccountWizard.identityPageUnload();">
+              onpageadvanced="return exchangeEws.accountWizard.identityPageUnload();">
     <vbox flex="1">
       <grid>
         <columns>
