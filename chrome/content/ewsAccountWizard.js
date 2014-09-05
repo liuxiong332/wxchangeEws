@@ -13,6 +13,7 @@ exchangeEws.accountWizard._ewsData = {
     'ServerType-exchange': {
       'useMail': true,
     },
+    'hostName': null,
     'loginAtStartUp': true,
     'port': 443,
     'socketType': 3,
@@ -43,6 +44,7 @@ exchangeEws.accountWizard.onAccountWizardLoad = function() {
   SetCurrentAccountData(this._ewsData);
   AccountDataToPageData(this._ewsData, pageData);
   setAccountTypeData();
+  dump(pageData);
   return true;
 }
 
@@ -68,15 +70,19 @@ exchangeEws.accountWizard.identityPageUnload = function() {
   setPageData(pageData, "server", "hostname", host);
   setPageData(pageData, "server", "ewsUrl", ewsUrl);
   document.documentElement.canAdvance = true;
+
+  var nsIServer = Components.classes["@mozilla.org/messenger/server;1?type=exchange"]
+    .createInstance(Components.interfaces.nsIMsgIncomingServer);
+    
   return true;
 }; 
 
 exchangeEws.accountWizard.overrideAccountWizard = function() {
   // override PageDataToAccountData to copy ews-specific information
-  this.oldPageDataToAccountData = PageDataToAccountData;
+  var oldPageDataToAccountData = PageDataToAccountData;
   PageDataToAccountData = function ewsPageDataToAccountData(pageData, accountData) {
-    exquilla.AW.oldPageDataToAccountData(pageData, accountData);
-    if (accountData.incomingServer.type == 'exchange') {
+    oldPageDataToAccountData(pageData, accountData);
+    if (accountData.incomingServer.type === 'exchange') {
       if (!accountData.incomingServer["ServerType-exchange"])
         accountData.incomingServer["ServerType-exchange"] = {};
 
