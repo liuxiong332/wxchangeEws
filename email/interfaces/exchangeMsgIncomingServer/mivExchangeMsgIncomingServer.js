@@ -44,7 +44,7 @@ function mivExchangeMsgIncomingServer() {
  	this._filterList = null;
  	//the preference branch for the server
 	this._prefBranch = null;
-	resetPrefBranch();
+	this.resetPrefBranch();
 	this._defaultPrefBranch = mivExchangeMsgIncomingServer.getBranch(
 		"mail.server.default.");
 }
@@ -114,16 +114,16 @@ mivExchangeMsgIncomingServer.prototype = {
 	set key(aValue)
 	{
 		this._serverKey = aValue;
-		resetPrefBranch();
+		this.resetPrefBranch();
 	},
 
 	get ewsUrl() {
 		return this._ewsUrl;
-	}
+	},
 
 	set ewsUrl(value) {
 		this._ewsUrl = value;
-	}
+	},
   /**
    * pretty name - should be "userid on hostname"
    * if the pref is not set
@@ -181,12 +181,11 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute long port;
 	get port()
 	{
-		return this.getIntValue("port");
+		return 443;
 	},
 
 	set port(aValue)
 	{
-		this.setIntValue("port", aValue);
 	},
 
   /**
@@ -235,7 +234,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute AString accountManagerChrome;
 	get accountManagerChrome()
 	{
-		return "am-main.xul";
+		return "chrome://exchangemail/am-main.xul";
 	},
 
   /**
@@ -246,7 +245,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute ACString localStoreType;
 	get localStoreType()
 	{
-		return "mailbox";
+		return "exchange";
 	},
 
 	getProtocolInfo: function() {
@@ -403,7 +402,7 @@ mivExchangeMsgIncomingServer.prototype = {
 
 	set performingBiff(aValue)
 	{
-		setBoolValue("performing_biff", aValue);
+		this.setBoolValue("performing_biff", aValue);
 	},
 
   /* the on-disk path to message storage for this server */
@@ -461,7 +460,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	get rootFolder()
 	{
 		if(!this._rootFolder)
-			this._rootFolder = createRootFolder();
+			this._rootFolder = this.createRootFolder();
 		return this._rootFolder;
 	},
 
@@ -517,12 +516,12 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute nsMsgAuthMethodValue authMethod;
 	get authMethod()
 	{
-		return getIntValue("authMethod");
+		return this.getIntValue("authMethod");
 	},
 
 	set authMethod(aValue)
 	{
-		setIntValue("authMethod", aValue);
+		this.setIntValue("authMethod", aValue);
 	},
 
   /**
@@ -534,24 +533,24 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute nsMsgSocketTypeValue socketType;
 	get socketType()
 	{
-		return getIntValue("socket_type");
+		return this.getIntValue("socket_type");
 	},
 
 	set socketType(aValue)
 	{
-		setIntValue("socket_type", aValue);
+		this.setIntValue("socket_type", aValue);
 	},
 
   /* empty trash on exit */
 //  attribute boolean emptyTrashOnExit;
 	get emptyTrashOnExit()
 	{
-		return getBoolValue("empty_trash_on_exit");
+		return this.getBoolValue("empty_trash_on_exit");
 	},
 
 	set emptyTrashOnExit(aValue)
 	{
-		setBoolValue("empty_trash_on_exit", aValue);
+		this.setBoolValue("empty_trash_on_exit", aValue);
 	},
   /**
    * Get the server's list of filters.
@@ -758,7 +757,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  void setCharValue(in string attr, in ACString value);
 	setCharValue: function _setCharValue(attr, value)
 	{
-		this._prefBranch.setCharValue(attr, value);
+		this._prefBranch.setCharPref(attr, value);
 	},
 
 //  AString getUnicharValue(in string attr);
@@ -861,12 +860,12 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute boolean valid;
 	get valid()
 	{
-		return getBoolValue("valid");
+		return this.getBoolValue("valid");
 	},
 
 	set valid(aValue)
 	{
-		setBoolValue("value", aValue);
+		this.setBoolValue("value", aValue);
 	},
   
 //  AString toString();
@@ -886,6 +885,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	equals: function _equals(server)
 	{
 		dump("function equals\n");
+		return false;
 	},
 
   /* Get Messages at startup */
@@ -893,6 +893,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	get downloadMessagesAtStartup()
 	{
 		dump("get downloadMessagesAtStartup\n");
+		return true;
 	},
 
   /* check to this if the server supports filters */
@@ -900,6 +901,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	get canHaveFilters()
 	{
 		dump("get canHaveFilters\n");
+		return false;
 	},
 
 	set canHaveFilters(aValue)
@@ -958,6 +960,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	get retentionSettings()
 	{
 		dump("get retentionSettings\n");
+		return false;
 	},
 
 	set retentionSettings(aValue)
@@ -986,6 +989,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	get canEmptyTrashOnExit()
 	{
 		dump("get canEmptyTrashOnExit\n");
+		return false;
 	},
 
   /* display startup page once per account per session */
@@ -993,16 +997,18 @@ mivExchangeMsgIncomingServer.prototype = {
 	get displayStartupPage()
 	{
 		dump("get displayStartupPage\n");
+		return false;
 	},
 
 	set displayStartupPage(aValue)
 	{
-		dump("set displayStartupPage aValue:"+aValue+"\n");
+		dump("set displayStartupPage aValue:"+aValue+"\n")
 	},
 //  attribute nsIMsgDownloadSettings downloadSettings;
 	get downloadSettings()
 	{
 		dump("get downloadSettings\n");
+		return false;
 	},
 
 	set downloadSettings(aValue)
@@ -1063,12 +1069,12 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute boolean hidden;
 	get hidden()
 	{
-		return getBoolValue("hidden");
+		return this.getBoolValue("hidden");
 	},
 
 	set hidden(aValue)
 	{
-		setBoolValue("hidden", aValue);
+		this.setBoolValue("hidden", aValue);
 	},
 
   /**
@@ -1200,6 +1206,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute nsIMsgFilterPlugin spamFilterPlugin;
 	get spamFilterPlugin()
 	{
+		return null;
 		dump("get spamFilterPlugin\n");
 	},
 
@@ -1238,6 +1245,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	isNewHdrDuplicate: function _isNewHdrDuplicate(aNewHdr)
 	{
 		dump("function isNewHdrDuplicate\n");
+		return false;
 	},
 
   /**
@@ -1265,6 +1273,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	getForcePropertyEmpty: function _getForcePropertyEmpty(propertyName)
 	{
 		dump("function getForcePropertyEmpty\n");
+		return false;
 	},
 
   /**
@@ -1287,20 +1296,9 @@ mivExchangeMsgIncomingServer.prototype = {
 
 };
 
-function NSGetFactory(cid) {
 
-	try {
-		if (!NSGetFactory.mivExchangeMsgIncomingServer) {
-			NSGetFactory.mivExchangeMsgIncomingServer = XPCOMUtils.generateNSGetFactory([mivExchangeMsgIncomingServer]);
-
-	}
-
-	} catch(e) {
-		Components.utils.reportError(e);
-		dump(e);
-		throw e;
-	}
-
-	return NSGetFactory.mivExchangeMsgIncomingServer(cid);
-} 
-
+var components = [mivExchangeMsgIncomingServer];
+if ("generateNSGetFactory" in XPCOMUtils)
+  var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);  // Firefox 4.0 and higher
+else
+  var NSGetModule = XPCOMUtils.generateNSGetModule(components);    // Firefox 3.x
