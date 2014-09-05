@@ -1759,30 +1759,9 @@ dump("mivExchangeMsgFolder: get msgStore\n");
 
 };
 
-function NSGetFactory(cid) {
 
-	try {
-		if (!NSGetFactory.mivExchangeMsgFolder) {
-			NSGetFactory.mivExchangeMsgFolder = XPCOMUtils.generateNSGetFactory([mivExchangeMsgFolder]);
-
-		dump("Joepie 1 !!!!\n");
-		try {
-			var tmp = new mivExchangeMsgFolder();
-		}
-		catch(err){ dump("err:"+err+"\n"); }
-		dump("Joepie 2 !!!!\n");
-
-	}
-
-	} catch(e) {
-		Components.utils.reportError(e);
-		dump(e);
-		throw e;
-	}
-
-try{
-	var result = NSGetFactory.mivExchangeMsgFolder(cid);
-}catch(err){ dump("Error2:"+err+"\n");}
-	return result;
-} 
-
+var components = [mivExchangeMsgFolder];
+if ("generateNSGetFactory" in XPCOMUtils)
+  var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);  // Firefox 4.0 and higher
+else
+  var NSGetModule = XPCOMUtils.generateNSGetModule(components);    // Firefox 3.x

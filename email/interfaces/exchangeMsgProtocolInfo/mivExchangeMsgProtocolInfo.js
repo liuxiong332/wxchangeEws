@@ -198,20 +198,10 @@ mivExchangeMsgProtocolInfo.prototype = {
 
 };
 
-function NSGetFactory(cid) {
 
-	try {
-		if (!NSGetFactory.mivExchangeMsgProtocolInfo) {
-			NSGetFactory.mivExchangeMsgProtocolInfo = XPCOMUtils.generateNSGetFactory([mivExchangeMsgProtocolInfo]);
 
-	}
-
-	} catch(e) {
-		Components.utils.reportError(e);
-		dump(e);
-		throw e;
-	}
-
-	return NSGetFactory.mivExchangeMsgProtocolInfo(cid);
-} 
-
+var components = [mivExchangeMsgProtocolInfo];
+if ("generateNSGetFactory" in XPCOMUtils)
+  var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);  // Firefox 4.0 and higher
+else
+  var NSGetModule = XPCOMUtils.generateNSGetModule(components);    // Firefox 3.x

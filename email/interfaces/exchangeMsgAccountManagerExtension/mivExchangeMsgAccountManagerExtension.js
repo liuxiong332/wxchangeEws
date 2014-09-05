@@ -88,20 +88,9 @@ dump("mivExchangeMsgAccountManagerExtension.chromePackageName:\n");
 
 };
 
-function NSGetFactory(cid) {
 
-	try {
-		if (!NSGetFactory.mivExchangeMsgAccountManagerExtension) {
-			NSGetFactory.mivExchangeMsgAccountManagerExtension = XPCOMUtils.generateNSGetFactory([mivExchangeMsgAccountManagerExtension]);
-
-	}
-
-	} catch(e) {
-		Components.utils.reportError(e);
-		dump(e);
-		throw e;
-	}
-
-	return NSGetFactory.mivExchangeMsgAccountManagerExtension(cid);
-} 
-
+var components = [mivExchangeMsgAccountManagerExtension];
+if ("generateNSGetFactory" in XPCOMUtils)
+  var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);  // Firefox 4.0 and higher
+else
+  var NSGetModule = XPCOMUtils.generateNSGetModule(components);    // Firefox 3.x

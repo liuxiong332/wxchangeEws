@@ -160,20 +160,10 @@ dump("exchangeProtocolhandler: allowPort\n");
 
 };
 
-function NSGetFactory(cid) {
 
-	try {
-		if (!NSGetFactory.mivExchangeProtocolHandler) {
-			NSGetFactory.mivExchangeProtocolHandler = XPCOMUtils.generateNSGetFactory([mivExchangeProtocolHandler]);
 
-	}
-
-	} catch(e) {
-		Components.utils.reportError(e);
-		dump(e);
-		throw e;
-	}
-
-	return NSGetFactory.mivExchangeProtocolHandler(cid);
-} 
-
+var components = [mivExchangeProtocolHandler];
+if ("generateNSGetFactory" in XPCOMUtils)
+  var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);  // Firefox 4.0 and higher
+else
+  var NSGetModule = XPCOMUtils.generateNSGetModule(components);    // Firefox 3.x
