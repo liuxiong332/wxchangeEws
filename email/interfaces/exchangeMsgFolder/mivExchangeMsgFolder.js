@@ -32,8 +32,12 @@ var EXPORTED_SYMBOLS = ["mivExchangeMsgFolder"];
 function mivExchangeMsgFolder() {
 
 	//this.logInfo("mivExchangeMsgFolder: init");
-
+	this._baseMessageUri = null;
+	this._database = null;
 }
+
+mivExchangeMsgFolder.EXCHANGE_SCHEMA = "exchange:/";
+mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA = "exchange-message:/";
 
 var mivExchangeMsgFolderGUID = "364ed353-d3ad-41d2-9df3-2fab209d9ac1";
 
@@ -53,7 +57,7 @@ mivExchangeMsgFolder.prototype = {
 	classDescription : "Exchange EWS Msg Folder",
 
 	classID : components.ID("{"+mivExchangeMsgFolderGUID+"}"),
-	contractID : "@1st-setup.nl/exchange/msgfolder;1",
+	contractID : "@kingsoft.com/exchange/msgfolder;1",
 //	flags : Ci.nsIClassInfo.THREADSAFE,
 	implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
@@ -71,6 +75,23 @@ mivExchangeMsgFolder.prototype = {
 		return ifaces;
 	},
 
+	init: function(baseUri) {
+		var biasIndex = baseUri.indexOf('/');
+		if(biasIndex === -1)
+			throw new Error("server URI isnot correct");
+		this._baseMessageUri = mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA + baseUri.slice(biasIndex+1);
+	}
+
+	getDatabase: function() {
+		if(!this._database) {
+			let dbService = Cc["@mozilla.org/msgDatabase/msgDBService;1"].getService(Ci.nsIMsgDBService);
+			let db = dbService.OpenFolderDB(this, false);
+			if(!db)
+				db = dbService.CreateNewDB(this);
+			this._database = db;
+		}
+		return this._database;
+	}
 
 //  const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
 //  const nsMsgBiffState nsMsgBiffState_NoMail =  1; // No new mail is waiting.

@@ -470,9 +470,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
 	createRootFolder: function() {
-		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-		var serverResource = rdf.GetResource(this.serverURI);
-		return serverResource.QueryInterface(Ci.nsIMsgFolder);
+		return Cc["@kingsoft.com/exchange/msgfolder;1"].createInstance(Ci.nsIMsgFolder);
 	}, 
   /* root folder for this account 
      - if account is deferred, root folder of deferred-to account */
