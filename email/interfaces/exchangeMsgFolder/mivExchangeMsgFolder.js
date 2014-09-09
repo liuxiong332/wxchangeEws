@@ -26,18 +26,37 @@ var components = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://exchangeEws/ecFunctions.js");
 
 var EXPORTED_SYMBOLS = ["mivExchangeMsgFolder"];
 
 function mivExchangeMsgFolder() {
 
 	//this.logInfo("mivExchangeMsgFolder: init");
+	this._uri = null;
 	this._baseMessageUri = null;
 	this._database = null;
+	this._name = null;
+	this._server = null;	//nsIMsgIncomingServer
+	this._path = null;		//nsIFile: file path
+	this._flags = null;
+	this._parent = null;
+	this._subfolders = [];
 }
 
 mivExchangeMsgFolder.EXCHANGE_SCHEMA = "exchange:/";
 mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA = "exchange-message:/";
+mivExchangeMsgFolder.INCOMING_SERVER_TYPE = "exchange";
+mivExchangeMsgFolder.accountManager = Cc["@mozilla.org/messenger/account-manager;1"]
+	.getService(Ci.nsIMsgAccountManager);
+mivExchangeMsgFolder.globalFunc = Cc["@1st-setup.nl/global/functions;1"]
+	.createInstance(Ci.mivFunctions);
+
+mivExchangeMsgFolder.createLocalFile = function(filePath) {
+	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+	file.initWithFile(filePath);
+	return file;
+}
 
 var mivExchangeMsgFolderGUID = "364ed353-d3ad-41d2-9df3-2fab209d9ac1";
 
@@ -49,6 +68,7 @@ mivExchangeMsgFolder.prototype = {
 				Ci.nsISupports]),
 */
 	QueryInterface : XPCOMUtils.generateQI([Ci.mivExchangeMsgFolder,
+				Ci.nsIRDFResource,
 				Ci.nsIMsgFolder,
 				Ci.nsISupports]),
 
@@ -69,20 +89,50 @@ mivExchangeMsgFolder.prototype = {
 	getInterfaces : function _getInterfaces(count) 
 	{
 		var ifaces = [Ci.mivExchangeMsgFolder,
+				Ci.nsIRDFResource,
 				Ci.nsIMsgFolder,
 				Ci.nsISupports];
 		count.value = ifaces.length;
 		return ifaces;
 	},
 
+//  nsIRDFResource implementation
+	equalsNode: function(aNode) {
+		return (aNode instanceof Ci.nsIRDFResource) &&
+		aNode.QueryInterface(Ci.nsIRDFResource) === this;
+	},
+
 	init: function(baseUri) {
-		var biasIndex = baseUri.indexOf('/');
-		if(biasIndex === -1)
-			throw new Error("server URI isnot correct");
-		this._baseMessageUri = mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA + baseUri.slice(biasIndex+1);
+		//register this resource in the RDF service
+		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"]
+  			.getService(Ci.nsIRDFService);
+  		rdf.registerResource(this, true);
+
+		this._uri = baseUri;
+		this._baseMessageUri = generateBaseMessageUri();
+
+		function generateBaseMessageUri() {
+			var biasIndex = baseUri.indexOf('/');
+			if(biasIndex === -1)
+				throw new Error("server URI isnot correct");
+			return mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA + baseUri.slice(biasIndex+1);
+		}
+		
+	},
+
+	get value() {
+		return this._uri;
+	},
+
+	get valueUTF8() {
+		return this._uri;
+	},
+
+	equalsString(aURI) {
+		return this._uri === aURI;
 	}
 
-	getDatabase: function() {
+	get database() {
 		if(!this._database) {
 			let dbService = Cc["@mozilla.org/msgDatabase/msgDBService;1"].getService(Ci.nsIMsgDBService);
 			let db = dbService.OpenFolderDB(this, false);
@@ -91,8 +141,38 @@ mivExchangeMsgFolder.prototype = {
 			this._database = db;
 		}
 		return this._database;
-	}
+	},
 
+	parseUri: function(needServer) {
+		if(this._haveParsedURI)
+			return ;
+		var uril = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURL);
+		url.spec = this._uri;
+		if(!this._isServerIsValid) {	//if the server has not initialized
+			let path = url.path;
+			this._isServer = (path === "/");
+			this._isServerIsValid = true;
+		}
+		if(!this._name) {
+			this._name = url.fileName;
+		}
+		if(!this._server) {
+			let parentMsgFolder = this.parent;
+			if(parentMsgFolder)
+				this._server = parentMsgFolder.server;
+			if(!this._server && needServer) {
+				this._server = 
+					mivExchangeMsgFolder.accountManager.findServerByURI(url, false);
+			}
+		}
+
+		let serverPath = this._server.localPath;
+		if(!this._path) {
+			serverPath.append(url.fileName);
+			this._path = mivExchangeMsgFolder.createLocalFile(serverPath);
+		}
+		this._haveParsedURI = true;
+	},
 //  const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
 //  const nsMsgBiffState nsMsgBiffState_NoMail =  1; // No new mail is waiting.
 //  const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is new mail.
@@ -101,8 +181,9 @@ mivExchangeMsgFolder.prototype = {
 //  readonly attribute nsISimpleEnumerator messages;
 	get messages()
 	{
-dump("mivExchangeMsgFolder: get messages\n");
-		return true;
+		if(this.database)
+			return this.database.enumerateMessages();
+		return null;
 	},
 
 //  void startFolderLoading();
@@ -127,8 +208,7 @@ dump("mivExchangeMsgFolder: function updateFolder\n");
 //  readonly attribute AString prettiestName;
 	get prettiestName()
 	{
-dump("mivExchangeMsgFolder: get prettiestName\n");
-		return true;
+		return this.name;
 	},
 
   /**
@@ -157,7 +237,7 @@ dump("mivExchangeMsgFolder: get showDeletedMessages\n");
 //  readonly attribute nsIMsgIncomingServer server;
 	get server()
 	{
-dump("mivExchangeMsgFolder: get server\n");
+	
 		return true;
 	},
 
@@ -167,8 +247,10 @@ dump("mivExchangeMsgFolder: get server\n");
 //  readonly attribute boolean isServer;
 	get isServer()
 	{
-dump("mivExchangeMsgFolder: get isServer\n");
-		return true;
+		if(!this._isServerIsValid) {
+			this.parseUri();
+		}
+		return this._isServer;
 	},
 
 //  readonly attribute boolean canSubscribe;
@@ -948,26 +1030,27 @@ dump("mivExchangeMsgFolder: set gettingNewMessages\n");
 //  attribute nsIFile filePath;
 	get filePath()
 	{
-dump("mivExchangeMsgFolder: get filePath\n");
-		return true;
+		return this._path.clone();
 	},
 
 	set filePath(aValue)
 	{
-dump("mivExchangeMsgFolder: set filePath\n");
+		this._path = aValue;
 	},
 
 //  readonly attribute ACString baseMessageURI;
 	get baseMessageURI()
 	{
-dump("mivExchangeMsgFolder: get baseMessageURI\n");
-		return true;
+		return this._baseMessageUri;
 	},
 
 //  ACString generateMessageURI(in nsMsgKey msgKey);
 	generateMessageURI: function _generateMessageURI(msgKey)
 	{
-dump("mivExchangeMsgFolder: function generateMessageURI\n");
+		var uri = baseMessageURI;
+		uri.append('#');
+		uri.append(msgKey);
+		return uri;
 	},
 
 //  const nsMsgDispositionState nsMsgDispositionState_None = -1;
@@ -1341,25 +1424,28 @@ dump("mivExchangeMsgFolder: get URI\n");
 //  attribute AString name;
 	get name()
 	{
-dump("mivExchangeMsgFolder: get name\n");
-		return true;
+		if(!this._haveParsedURI && !this._name) 
+			this.parseUri();
+		if(this._isServer) {
+			return this.server.prettyName;
+		}
+		return this._name;
 	},
 
-	set name(aValue)
+	set name(name)
 	{
-dump("mivExchangeMsgFolder: set name\n");
+		this._name = name;
 	},
 
 //  attribute AString prettyName;
 	get prettyName()
 	{
-dump("mivExchangeMsgFolder: get prettyName\n");
-		return true;
+		return this.name;
 	},
 
-	set prettyName(aValue)
+	set prettyName(name)
 	{
-dump("mivExchangeMsgFolder: set prettyName\n");
+		this.name = name;
 	},
 
 //  readonly attribute AString abbreviatedName;
@@ -1372,13 +1458,17 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
 //  attribute nsIMsgFolder parent;
 	get parent()
 	{
-dump("mivExchangeMsgFolder: get parent\n");
-		return true;
+		return this._parent;
 	},
 
-	set parent(aValue)
+	set parent(parent)
 	{
-dump("mivExchangeMsgFolder: set parent\n");
+		this._parent = parent;
+		if(parent) {
+			this._isServer = false;
+			this._isServerIsValid = false;
+			this._server = parent.server;
+		}
 	},
 
   /**
@@ -1388,8 +1478,8 @@ dump("mivExchangeMsgFolder: set parent\n");
 //  readonly attribute nsISimpleEnumerator subFolders;
 	get subFolders()
 	{
-dump("mivExchangeMsgFolder: get subFolders\n");
-		return true;
+		return exchWebService.commonFunctions
+			.CreateSimpleEnumerator(this._subfolders);
 	},
 
   /**
@@ -1458,7 +1548,7 @@ dump("mivExchangeMsgFolder: function getChildNamed\n");
 //  nsIMsgFolder findSubFolder(in ACString escapedSubFolderName);
 	findSubFolder: function _findSubFolder(escapedSubFolderName)
 	{
-dump("mivExchangeMsgFolder: function findSubFolder\n");
+
 	},
 
 //  void AddFolderListener(in nsIFolderListener listener);
@@ -1774,8 +1864,7 @@ dump("mivExchangeMsgFolder: function getForcePropertyEmpty\n");
 //  readonly attribute nsIMsgPluggableStore msgStore;
 	get msgStore()
 	{
-dump("mivExchangeMsgFolder: get msgStore\n");
-		return true;
+		return this.server.msgStore;
 	},
 
 };

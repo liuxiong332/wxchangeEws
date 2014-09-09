@@ -249,8 +249,20 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
 	getProtocolInfo: function() {
-		var protocolStr = "@mozilla.org/messenger/protocol/info;type=" + this.type;
-		return Cc[protocolStr].getService(Ci.nsIMsgProtocolInfo);
+		if(!this._protocolInfo) {
+			let protocolStr = "@mozilla.org/messenger/protocol/info;1?type=" + this.type;
+			this._protocolInfo = 
+				Cc[protocolStr].createInstance(Ci.nsIMsgProtocolInfo);
+		}
+		return this._protocolInfo;
+	},
+
+	set protocolInfo(info) {
+		this._protocolInfo = info;
+	},
+
+	get protocolInfo() {
+		return this.getProtocolInfo();
 	},
   // Perform specific tasks (reset flags, remove files, etc) for account user/server name changes.
 //  void onUserOrHostNameChanged(in ACString oldName, in ACString newName,
@@ -361,12 +373,15 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute boolean doBiff;
 	get doBiff()
 	{
-		return this.getBoolValue("do_biff");
+		var hasBiff = this._prefBranch.prefHasUserValue("check_new_mail");
+		if(hasBiff)
+			return this._prefBranch.getBoolValue("check_new_mail");
+		return this.getProtocolInfo().defaultDoBiff;
 	},
 
 	set doBiff(aValue)
 	{
-		this.setBoolValue("do_biff", aValue);
+		this.setBoolValue("check_new_mail", aValue);
 	},
 
   /* how often to biff */
@@ -470,7 +485,9 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
 	createRootFolder: function() {
-		return Cc["@kingsoft.com/exchange/msgfolder;1"].createInstance(Ci.nsIMsgFolder);
+		var folder = Cc["@kingsoft.com/exchange/msgfolder;1"].createInstance(Ci.mivExchangeMsgFolder);
+		folder.init(this.serverURI);
+		return folder;
 	}, 
   /* root folder for this account 
      - if account is deferred, root folder of deferred-to account */
@@ -531,12 +548,15 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute nsMsgSocketTypeValue socketType;
 	get socketType()
 	{
-		return this.getIntValue("socket_type");
+		var socketType = this.getIntValue("socketType");
+		if(!socketType)
+			return false;
+		return true;
 	},
 
 	set socketType(aValue)
 	{
-		this.setIntValue("socket_type", aValue);
+		this.setIntValue("socketType", aValue);
 	},
 
   /* empty trash on exit */
@@ -647,7 +667,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  void setDefaultLocalPath(in nsIFile aDefaultLocalPath);
 	setDefaultLocalPath: function _setDefaultLocalPath(aDefaultLocalPath)
 	{
-		this.protocolInfo.defaultLocalPath = aDefaultLocalPath;
+		this.getProtocolInfo().defaultLocalPath = aDefaultLocalPath;
 	},
 
   /**
@@ -914,44 +934,47 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute boolean canDelete;
 	get canDelete()
 	{
-		return getBoolValue("can_delete");
+		return this.getBoolValue("can_delete");
 	},
 
 	set canDelete(aValue)
 	{
-		setBoolValue("can_delete", aValue);
+		this.setBoolValue("can_delete", aValue);
 	},
 
 //  attribute boolean loginAtStartUp;
 	get loginAtStartUp()
 	{
-		return getBoolValue("login_at_startup");
+		var loginAtStartup = this.getBoolValue("login_at_startup");
+		if(loginAtStartup)
+			return loginAtStartup;
+		return false;
 	},
 
 	set loginAtStartUp(aValue)
 	{
-		setBoolValue("login_at_startup", aValue);
+		this.setBoolValue("login_at_startup", aValue);
 	},
 
 //  attribute boolean limitOfflineMessageSize;
 	get limitOfflineMessageSize()
 	{
-		return getBoolValue("limit_offline_message_size");
+		return this.getBoolValue("limit_offline_message_size");
 	},
 
 	set limitOfflineMessageSize(aValue)
 	{
-		setBoolValue("limit_offline_message_size", aValue);
+		this.setBoolValue("limit_offline_message_size", aValue);
 	},
 //  attribute long maxMessageSize;
 	get maxMessageSize()
 	{
-		return getIntValue("max_size");
+		return this.getIntValue("max_size");
 	},
 
 	set maxMessageSize(aValue)
 	{
-		setIntValue("max_size", aValue);
+		this.setIntValue("max_size", aValue);
 	},
 
 //  attribute nsIMsgRetentionSettings retentionSettings;
@@ -1089,36 +1112,36 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute boolean defaultCopiesAndFoldersPrefsToServer;
 	get defaultCopiesAndFoldersPrefsToServer()
 	{
-		return getBoolValue("allows_specialfolders_usage");
+		return this.getBoolValue("allows_specialfolders_usage");
 	},
 
 	set defaultCopiesAndFoldersPrefsToServer(aValue)
 	{
-		setBoolValue("allows_specialfolders_usage", aValue);
+		this.setBoolValue("allows_specialfolders_usage", aValue);
 	},
 
   /* can this server allows sub folder creation */
 //  attribute boolean canCreateFoldersOnServer;
 	get canCreateFoldersOnServer()
 	{
-		return getBoolValue("can_create_folders_onserver");
+		return this.getBoolValue("can_create_folders_onserver");
 	},
 
 	set canCreateFoldersOnServer(aValue)
 	{
-		setBoolValue("can_create_folders_onserver", aValue);
+		this.setBoolValue("can_create_folders_onserver", aValue);
 	},
 
   /* can this server allows message filing ? */
 //  attribute boolean canFileMessagesOnServer;
 	get canFileMessagesOnServer()
 	{
-		return getBoolValue("can_file_messages");
+		return this.getBoolValue("can_file_messages");
 	},
 
 	set canFileMessagesOnServer(aValue)
 	{
-		setBoolValue("can_file_messages", aValue);
+		this.setBoolValue("can_file_messages", aValue);
 	},
 
   /* can this server allow compacting folders ? */
@@ -1230,12 +1253,12 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute long incomingDuplicateAction;
 	get incomingDuplicateAction()
 	{
-		return getIntValue("dup_action");
+		return this.getIntValue("dup_action");
 	},
 
 	set incomingDuplicateAction(aValue)
 	{
-		setIntValue("dup_action", aValue);
+		this.setIntValue("dup_action", aValue);
 	},
 
   // check if new hdr is a duplicate of a recently arrived header

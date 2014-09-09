@@ -11,7 +11,7 @@ exchangeEws.accountWizard._ewsData = {
   'incomingServer': {
     'type': 'exchange',
     'ServerType-exchange': {
-      'useMail': true,
+      'ewsUrl': '',
     },
     'hostName': null,
     'loginAtStartUp': true,
@@ -19,7 +19,9 @@ exchangeEws.accountWizard._ewsData = {
     'socketType': 3,
     'biffMinutes': 5,
     'doBiff': true,
-    'protocolInfo': { 'serverIID': Components.interfaces.mivExchangeMsgIncomingServer },
+    'protocolInfo': { 
+      'serverIID': Components.interfaces.mivExchangeMsgIncomingServer 
+    },
   },
   'identity': {
     'FccFolder': 'Sent Items'
