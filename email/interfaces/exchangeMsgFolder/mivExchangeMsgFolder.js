@@ -97,40 +97,50 @@ mivExchangeMsgFolder.prototype = {
 	},
 
 //  nsIRDFResource implementation
-	equalsNode: function(aNode) {
+	EqualsNode: function(aNode) {
 		return (aNode instanceof Ci.nsIRDFResource) &&
 		aNode.QueryInterface(Ci.nsIRDFResource) === this;
 	},
 
-	init: function(baseUri) {
+	Init: function(baseUri) {
 		//register this resource in the RDF service
 		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"]
   			.getService(Ci.nsIRDFService);
-  		rdf.registerResource(this, true);
+  			
+  		this._uri = baseUri;
+  	//	rdf.RegisterResource(this.QueryInterface(Ci.nsIRDFResource), true);
 
-		this._uri = baseUri;
 		this._baseMessageUri = generateBaseMessageUri();
-
 		function generateBaseMessageUri() {
 			var biasIndex = baseUri.indexOf('/');
 			if(biasIndex === -1)
 				throw new Error("server URI isnot correct");
+			while(baseUri[biasIndex+1] === '/')
+				++biasIndex;
 			return mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA + baseUri.slice(biasIndex+1);
 		}
 		
 	},
 
-	get value() {
+	get Value() {
 		return this._uri;
 	},
 
-	get valueUTF8() {
+	get ValueUTF8() {
 		return this._uri;
 	},
 
-	equalsString(aURI) {
+	EqualsString: function(aURI) {
 		return this._uri === aURI;
-	}
+	},
+
+	GetDelegate: function(aKey, aIID) {
+		return null;
+	},
+
+	ReleaseDelegate: function(aKey) {
+
+	},
 
 	get database() {
 		if(!this._database) {
@@ -146,7 +156,7 @@ mivExchangeMsgFolder.prototype = {
 	parseUri: function(needServer) {
 		if(this._haveParsedURI)
 			return ;
-		var uril = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURL);
+		var url = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURL);
 		url.spec = this._uri;
 		if(!this._isServerIsValid) {	//if the server has not initialized
 			let path = url.path;
@@ -237,8 +247,9 @@ dump("mivExchangeMsgFolder: get showDeletedMessages\n");
 //  readonly attribute nsIMsgIncomingServer server;
 	get server()
 	{
-	
-		return true;
+		if(!this._server)
+			this.parseUri();
+		return this._server;
 	},
 
   /**

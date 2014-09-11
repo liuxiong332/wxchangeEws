@@ -485,9 +485,9 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
 	createRootFolder: function() {
-		var folder = Cc["@kingsoft.com/exchange/msgfolder;1"].createInstance(Ci.mivExchangeMsgFolder);
-		folder.init(this.serverURI);
-		return folder;
+		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+		var res = rdf.GetResource(this.serverURI);
+		return res.QueryInterface(Ci.nsIMsgFolder);
 	}, 
   /* root folder for this account 
      - if account is deferred, root folder of deferred-to account */

@@ -73,9 +73,6 @@ exchangeEws.accountWizard.identityPageUnload = function() {
   setPageData(pageData, "server", "ewsUrl", ewsUrl);
   document.documentElement.canAdvance = true;
 
-  var nsIServer = Components.classes["@mozilla.org/messenger/server;1?type=exchange"]
-    .createInstance(Components.interfaces.nsIMsgIncomingServer);
-    
   return true;
 }; 
 

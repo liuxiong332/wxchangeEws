@@ -1,4 +1,14 @@
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cr = Components.results;
+var components = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+
 var mivExchangeMsgFolderFactoryGUID = "35765C1C-CEE4-41D1-B12F-EEB7E74AD0FF";
 function mivExchangeMsgFolderFactory() {}
 
@@ -54,9 +64,7 @@ mivExchangeMsgFolderFactory.prototype = {
 	lockFactory: function(lock) {
 		return true;
 	}
-},
-
-
+};
 
 var components = [mivExchangeMsgFolderFactory];
 if ("generateNSGetFactory" in XPCOMUtils)
