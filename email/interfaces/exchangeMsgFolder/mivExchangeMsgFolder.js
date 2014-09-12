@@ -27,6 +27,9 @@ var components = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://exchangeEws/ecFunctions.js");
+Cu.import("resource://exchangeEws/commonFunctions.js");
+
+var baseLog = CommonFunctions.baseLog;
 
 var EXPORTED_SYMBOLS = ["mivExchangeMsgFolder"];
 
@@ -106,7 +109,7 @@ mivExchangeMsgFolder.prototype = {
 		//register this resource in the RDF service
 		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"]
   			.getService(Ci.nsIRDFService);
-  			
+  		baseLog.info("baseUri: " + baseUri);
   		this._uri = baseUri;
   	//	rdf.RegisterResource(this.QueryInterface(Ci.nsIRDFResource), true);
 
@@ -160,6 +163,7 @@ mivExchangeMsgFolder.prototype = {
 		url.spec = this._uri;
 		if(!this._isServerIsValid) {	//if the server has not initialized
 			let path = url.path;
+			baseLog.info("url.path: " + url.path);
 			this._isServer = (path === "/");
 			this._isServerIsValid = true;
 		}
@@ -173,6 +177,7 @@ mivExchangeMsgFolder.prototype = {
 			if(!this._server && needServer) {
 				this._server = 
 					mivExchangeMsgFolder.accountManager.findServerByURI(url, false);
+				baseLog.info("server is " + this._server);
 			}
 		}
 
@@ -248,7 +253,7 @@ dump("mivExchangeMsgFolder: get showDeletedMessages\n");
 	get server()
 	{
 		if(!this._server)
-			this.parseUri();
+			this.parseUri(true);
 		return this._server;
 	},
 
@@ -259,7 +264,7 @@ dump("mivExchangeMsgFolder: get showDeletedMessages\n");
 	get isServer()
 	{
 		if(!this._isServerIsValid) {
-			this.parseUri();
+			this.parseUri(true);
 		}
 		return this._isServer;
 	},
@@ -1436,7 +1441,7 @@ dump("mivExchangeMsgFolder: get URI\n");
 	get name()
 	{
 		if(!this._haveParsedURI && !this._name) 
-			this.parseUri();
+			this.parseUri(true);
 		if(this._isServer) {
 			return this.server.prettyName;
 		}
@@ -1489,6 +1494,10 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
 //  readonly attribute nsISimpleEnumerator subFolders;
 	get subFolders()
 	{
+		baseLog.info("get subFolders");
+		if(!this._initialize) {
+			this.server.msgStore.discoverSubFolders(this, true);
+		}
 		return exchWebService.commonFunctions
 			.CreateSimpleEnumerator(this._subfolders);
 	},

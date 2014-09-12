@@ -51,6 +51,8 @@ function mivExchangeMsgIncomingServer() {
 
 var mivExchangeMsgIncomingServerGUID = "79d87edc-020e-48d4-8c04-b894edab4bd2";
 
+var PROTOCOL_NAME = "exchange";
+
 mivExchangeMsgIncomingServer.getBranch = function(branchName) {
 	return Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch(branchName);
 };
@@ -245,7 +247,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute ACString localStoreType;
 	get localStoreType()
 	{
-		return "exchange";
+		return "mailbox";
 	},
 
 	getProtocolInfo: function() {
@@ -309,9 +311,8 @@ mivExchangeMsgIncomingServer.prototype = {
 		}
 		if(!this.password) {
 			var dialog = aMsgWindow.authPrompt;
-			var serverUrl = this.localStoreType + "://" + this.username + "@" + this.hostName;
 			var resPassword = {};
-			if(!dialog.promptPassword(aPromptTitle, aPromptString, serverUrl, 
+			if(!dialog.promptPassword(aPromptTitle, aPromptString, this.serverURI, 
 				dialog.SAVE_PASSWORD_PERMANENTLY, resPassword))
 				this.password = "";
 			else
@@ -322,7 +323,7 @@ mivExchangeMsgIncomingServer.prototype = {
 
 	getLoginInfos: function() {
 		var loginManager = mivExchangeMsgIncomingServer.loginManager;
-		var currentUrl = this.localStoreType + "://" + this.hostName;
+		var currentUrl = PROTOCOL_NAME + "://" + this.hostName;
 		return loginManager.findLogins({}, currentUrl, "", currentUrl);
 	},
 
@@ -467,7 +468,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  readonly attribute ACString serverURI;
 	get serverURI()
 	{
-		return this.localStoreType + "://" + this.username + "@" + this.hostName;
+		return PROTOCOL_NAME + "://" + this.username + "@" + this.hostName + ":" + this.port;
 	},
 
   /* the root folder for this server, even if server is deferred */

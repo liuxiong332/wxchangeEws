@@ -26,6 +26,9 @@ var components = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://exchangeEws/commonFunctions.js");
+
+var baseLog = CommonFunctions.baseLog;
 
 function mivExchangeMsgProtocolInfo() {
 
@@ -71,9 +74,15 @@ mivExchangeMsgProtocolInfo.prototype = {
 		var file = Cc["@mozilla.org/file/directory_service;1"].
 				getService(Ci.nsIProperties).
 				get("ProfD", Ci.nsIFile);
+		baseLog.info(file.path);
 		if (!file) return Cr.NS_ERROR_FAILURE;
 
+
 		if (!file.exists()) {
+			file.create(file.DIRECTORY_TYPE, 0775);
+		}
+		file.append("exchange");
+		if(!file.exists()) {
 			file.create(file.DIRECTORY_TYPE, 0775);
 		}
 		return file;
