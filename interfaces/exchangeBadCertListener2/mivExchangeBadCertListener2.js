@@ -18,6 +18,11 @@
  *
  * ***** BEGIN LICENSE BLOCK *****/
 
+/* this class is used to ask for user to recerdential
+	when the user credential is bad, checkAndSolveCertProblem will pop a 
+	window to ask for user retry, if the user canceled, then the credential failed.
+
+ */
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -63,6 +68,7 @@ mivExchangeBadCertListener2.prototype = {
 
 	// External methods
 	// nsIBadCertListener2
+	// note the target site has certification problem
 	notifyCertProblem: function _notifyCertProblem(socketInfo, status, targetSite) 
 	{
 		this.logInfo("notifyCertProblem: targetSite:"+targetSite);
@@ -72,6 +78,7 @@ mivExchangeBadCertListener2.prototype = {
 		return true;
 	},
 
+	//check the certification has or not problem in the local cache
 	checkCertProblem: function _checkCertProblem(targetSite) 
 	{
 		if (!targetSite) return false;
@@ -92,6 +99,8 @@ mivExchangeBadCertListener2.prototype = {
 		return waitingProblem;
 	},
 
+	//check the certification problem and pop a exception dialog to ask user to
+	// cerdential
 	checkAndSolveCertProblem: function _checkAndSolveCertProblem(targetSite) 
 	{
 		var waitingProblem = this.checkCertProblem(targetSite);
@@ -127,7 +136,7 @@ mivExchangeBadCertListener2.prototype = {
 			return { hadProblem: false };
 		}
 	},
-
+	// check if user cancel the targetSite in the local cache 
 	userCanceledCertProblem: function _userCanceledCertProblem(targetSite) 
 	{
 		if (this.userCanceled[targetSite]) {

@@ -36,7 +36,7 @@ var EXPORTED_SYMBOLS = ["mivExchangeMsgFolder"];
 function mivExchangeMsgFolder() {
 
 	//this.logInfo("mivExchangeMsgFolder: init");
-	this._uri = null;
+ 	this._uri = null;	 
 	this._baseMessageUri = null;
 	this._database = null;
 	this._name = null;
@@ -109,8 +109,7 @@ mivExchangeMsgFolder.prototype = {
 		//register this resource in the RDF service
 		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"]
   			.getService(Ci.nsIRDFService);
-  		baseLog.info("baseUri: " + baseUri);
-  		this._uri = baseUri;
+  		this._uriStr = baseUri;
   	//	rdf.RegisterResource(this.QueryInterface(Ci.nsIRDFResource), true);
 
 		this._baseMessageUri = generateBaseMessageUri();
@@ -157,36 +156,35 @@ mivExchangeMsgFolder.prototype = {
 	},
 
 	parseUri: function(needServer) {
-		if(this._haveParsedURI)
-			return ;
+
 		var url = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURL);
 		url.spec = this._uri;
+		//parse isServer from the uri
 		if(!this._isServerIsValid) {	//if the server has not initialized
 			let path = url.path;
-			baseLog.info("url.path: " + url.path);
 			this._isServer = (path === "/");
 			this._isServerIsValid = true;
 		}
+		//parse name from the uri
 		if(!this._name) {
 			this._name = url.fileName;
 		}
-		if(!this._server) {
+		//parse server from the uri
+		if(needServer && !this._server) {
 			let parentMsgFolder = this.parent;
 			if(parentMsgFolder)
 				this._server = parentMsgFolder.server;
-			if(!this._server && needServer) {
+			if(!this._server) {
 				this._server = 
 					mivExchangeMsgFolder.accountManager.findServerByURI(url, false);
-				baseLog.info("server is " + this._server);
 			}
 		}
-
-		let serverPath = this._server.localPath;
-		if(!this._path) {
+		//parse the local path from the uri
+		if(!this._path && this._server) {
+			let serverPath = this._server.localPath;
 			serverPath.append(url.fileName);
 			this._path = mivExchangeMsgFolder.createLocalFile(serverPath);
 		}
-		this._haveParsedURI = true;
 	},
 //  const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
 //  const nsMsgBiffState nsMsgBiffState_NoMail =  1; // No new mail is waiting.
@@ -264,7 +262,7 @@ dump("mivExchangeMsgFolder: get showDeletedMessages\n");
 	get isServer()
 	{
 		if(!this._isServerIsValid) {
-			this.parseUri(true);
+			this.parseUri(false);
 		}
 		return this._isServer;
 	},
@@ -1046,6 +1044,7 @@ dump("mivExchangeMsgFolder: set gettingNewMessages\n");
 //  attribute nsIFile filePath;
 	get filePath()
 	{
+		baseLog("filepath is " + this._path);
 		return this._path.clone();
 	},
 
@@ -1440,11 +1439,8 @@ dump("mivExchangeMsgFolder: get URI\n");
 //  attribute AString name;
 	get name()
 	{
-		if(!this._haveParsedURI && !this._name) 
-			this.parseUri(true);
-		if(this._isServer) {
-			return this.server.prettyName;
-		}
+		if(!this._name) 
+			this.parseUri(false);
 		return this._name;
 	},
 
@@ -1497,6 +1493,7 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
 		baseLog.info("get subFolders");
 		if(!this._initialize) {
 			this.server.msgStore.discoverSubFolders(this, true);
+			this._initialize = true;
 		}
 		return exchWebService.commonFunctions
 			.CreateSimpleEnumerator(this._subfolders);

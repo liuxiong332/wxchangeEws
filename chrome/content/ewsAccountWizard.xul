@@ -2,9 +2,7 @@
 
 
 <wizard id="AccountWizard" title="New Account"
-        onwizardcancel="return onCancel();"
-        onwizardfinish="return FinishAccount();"
-        onload="exchangeEws.accountWizard.onAccountWizardLoad();"
+        onwizardfinish="return exchangeEws.accountWizard.finishAccount();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://messenger/content/amUtils.js"/>

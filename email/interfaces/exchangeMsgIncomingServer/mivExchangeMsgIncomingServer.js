@@ -26,6 +26,9 @@ var components = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://exchangeEws/commonFunctions.js");
+
+var baseLog = CommonFunctions.baseLog;
 
 function mivExchangeMsgIncomingServer() {
 
@@ -475,6 +478,7 @@ mivExchangeMsgIncomingServer.prototype = {
 //  attribute nsIMsgFolder rootFolder;
 	get rootFolder()
 	{
+		baseLog.info("get rootFolder");
 		if(!this._rootFolder)
 			this._rootFolder = this.createRootFolder();
 		return this._rootFolder;

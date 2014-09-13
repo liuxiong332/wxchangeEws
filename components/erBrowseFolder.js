@@ -39,13 +39,20 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-Cu.import("resource://exchangecalendar/ecFunctions.js");
+Cu.import("resource://exchangeEws/ecFunctions.js");
 
-Cu.import("resource://exchangecalendar/ecExchangeRequest.js");
-Cu.import("resource://exchangecalendar/soapFunctions.js");
+Cu.import("resource://exchangeEws/ecExchangeRequest.js");
+Cu.import("resource://exchangeEws/soapFunctions.js");
 
 var EXPORTED_SYMBOLS = ["erBrowseFolderRequest"];
 
+/*
+ serverUrl: ews url
+ folderID: the ID of folder  	changeKey: a string that identifies a version of a folder
+ folderBase: folders that can be referenced by name, if the folderID isnot null, 
+ 	the folderBase is omit.
+ 	
+ */
 function erBrowseFolderRequest(aArgument, aCbOk, aCbError)
 {
 	this.mCbOk = aCbOk;
