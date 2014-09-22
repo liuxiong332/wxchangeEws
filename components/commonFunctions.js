@@ -1,11 +1,11 @@
 
-var EXPORTED_SYMBOLS = ["CommonFunctions"];
+var EXPORTED_SYMBOLS = ["commonFunctions"];
 
 Components.utils.import("resource:///modules/gloda/log4moz.js");
 
-CommonFunctions = {};
-CommonFunctions.Log = {
-	//get the configured logger, loggerName is the name of the logger, level 
+commonFunctions = {};
+commonFunctions.Log = {
+	//get the configured logger, loggerName is the name of the logger, level
 	// is the logger level
 	getConfiguredLogger: function(loggerName, level, consoleLevel, dumpLevel) {
 		var logger = Log4Moz.getConfiguredLogger(loggerName, level, consoleLevel, dumpLevel);
@@ -23,16 +23,19 @@ CommonFunctions.Log = {
 
 		function addFileLine(args) {
 			let jsFrame = Components.stack.caller.caller.caller;
-			let str = '';
 			try {
-				str = "\n(in file " + jsFrame.filename + ",function name "
+				var str = "\n(in file " + jsFrame.filename + ",function name "
 					+ jsFrame.name + ",line " + jsFrame.lineNumber + ")";
-			} catch(e) {}	
+			} catch(e) {}
 			args.push(str);
-			return args;	
+			return args;
 		}
+	},
+	getBaseLog: function() {
+		var infoLevel = Log4Moz.Level.Info;
+		return this.getConfiguredLogger('exchange.base', infoLevel, infoLevel,
+			infoLevel);
 	}
 };
 
-CommonFunctions.baseLog = CommonFunctions.Log.getConfiguredLogger("exchange.base", 
-	Log4Moz.Level.Info, Log4Moz.Level.Info, Log4Moz.Level.Info);
+commonFunctions.baseLog = commonFunctions.Log.getBaseLog();

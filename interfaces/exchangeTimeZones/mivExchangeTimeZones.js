@@ -29,7 +29,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("resource://calendar/modules/calProviderUtils.jsm");
 
-Cu.import("resource://exchangecalendar/erGetTimeZones.js");
+Cu.import("resource://exchangeEws/erGetTimeZones.js");
 
 //Cu.import("resource://interfaces/xml2jxon/mivIxml2jxon.js");
 
@@ -41,8 +41,8 @@ function mivExchangeTimeZones() {
 	this.globalFunctions = Cc["@1st-setup.nl/global/functions;1"]
 				.getService(Ci.mivFunctions);
 
-	this.loadBalancer = Cc["@1st-setup.nl/exchange/loadbalancer;1"]  
-	                          .getService(Ci.mivExchangeLoadBalancer); 
+	this.loadBalancer = Cc["@1st-setup.nl/exchange/loadbalancer;1"]
+	                          .getService(Ci.mivExchangeLoadBalancer);
 
 	this.exchangeStatistics = Cc["@1st-setup.nl/exchange/statistics;1"]
 				.getService(Ci.mivExchangeStatistics);
@@ -81,7 +81,7 @@ mivExchangeTimeZones.prototype = {
 	implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
 	// void getInterfaces(out PRUint32 count, [array, size_is(count), retval] out nsIIDPtr array);
-	getInterfaces: function _getInterfaces(count) 
+	getInterfaces: function _getInterfaces(count)
 	{
 		var ifaces = [Ci.mivExchangeTimeZones,
 			Ci.nsIClassInfo,
@@ -105,11 +105,11 @@ mivExchangeTimeZones.prototype = {
 			var self = this;
 			this.loadBalancer.addToQueue({ calendar: aCalendar,
 					 ecRequest:erGetTimeZonesRequest,
-					 arguments: {user: aUser, 
+					 arguments: {user: aUser,
 					 serverUrl: aURL,
 					 serverVersion: version,
 					 actionStart: Date.now() },
-					 cbOk: function(erGetTimeZonesRequest, aTimeZoneDefinitions) { self.getTimeZonesOK(erGetTimeZonesRequest, aTimeZoneDefinitions);}, 
+					 cbOk: function(erGetTimeZonesRequest, aTimeZoneDefinitions) { self.getTimeZonesOK(erGetTimeZonesRequest, aTimeZoneDefinitions);},
 					 cbError: function(erGetTimeZonesRequest, aCode, aMsg) { self.getTimeZonesError(erGetTimeZonesRequest, aCode, aMsg);},
 					 listener: null});
 
@@ -154,7 +154,7 @@ mivExchangeTimeZones.prototype = {
 							tmpScore = tmpScore + 1;
 						}
 					}
-					
+
 					if (tmpScore > finalScore) {
 						finalScore = tmpScore;
 						weHaveAMatch = exchangeTimeZone;
@@ -167,7 +167,7 @@ mivExchangeTimeZones.prototype = {
 
 		return null;
 	},
-	
+
 	getExchangeTimeZoneIdByCalTimeZone: function _getExchangeTimeZoneIdByCalTimeZone(aCalTimeZone, aURL, aIndexDate)
 	{
 
@@ -344,7 +344,7 @@ mivExchangeTimeZones.prototype = {
 		if (!tzcomp) {
 			return {};
 		}
-	
+
 		var dsttz = null;
 		for (var comp = tzcomp.getFirstSubcomponent("DAYLIGHT");
 		     comp;
@@ -363,11 +363,11 @@ mivExchangeTimeZones.prototype = {
 				stdtz = comp;
 			}
 		}
-	
+
 		if (!stdtz) {
 			return {};
 		}
-	
+
 		// Get TZOFFSETTO from standard time.
 		var m = stdtz.getFirstProperty("TZOFFSETTO").value.match(/^([+-]?)(\d\d)(\d\d)$/);
 		var biasOffset = cal.createDuration();
@@ -389,7 +389,7 @@ mivExchangeTimeZones.prototype = {
 				daylightOffset.isNegative = true;
 			}
 		}
-	
+
 		if (daylightOffset) {
 			return { standard: biasOffset.icalString,
 				 daylight: daylightOffset.icalString } ;
@@ -431,18 +431,18 @@ mivExchangeTimeZones.prototype = {
 
 		file.initWithPath(somefile);
 
-		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].  
-				 createInstance(Components.interfaces.nsIFileInputStream);  
-		istream.init(file, -1, -1, 0);  
-		istream.QueryInterface(Components.interfaces.nsILineInputStream);  
-		  
-		// read lines into array  
-		var line = {}, lines = "", hasmore;  
-		do {  
-			hasmore = istream.readLine(line);  
-			lines += line.value;   
-		} while(hasmore);  
-		  
+		var istream = Components.classes["@mozilla.org/network/file-input-stream;1"].
+				 createInstance(Components.interfaces.nsIFileInputStream);
+		istream.init(file, -1, -1, 0);
+		istream.QueryInterface(Components.interfaces.nsILineInputStream);
+
+		// read lines into array
+		var line = {}, lines = "", hasmore;
+		do {
+			hasmore = istream.readLine(line);
+			lines += line.value;
+		} while(hasmore);
+
 		istream.close();
 		var root = xml2json.newJSON();
 		xml2json.parseXML(root, lines);
@@ -462,7 +462,7 @@ function NSGetFactory(cid) {
 		if (!NSGetFactory.mivExchangeTimeZones) {
 			// Load main script from lightning that we need.
 			NSGetFactory.mivExchangeTimeZones = XPCOMUtils.generateNSGetFactory([mivExchangeTimeZones]);
-			
+
 	}
 
 	} catch(e) {
@@ -471,5 +471,5 @@ function NSGetFactory(cid) {
 		throw e;
 	}
 	return NSGetFactory.mivExchangeTimeZones(cid);
-} 
+}
 

@@ -37,26 +37,24 @@ function typeString(o) {
 		return "null";
   //object, array, function, date, regexp, string, number, boolean, error
 	var internalClass = Object.prototype.toString.call(o)
-                                               .match(/\[object\s(\w+)\]/)[1];
+  	.match(/\[object\s(\w+)\]/)[1];
 	return internalClass.toLowerCase();
 }
 
 function isArray(obj) {
-	return (typeString(obj) == "array");
+	return (typeString(obj) === "array");
 }
 
-function isInList(inArray, inStr)
-{
+function isInList(inArray, inStr) {
 	return (inArray[inStr] !== undefined);
 }
 
-const specialChars1 = {	" ": true, 
-			"\n" : true, 
-			"\r" : true, 
+const specialChars1 = {	" ": true,
+			"\n" : true,
+			"\r" : true,
 			"\t" : true };
 
-function findCharacter(aStr, aSP, aChar)
-{
+function findCharacter(aStr, aSP, aChar) {
 	if (!aStr) return -1;
 
 	var pos = aSP;
@@ -72,8 +70,7 @@ function findCharacter(aStr, aSP, aChar)
 	return -1;
 }
 
-function findString(aStr, aSP, aNeedle)
-{
+function findString(aStr, aSP, aNeedle) {
 	if (!aStr) return -1;
 
 	var pos = aSP;
@@ -90,8 +87,7 @@ function findString(aStr, aSP, aNeedle)
 	return -1;
 }
 
-function splitOnCharacter(aStr, aSP, aSplitCharacter)
-{
+function splitOnCharacter(aStr, aSP, aSplitCharacter) {
 	if (!aStr) {
 		return null;
 	}
@@ -122,7 +118,8 @@ function splitOnCharacter(aStr, aSP, aSplitCharacter)
 		if (notQuoteOpen) {
 			if (splitCharIsArray) {
 				for (var index in aSplitCharacter) {
-					if (aStr.substr(tmpPos,aSplitCharacter[index].length) == aSplitCharacter[index]) {
+					if (aStr.substr(tmpPos,aSplitCharacter[index].length) ==
+						aSplitCharacter[index]) {
 						hitSplitCharacter = true;
 						break;
 					}
@@ -152,8 +149,7 @@ function splitOnCharacter(aStr, aSP, aSplitCharacter)
 	}
 }
 
-var replaceFromXML = function _replaceFromXML(str, r1)
-{
+var replaceFromXML = function _replaceFromXML(str, r1) {
 	var result = str;
 	if (r1[0] == "#") {
 		if (r1[1] == "x") {
@@ -177,19 +173,17 @@ var replaceFromXML = function _replaceFromXML(str, r1)
 	return result;
 }
 
-function convertSpecialCharatersFromXML(aStr)
-{
+function convertSpecialCharatersFromXML(aStr) {
 	if (!aStr) return aStr;
 
 	var result = aStr;
 	// Convert special characters
-	result = result.replace(/&(quot|apos|lt|gt|amp|#x[0123456789ancdefABCDEF][0123456789ancdefABCDEF]?[0123456789ancdefABCDEF]?[0123456789ancdefABCDEF]?|#[0123456789][0123456789]?[0123456789]?[0123456789]?);/g, replaceFromXML); 
+	result = result.replace(/&(quot|apos|lt|gt|amp|#x[0123456789ancdefABCDEF][0123456789ancdefABCDEF]?[0123456789ancdefABCDEF]?[0123456789ancdefABCDEF]?|#[0123456789][0123456789]?[0123456789]?[0123456789]?);/g, replaceFromXML);
 
 	return result;
 }
 
-var replaceToXML = function _replaceToXML(str, r1)
-{
+var replaceToXML = function _replaceToXML(str, r1) {
 	var result = str;
 	switch (r1) {
 	case "&": result = "&amp;"; break;
@@ -202,19 +196,17 @@ var replaceToXML = function _replaceToXML(str, r1)
 	return result;
 }
 
-function convertSpecialCharatersToXML(aStr)
-{
+function convertSpecialCharatersToXML(aStr) {
 	if ((aStr === null) || (aStr === undefined)) return aStr;
 
 	var result = aStr.toString();
 	// Convert special characters
-	result = result.replace(/(&|\x22|\x27|<|>)/g, replaceToXML);  
+	result = result.replace(/(&|\x22|\x27|<|>)/g, replaceToXML);
 
-	return result;
+		return result;
 }
 
-function trim(aValue)
-{
+function trim(aValue) {
 	var strLength = aValue.length;
 	var leftPos = 0;
 	while ((leftPos < strLength) && (aValue[leftPos] == " ")) {
@@ -250,9 +242,11 @@ const xguid = "d7165a60-7d64-42b2-ac48-6ccfc0962abb";
 const tsep = ":";
 
 mivIxml2jxon.prototype = {
-	QueryInterface: XPCOMUtils.generateQI([Ci.mivIxml2jxon,Ci.nsIClassInfo,Ci.nsISupports]),
+	QueryInterface: XPCOMUtils.generateQI([Ci.mivIxml2jxon,
+		Ci.nsIClassInfo,Ci.nsISupports]),
 	getHelperForLanguage: function _getHelperForLanguage(language) {return null;},
-	getInterfaces: function _getInterfaces(c){c.value = 3;return [Ci.mivIxml2jxon,Ci.nsIClassInfo,Ci.nsISupports];},
+	getInterfaces: function _getInterfaces(c){c.value = 3;
+		return [Ci.mivIxml2jxon,Ci.nsIClassInfo,Ci.nsISupports];},
 	classDescription: "XML2JXON",
 	classID: components.ID("{"+xguid+"}"),
 	contractID: cId,
@@ -294,7 +288,8 @@ mivIxml2jxon.prototype = {
 		this.nameSpaces[index] = nameSpaceMgr.addNameSpace(index, b);
 		for each(var child in this.tags) {child.addNameSpace(index, b);}
 	},
-	setAttribute: function _setAttribute(a, b){this.attr[a] = convertSpecialCharatersToXML(b);},
+	setAttribute: function _setAttribute(a, b){this.attr[a] =
+		convertSpecialCharatersToXML(b);},
 	getAttribute: function _getAttribute(a, b){
 		if (this.attr[a]) {return convertSpecialCharatersFromXML(this.attr[a]);}
 		else {return b;}
@@ -318,7 +313,8 @@ mivIxml2jxon.prototype = {
 		var rt;
 		for (let index in this.tags) {
 			let childTag = this.tags[index];
-			if ((childTag instanceof Ci.mivIxml2jxon) || (childTag instanceof mivIxml2jxon)) {
+			if ((childTag instanceof Ci.mivIxml2jxon) ||
+			 (childTag instanceof mivIxml2jxon)) {
 				ri = childTag.realTagName(index);
 				rt = childTag.realTagName(a);
 				if (ri == rt) {return childTag;}
@@ -345,6 +341,11 @@ mivIxml2jxon.prototype = {
 		if (to) {return to.value;}
 		else {return b;}
 	},
+	getTagIntValue: function(a, b) {
+		var to = this.getTag(a);
+		if(to)	return parseInt(to.value);
+		else { return b; }
+	},
 	getTagValueByXPath: function _getTagValueByXPath(a, b)	{
 		var rs = this.XPath(a);
 		var r = b;
@@ -356,7 +357,9 @@ mivIxml2jxon.prototype = {
 		if (!a.nameSpaces) return;
 		if (!this.nameSpaces) {this.nameSpaces = {};}
 		for (let index in a.nameSpaces) {
-			if (!this.nameSpaces[index]) {this.nameSpaces[index] = a.nameSpaces[index];}
+			if (!this.nameSpaces[index]) {
+				this.nameSpaces[index] = a.nameSpaces[index];
+			}
 		}
 	},
 	addChildTagObject: function _addChildTagObject(a){
@@ -380,7 +383,10 @@ mivIxml2jxon.prototype = {
 		}
 		if (c === false) {c = "false";}
 		if (c === 0) { c = "0";}
-		if ((c !== undefined) && (c !== null) && (c != "")) {var xml = "<"+ns+tsep+a+">"+convertSpecialCharatersToXML(c)+"</"+ns+tsep+a+">"}
+		if ((c !== undefined) && (c !== null) && (c != ""))
+		{
+			var xml = "<"+ns+tsep+a+">"+convertSpecialCharatersToXML(c)+"</"+ns+tsep+a+">"
+		}
 		else {var xml = "<"+ns+tsep+a+"/>"}
 		var r = new mivIxml2jxon(xml,0, this);
 		return r;
@@ -394,19 +400,25 @@ mivIxml2jxon.prototype = {
 		return r;
 	},
 	contentStr: function _contentStr(){
-		if ((this.content) && (this.content[0])) {return this.content[0];} else {return "";}
+		if ((this.content) && (this.content[0])) {return this.content[0];}
+		else {return "";}
 	},
-	get value(){return convertSpecialCharatersFromXML(this.contentStr().toString());},
-	attributesToString: function _attributesToString(){
+	get value() {
+		return convertSpecialCharatersFromXML(this.contentStr().toString());
+	},
+	attributesToString: function _attributesToString() {
 		var r = "";
 		for (let i in this.attr) {r += " "+i + '="'+this.attr[i]+'"';}
 		return r;
 	},
-	nameSpacesToString: function _nameSpacesToString(){
+	nameSpacesToString: function _nameSpacesToString() {
 		var r = "";
 		for (let i in this.nameSpaces) {
-			if (i == "_default_") {r += ' xmlns="'+nameSpaceMgr.getNameSpace(this.nameSpaces[i])+'"';}
-			else {r += " xmlns:"+i+'="'+nameSpaceMgr.getNameSpace(this.nameSpaces[i])+'"';}
+			if (i == "_default_") {
+				r += ' xmlns="'+nameSpaceMgr.getNameSpace(this.nameSpaces[i])+'"';}
+			else {
+				r += " xmlns:"+i+'="'+nameSpaceMgr.getNameSpace(this.nameSpaces[i])+'"';
+			}
 		}
 		return r;
 	},
@@ -425,12 +437,13 @@ mivIxml2jxon.prototype = {
 			else {
 				r += this.tags[index].toString(nss);
 			}
-			
+
 		}
 		if (this.content) {
 			for (let index in this.content) {
 				cc++;
-				if ((typeof this.content[index] === "string") || (this.content[index] instanceof String)) {
+				if ((typeof this.content[index] === "string") ||
+					(this.content[index] instanceof String)) {
 					r += this.content[index];
 				}
 			}
@@ -476,7 +489,8 @@ mivIxml2jxon.prototype = {
 			tmpPath = "/"+tmpPath;
 			break;
 		case "@" : // Find attribute within this element
-			if (this.attr[tmpPath.substr(1)]) {result.push(this.attr[tmpPath.substr(1)]);}
+			if (this.attr[tmpPath.substr(1)]) {
+				result.push(this.attr[tmpPath.substr(1)]);}
 			tmpPath = "";
 			break;
 		case "*" : // Wildcard. Will parse all children.
@@ -488,28 +502,35 @@ mivIxml2jxon.prototype = {
 				else {tmpTagName = this.tags[index].tagName;}
 
 				if (tmpTagName != this.tagName) {
-					if (tmpIsArray) {for (let index2 in this.tags[index]) {result.push(this.tags[index][index2]);}}
+					if (tmpIsArray) {for (let index2 in this.tags[index]) {
+						result.push(this.tags[index][index2]);}}
 					else {result.push(this.tags[index]);}
 				}
 			}
 			break;
 		case "[" : // Compare/match function
 			var index = splitOnCharacter(tmpPath.substr(1), 0, "]");
-			if (!index) {throw "XPath error: Did not find closing square bracket. tagName:"+this.tagName+", tmpPath:"+tmpPath;}
+			if (!index) {
+				throw "XPath error: Did not find closing square bracket. tagName:"
+				+this.tagName+", tmpPath:"+tmpPath;
+			}
 			tmpPath = tmpPath.substr(index.length+2);
-			index = trim(index); 
+			index = trim(index);
 			if (index != "") {
 				if (ifFunction(index, this)) {result.push(this);}
 				else {return result;}
 			}
-			else {throw "XPath compare error:No Value between square brackets:"+this.tagName+"["+index+"]";}
+			else {throw "XPath compare error:No Value between square brackets:"
+				+this.tagName+"["+index+"]";}
 			break;
 		default:
 			var bracketPos = tmpPath.indexOf("[");
 			var forwardSlashPos = tmpPath.indexOf("/");
 			var splitPos = tmpPath.length;
 			if ((bracketPos < splitPos) && (bracketPos > -1)) {splitPos = bracketPos;}
-			if ((forwardSlashPos < splitPos) && (forwardSlashPos > -1)) {splitPos = forwardSlashPos;}
+			if ((forwardSlashPos < splitPos) && (forwardSlashPos > -1)) {
+				splitPos = forwardSlashPos;
+			}
 			var tmpPath2 = tmpPath.substr(0, splitPos);
 			tmpPath = tmpPath.substr(splitPos);
 			if (tmpPath2 != "") {
@@ -520,7 +541,10 @@ mivIxml2jxon.prototype = {
 		if ((result.length > 0) && (tmpPath != "")) {
 			var finalResult = [];
 			for (let index in result) {
-				if ((typeof result[index] === "string") || (result[index] instanceof String)) {finalResult.push(result[index]);}
+				if ((typeof result[index] === "string") ||
+					(result[index] instanceof String)) {
+					finalResult.push(result[index]);
+			}
 				else {
 					if (isArray(result[index])) {
 						for (let index2 in result[index]) {
@@ -562,7 +586,8 @@ mivIxml2jxon.prototype = {
 				result = finalResult;
 			}
 		}
-		if ((tmpPath != "") && (tmpPath.substr(0,2) == "//") && (this.tags[allTag]) && (this.tagName == this.tags[allTag].tagName)) {
+		if ((tmpPath != "") && (tmpPath.substr(0,2) == "//") && (this.tags[allTag])
+			&& (this.tagName == this.tags[allTag].tagName)) {
 			tmpPath = tmpPath.substr(1);
 			if ((tmpPath != "") && (tmpPath.substr(0,2) != "//")) {
 				var finalResult = [];
@@ -581,11 +606,11 @@ mivIxml2jxon.prototype = {
 	},
 	get lastPos(){return this._lastPos;},
 	set lastPos(aValue){this._lastPos = aValue;},
-	processXMLString: function _processXMLString(aStr, aSP, aParent){processXMLStringEXT(aStr, aSP, aParent, this);},
+	processXMLString: function _processXMLString(aStr, aSP, aParent) {
+		processXMLStringEXT(aStr, aSP, aParent, this);},
 }
 
-function checkClosingElement(aStr, aPos, aXMLObject, aParent)
-{
+function checkClosingElement(aStr, aPos, aXMLObject, aParent) {
 	var strLength = aStr.length;
 	var tmpStartPos = aPos;
 	if (aPos < strLength) {
@@ -599,7 +624,8 @@ function checkClosingElement(aStr, aPos, aXMLObject, aParent)
 			}
 			else {var nameSpace = "_default_";}
 
-			if ((aParent) && (closingTag == aParent.tagName) && (nameSpace == aParent.nameSpace)) {
+			if ((aParent) && (closingTag == aParent.tagName) &&
+				(nameSpace == aParent.nameSpace)) {
 				aXMLObject.lastPos = tmpPos;
 				aXMLObject.closed = true;
 				return true;
@@ -611,8 +637,7 @@ function checkClosingElement(aStr, aPos, aXMLObject, aParent)
 	else {throw Ci.mivIxml2jxon.ERR_INVALID_TAG;}
 }
 
-function hasXMLHeader(aStr, aSP)
-{
+function hasXMLHeader(aStr, aSP) {
 	if (!aStr) return 0;
 
 	var pos = findCharacter(aStr, aSP, "<");
@@ -627,7 +652,7 @@ function hasXMLHeader(aStr, aSP)
 				var tmpPos = findString(aStr, pos, "?>");
 				if (tmpPos == -1) {throw Ci.mivIxml2jxon.ERR_INVALID_SPECIAL_TAG;}
 				else {
-					return (tmpPos+2);						
+					return (tmpPos+2);
 				}
 			}
 			else {throw Ci.mivIxml2jxon.ERR_MISSING_SPECIAL_TAG;}
@@ -636,8 +661,7 @@ function hasXMLHeader(aStr, aSP)
 	return 0;
 }
 
-function processXMLStringEXT(aStr, aSP, aParent, aXMLObject)
-{
+function processXMLStringEXT(aStr, aSP, aParent, aXMLObject) {
 	if (!aStr) return;
 try{
 	var tmpSP = aSP;
@@ -669,7 +693,7 @@ try{
 					var tmpStart = aXMLObject.startPos + 1;
 					let tmpTagName = "";
 					tc = aStr[tmpStart];
-					while ((tmpStart < strLength) && (tc != ">") && 
+					while ((tmpStart < strLength) && (tc != ">") &&
 						(tc != "/") && (!(isInList(specialChars1,tc)))) {
 						tmpTagName = tmpTagName + tc;
 						tmpStart++;
@@ -694,10 +718,12 @@ try{
 							var quoteOpen = false;
 							var seenAttributeSeparator = false;
 							var quoteChar = "";
-							while ((tmpStart < strLength) && 
+							while ((tmpStart < strLength) &&
 								(((tc != ">") && (tc != "/")) || (quoteOpen)) ) {
 								attribute = attribute + tc;
-								if ((!seenAttributeSeparator) && (tc == "=") && (!quoteOpen)){seenAttributeSeparator = true;}
+								if ((!seenAttributeSeparator) && (tc == "=") && (!quoteOpen)) {
+									seenAttributeSeparator = true;
+								}
 								else {if (seenAttributeSeparator) {
 										if ((tc == '"') || (tc == "'")) {
 											if ((!quoteOpen) || ((quoteOpen) && (quoteChar == tc))) {
@@ -709,7 +735,8 @@ try{
 								}
 								tmpStart++;
 								tc = aStr[tmpStart];
-								if ((seenAttributeSeparator) && (tmpStart < strLength) && (isInList(specialChars1,tc)) && (!quoteOpen)) {
+								if ((seenAttributeSeparator) && (tmpStart < strLength) &&
+									(isInList(specialChars1,tc)) && (!quoteOpen)) {
 									aXMLObject.explodeAttribute(attribute);
 									attribute = "";
 									seenAttributeSeparator = false;
@@ -717,7 +744,8 @@ try{
 									tc = aStr[tmpStart];
 								}
 							}
-							if ((seenAttributeSeparator) && (!quoteOpen) && (tmpStart < strLength) && (attribute.length > 0)) {
+							if ((seenAttributeSeparator) && (!quoteOpen) &&
+								(tmpStart < strLength) && (attribute.length > 0)) {
 								aXMLObject.explodeAttribute(attribute);
 								seenAttributeSeparator = false;
 								attribute = "";
@@ -727,10 +755,14 @@ try{
 								aXMLObject.lastPos = tmpStart+1;
 								return;
 							}
-							else {if (!((tmpStart < strLength) && (tc == ">"))) {throw Ci.mivIxml2jxon.ERR_WRONG_CLOSING_TAG;}}
+							else {if (!((tmpStart < strLength) && (tc == ">"))) {
+								throw Ci.mivIxml2jxon.ERR_WRONG_CLOSING_TAG;
+							}}
 
 						}
-						else {if (!((tmpStart < strLength) && (tc == ">"))) {throw Ci.mivIxml2jxon.ERR_WRONG_CLOSING_TAG;}}
+						else {if (!((tmpStart < strLength) && (tc == ">"))) {
+							throw Ci.mivIxml2jxon.ERR_WRONG_CLOSING_TAG;
+						}}
 					}
 					var tmpChild = null;
 					while (((!tmpChild) || (!tmpChild.closed)) && (tmpPos)) {
@@ -739,7 +771,7 @@ try{
 
 						if ((tmpChild) && (!tmpChild.closed)) {
 							if (aStr.substr(tmpPos+1, 2) == "</") {
-								checkClosingElement(aStr, tmpPos+3, tmpChild, aXMLObject);									
+								checkClosingElement(aStr, tmpPos+3, tmpChild, aXMLObject);
 								tmpPos = tmpChild.lastPos;
 							}
 						}
@@ -753,7 +785,7 @@ try{
 		}
 	}
 	else {
-//dump("nothing left.\n");
+		//dump("nothing left.\n");
 		if (aParent) {
 			aParent.addToContent(aStr);
 		}
@@ -795,11 +827,13 @@ function ifFunction(aCondition, aXMLObject){
 				weHaveSubCondition = true;
 			}
 			else {
-				throw "XPath error: Did not find closing round bracket '"+aXMLObject.tagName+"' for condition:"+aCondition;
+				throw "XPath error: Did not find closing round bracket '"+
+					aXMLObject.tagName+"' for condition:"+aCondition;
 			}
 		}
 
-		var splitPart = splitOnCharacter(tmpCondition.toLowerCase(), startPos, [" and ", " or "]);
+		var splitPart = splitOnCharacter(tmpCondition.toLowerCase(), startPos,
+			[" and ", " or "]);
 		var operator = null;
 		var comparison = null;
 		if (splitPart) {
@@ -820,10 +854,12 @@ function ifFunction(aCondition, aXMLObject){
 			tmpCondition = "";
 		}
 		if (weHaveSubCondition) {
-			compareList.push( { left: subCondition, right: "", operator: operator, comparison: comparison, subCondition: subCondition} );
+			compareList.push( { left: subCondition, right: "", operator: operator,
+				comparison: comparison, subCondition: subCondition} );
 		}
 		else {
-			var splitPart2 = splitOnCharacter(splitPart, 0, ["!=", "<=", ">=", "<", "=", ">"]);
+			var splitPart2 = splitOnCharacter(splitPart, 0,
+				["!=", "<=", ">=", "<", "=", ">"]);
 			if (splitPart2) {
 				// Get comparison type
 				var smallerThen = false;
@@ -832,14 +868,23 @@ function ifFunction(aCondition, aXMLObject){
 				var splitPos2 = splitPart2.length;
 				switch (splitPart[splitPos2]) {
 					case "!":comparison = "!=";break;
-					case "<":comparison = "<";if (splitPart[splitPos2+1] == "=") comparison = "<=";break;
+					case "<":comparison = "<";if (splitPart[splitPos2+1] == "=")
+						comparison = "<=";break;
 					case "=":comparison = "=";break;
-					case ">":comparison = ">";if (splitPart[splitPos2+1] == "=") comparison = ">=";break;
+					case ">":comparison = ">";if (splitPart[splitPos2+1] == "=")
+						comparison = ">=";break;
 				}
-				compareList.push( { left: trim(splitPart2), right: trim(splitPart.substr(splitPart2.length+comparison.length)), operator: operator, comparison: comparison, subCondition: subCondition} );
+				compareList.push( { left: trim(splitPart2),
+					right: trim(splitPart.substr(splitPart2.length+comparison.length)),
+					operator: operator,
+					comparison: comparison,
+					subCondition: subCondition
+				} );
 			}
 			else {
-				compareList.push( { left: trim(splitPart), right: "", operator: operator, comparison: comparison, subCondition: subCondition} );
+				compareList.push( { left: trim(splitPart), right: "",
+					operator: operator, comparison: comparison,
+					subCondition: subCondition} );
 			}
 		}
 	}
@@ -847,10 +892,12 @@ function ifFunction(aCondition, aXMLObject){
 	var lastOperator = null;
 	for (let index in compareList) {
 		var tmpResult = false;
-		if (compareList[index].subCondition) {tmpResult = ifFunction(compareList[index].left, aXMLObject);}
+		if (compareList[index].subCondition) {tmpResult =
+			ifFunction(compareList[index].left, aXMLObject);}
 		else {
 			let tmpLeft = convertComparisonPart(compareList[index].left, aXMLObject);
-			let tmpRight = convertComparisonPart(compareList[index].right, aXMLObject);
+			let tmpRight =
+			convertComparisonPart(compareList[index].right, aXMLObject);
 			if (tmpLeft.length > 0) {
 				if (compareList[index].comparison) {
 					// Filter out ony the valid ones.
@@ -858,7 +905,9 @@ function ifFunction(aCondition, aXMLObject){
 						var x = 0;
 						tmpResult = false;
 						while ((x < tmpLeft.length) && (!tmpResult)) {
-							if ((typeof tmpLeft[x] === "string") || (tmpLeft[x] instanceof String) || (typeof tmpLeft[x] === "number")) {
+							if ((typeof tmpLeft[x] === "string") ||
+								(tmpLeft[x] instanceof String) ||
+								 (typeof tmpLeft[x] === "number")) {
 								var evalConditionLeft = tmpLeft[x].toString();
 							}
 							else {
@@ -866,17 +915,25 @@ function ifFunction(aCondition, aXMLObject){
 							}
 							var y = 0;
 							while ((y < tmpRight.length) && (!tmpResult)) {
-								if ((typeof tmpRight[y] === "string") || (tmpRight[y] instanceof String) || (typeof tmpRight[y] === "number")) {
+								if ((typeof tmpRight[y] === "string") ||
+									(tmpRight[y] instanceof String) ||
+									(typeof tmpRight[y] === "number")) {
 									var evalConditionRight = tmpRight[y].toString();
 								}
 								else {var evalConditionRight = tmpRight[y].value.toString();}
 								switch (compareList[index].comparison) {
-								case "!=":tmpResult = (evalConditionLeft != evalConditionRight);break;
-								case "<=":tmpResult = (evalConditionLeft <= evalConditionRight);break;
-								case ">=":tmpResult = (evalConditionLeft >= evalConditionRight);break;
-								case "<":tmpResult = (evalConditionLeft < evalConditionRight);break;
-								case "=":tmpResult = (evalConditionLeft==evalConditionRight);break;
-								case ">":tmpResult = (evalConditionLeft > evalConditionRight);break;
+								case "!=":
+									tmpResult = (evalConditionLeft != evalConditionRight);break;
+								case "<=":
+									tmpResult = (evalConditionLeft <= evalConditionRight);break;
+								case ">=":
+									tmpResult = (evalConditionLeft >= evalConditionRight);break;
+								case "<":
+									tmpResult = (evalConditionLeft < evalConditionRight);break;
+								case "=":
+									tmpResult = (evalConditionLeft==evalConditionRight);break;
+								case ">":
+									tmpResult = (evalConditionLeft > evalConditionRight);break;
 								}
 								y++;
 							}
@@ -896,8 +953,12 @@ function ifFunction(aCondition, aXMLObject){
 		case null:totalResult = tmpResult;break;
 		}
 		if (compareList[index].operator) {
-			if ((compareList[index].operator == "and") && (!totalResult)) {return false;}
-			if ((compareList[index].operator == "or") && (totalResult)) {return true;}
+			if ((compareList[index].operator == "and") && (!totalResult)) {
+				return false;
+			}
+			if ((compareList[index].operator == "or") && (totalResult)) {
+				return true;
+			}
 		}
 		lastOperator = compareList[index].operator;
 	}
@@ -910,7 +971,7 @@ function NSGetFactory(cid) {
 		if (!NSGetFactory.xml2json) {
 			// Load main script from lightning that we need.
 			NSGetFactory.xml2json = XPCOMUtils.generateNSGetFactory([mivIxml2jxon]);
-			
+
 	}
 
 	} catch(e) {
@@ -920,5 +981,5 @@ function NSGetFactory(cid) {
 	}
 
 	return NSGetFactory.xml2json(cid);
-} 
+}
 

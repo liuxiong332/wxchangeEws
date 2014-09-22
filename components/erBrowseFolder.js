@@ -14,10 +14,14 @@
  * -- Exchange 2007/2010 Calendar and Tasks Provider.
  * -- For Thunderbird with the Lightning add-on.
  *
- * This work is a combination of the Storage calendar, part of the default Lightning add-on, and 
- * the "Exchange Data Provider for Lightning" add-on currently, october 2011, maintained by Simon Schubert.
- * Primarily made because the "Exchange Data Provider for Lightning" add-on is a continuation 
- * of old code and this one is build up from the ground. It still uses some parts from the 
+ * This work is a combination of the Storage calendar, part of the default
+ * Lightning add-on, and
+ * the "Exchange Data Provider for Lightning" add-on currently, october 2011,
+ * maintained by Simon Schubert.
+ * Primarily made because the "Exchange Data Provider for Lightning" add-on
+ * is a continuation
+ * of old code and this one is build up from the ground. It still uses some
+ * parts from the
  * "Exchange Data Provider for Lightning" project.
  *
  * Author: Michel Verbraak (info@1st-setup.nl)
@@ -25,8 +29,8 @@
  * email: exchangecalendar@extensions.1st-setup.nl
  *
  *
- * This code uses parts of the Microsoft Exchange Calendar Provider code on which the
- * "Exchange Data Provider for Lightning" was based.
+ * This code uses parts of the Microsoft Exchange Calendar Provider code on
+ * which the "Exchange Data Provider for Lightning" was based.
  * The Initial Developer of the Microsoft Exchange Calendar Provider Code is
  *   Andrea Bittau <a.bittau@cs.ucl.ac.uk>, University College London
  * Portions created by the Initial Developer are Copyright (C) 2009
@@ -47,11 +51,13 @@ Cu.import("resource://exchangeEws/soapFunctions.js");
 var EXPORTED_SYMBOLS = ["erBrowseFolderRequest"];
 
 /*
+ the aArgument can be the below list
  serverUrl: ews url
- folderID: the ID of folder  	changeKey: a string that identifies a version of a folder
- folderBase: folders that can be referenced by name, if the folderID isnot null, 
- 	the folderBase is omit.
- 	
+ folderID: the ID of folder
+ changeKey: a string that identifies a version of a folder
+ folderBase: folders that can  be referenced by name,
+ 		if the folderID isnot null, the folderBase is omit.
+ 	mailbox: SMTP address, optional
  */
 function erBrowseFolderRequest(aArgument, aCbOk, aCbError)
 {
@@ -60,13 +66,13 @@ function erBrowseFolderRequest(aArgument, aCbOk, aCbError)
 
 	var self = this;
 
-	this.parent = new ExchangeRequest(aArgument, 
+	this.parent = new ExchangeRequest(aArgument,
 		function(aExchangeRequest, aResp) { self.onSendOk(aExchangeRequest, aResp);},
 		function(aExchangeRequest, aCode, aMsg) { self.onSendError(aExchangeRequest, aCode, aMsg);},
 		null);
 
 	this.argument = aArgument;
-	
+
 	this.serverUrl = aArgument.serverUrl;
 	this.folderID = aArgument.folderID;
 	this.folderBase = aArgument.folderBase;
@@ -80,12 +86,13 @@ erBrowseFolderRequest.prototype = {
 
 	execute: function _execute()
 	{
-//		exchWebService.commonFunctions.LOG("erBrowseFolderRequest.execute\n");
-
-		var req = exchWebService.commonFunctions.xmlToJxon('<nsMessages:FindFolder xmlns:nsMessages="'+nsMessagesStr+'" xmlns:nsTypes="'+nsTypesStr+'"/>');
+		var req = exchWebService.commonFunctions.xmlToJxon(
+			'<nsMessages:FindFolder xmlns:nsMessages="'+nsMessagesStr+
+			'" xmlns:nsTypes="'+nsTypesStr+'"/>');
 		req.setAttribute("Traversal", "Shallow");
 
-		req.addChildTag("FolderShape", "nsMessages", null).addChildTag("BaseShape", "nsTypes", "AllProperties"); 
+		req.addChildTag("FolderShape", "nsMessages", null)
+			.addChildTag("BaseShape", "nsTypes", "AllProperties");
 
 		var parentFolder = makeParentFolderIds2("ParentFolderIds", this.argument);
 		req.addChildTagObject(parentFolder);
@@ -93,16 +100,18 @@ erBrowseFolderRequest.prototype = {
 
 		this.parent.xml2jxon = true;
 
-		exchWebService.commonFunctions.LOG("erBrowseFolderRequest.execute:"+String(this.parent.makeSoapMessage(req)));
+		exchWebService.commonFunctions.LOG("erBrowseFolderRequest.execute:"+
+			String(this.parent.makeSoapMessage(req)));
 
 		//exchWebService.commonFunctions.LOG("erBrowseFolderRequest.execute:"+String(this.parent.makeSoapMessage(req)));
-                this.parent.sendRequest(this.parent.makeSoapMessage(req), this.serverUrl);
+   	this.parent.sendRequest(this.parent.makeSoapMessage(req), this.serverUrl);
 		req = null;
 	},
 
 	onSendOk: function _onSendOk(aExchangeRequest, aResp)
 	{
-		exchWebService.commonFunctions.LOG("erBrowseFolderRequest.onSendOk:"+String(aResp));
+		exchWebService.commonFunctions.LOG("erBrowseFolderRequest.onSendOk:"+
+			String(aResp));
 		// Get FolderID and ChangeKey
 		var aContinue = true;
 		var aError = false;
@@ -111,31 +120,39 @@ erBrowseFolderRequest.prototype = {
 		var aResult = undefined;
 		var childFolders = [];
 
-		var rm = aResp.XPath("/s:Envelope/s:Body/m:FindFolderResponse/m:ResponseMessages/m:FindFolderResponseMessage[@ResponseClass='Success' and m:ResponseCode='NoError']");
+		var rm = aResp.XPath("/s:Envelope/s:Body/m:FindFolderResponse/"
+			+"m:ResponseMessages/m:FindFolderResponseMessage" +
+			"[@ResponseClass='Success' and m:ResponseCode='NoError']");
 
 		if (rm.length > 0) {
 			var rootFolder = rm[0].getTag("m:RootFolder");
 			if (rootFolder) {
 				if (rootFolder.getAttribute("IncludesLastItemInRange") == "true") {
-					// Process results.
+				 	// Process results.
 					var folders = rootFolder.XPath("/t:Folders/*");
-					exchWebService.commonFunctions.LOG("Found '"+folders.length+"' folders.");
+					exchWebService.commonFunctions.LOG("Found '"+folders.length+
+						"' folders.");
 					for (var index in folders) {
-						exchWebService.commonFunctions.LOG("Adding folder:"+folders[index].getTagValue("t:DisplayName"));
+						exchWebService.commonFunctions.LOG("Adding folder:"+
+							folders[index].getTagValue("t:DisplayName"));
 						var tmpFolderClass = folders[index].getTagValue("t:FolderClass", "");
-						childFolders.push({ user: this.argument.user, 
-									mailbox: this.argument.mailbox,
-									folderBase: this.argument.folderBase,
-									serverUrl: this.argument.serverUrl,
-									folderID: folders[index].getAttributeByTag("t:FolderId", "Id"),
-									changeKey: folders[index].getAttributeByTag("t:FolderId", "ChangeKey"),
-									foldername: folders[index].getTagValue("t:DisplayName", ""), 
-									isContainer: (folders[index].getTagValue("t:ChildFolderCount", 0) > 0),
-									isContainerOpen : false,
-									isContainerEmpty: (folders[index].getTagValue("t:ChildFolderCount", 0) == 0),
-									level: this.argument.level+1,
-									children: [],
-									folderClass: tmpFolderClass });
+						let curFolder = folders[index];
+						childFolders.push({ user: this.argument.user,
+							mailbox: this.argument.mailbox,
+							folderBase: this.argument.folderBase,
+							serverUrl: this.argument.serverUrl,
+							folderID: folders[index].getAttributeByTag("t:FolderId", "Id"),
+							changeKey: folders[index].getAttributeByTag("t:FolderId", "ChangeKey"),
+							foldername: folders[index].getTagValue("t:DisplayName", ""),
+							totalCount: curFolder.getTagIntValue("t:TotalCount", 0),
+							childFolderCount: curFolder.getTagIntValue("t:ChildFolderCount", 0),
+							unreadCount: curFolder.getTagIntValue("t:UnreadCount", 0),
+							isContainer: (folders[index].getTagValue("t:ChildFolderCount", 0) > 0),
+							isContainerOpen : false,
+							isContainerEmpty: (folders[index].getTagValue("t:ChildFolderCount", 0) == 0),
+							level: this.argument.level+1,
+							children: [],
+							folderClass: tmpFolderClass });
 					}
 					folders = null;
 				}

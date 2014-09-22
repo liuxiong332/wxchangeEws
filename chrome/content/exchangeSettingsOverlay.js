@@ -14,10 +14,10 @@
  * -- Exchange 2007/2010 Calendar and Tasks Provider.
  * -- For Thunderbird with the Lightning add-on.
  *
- * This work is a combination of the Storage calendar, part of the default Lightning add-on, and 
+ * This work is a combination of the Storage calendar, part of the default Lightning add-on, and
  * the "Exchange Data Provider for Lightning" add-on currently, october 2011, maintained by Simon Schubert.
- * Primarily made because the "Exchange Data Provider for Lightning" add-on is a continuation 
- * of old code and this one is build up from the ground. It still uses some parts from the 
+ * Primarily made because the "Exchange Data Provider for Lightning" add-on is a continuation
+ * of old code and this one is build up from the ground. It still uses some parts from the
  * "Exchange Data Provider for Lightning" project.
  *
  * Author: Michel Verbraak (info@1st-setup.nl)
@@ -168,7 +168,7 @@ exchSettingsOverlay.prototype = {
 
 			this._document.getElementById("exchWebService_server").disabled = false;
 		}
-	
+
 		if (this.gexchWebServicesDetailsChecked) {
 			this._document.getElementById("exchWebService_autodiscovercheckrow").hidden = true;
 			this._document.getElementById("exchWebService_serverandmailboxcheckrow").hidden = true;
@@ -178,7 +178,7 @@ exchSettingsOverlay.prototype = {
 			this._document.getElementById("exchWebService_folderpathrow").hidden = (this.exchWebServicesgFolderIdOfShare != "");
 
 			this._document.getElementById("exchWebServices-SharedFolderID").hidden = (this.exchWebServicesgFolderIdOfShare == "");
-		
+
 		}
 
 		// We determine which to use on the dialog id which is active for the current this._document.
@@ -283,7 +283,7 @@ exchSettingsOverlay.prototype = {
 			}
 			menuItem = menuItem.nextSibling;
 		}
-	
+
 	},
 
 	exchWebServicesDoFolderBaseChanged: function _exchWebServicesDoFolderBaseChanged(aMenuList)
@@ -335,21 +335,21 @@ exchSettingsOverlay.prototype = {
 			var self = this;
 			if ((folderIdOfShare) && (folderIdOfShare != "")) {
 				var tmpObject = new erConvertIDRequest(
-					{user: this.exchWebServicesGetUsername(), 
+					{user: this.exchWebServicesGetUsername(),
 					 mailbox: this.exchWebServicesgMailbox,
 					 serverUrl: this.exchWebServicesgServer,
-					 folderId: folderIdOfShare}, 
-					function(aFolderID, aMailbox) { self.exchWebServicesConvertIDOK(aFolderID, aMailbox);}, 
+					 folderId: folderIdOfShare},
+					function(aFolderID, aMailbox) { self.exchWebServicesConvertIDOK(aFolderID, aMailbox);},
 					function(aExchangeRequest, aCode, aMsg) { self.exchWebServicesConvertIDError(aExchangeRequest, aCode, aMsg);});
 			}
 			else {
 		this.globalFunctions.LOG("exchWebServicesConvertIDOK: user:"+this.exchWebServicesGetUsername()+", mailbox:"+this.exchWebServicesgMailbox);
 				var tmpObject = new erPrimarySMTPCheckRequest(
-					{user: this.exchWebServicesGetUsername(), 
+					{user: this.exchWebServicesGetUsername(),
 					 mailbox: this.exchWebServicesgMailbox,
 					 serverUrl: this.exchWebServicesgServer,
-					 folderBase: "calendar"}, 
-					function(newPrimarySMTP) { self.exchWebServicesCheckServerAndMailboxOK(newPrimarySMTP);}, 
+					 folderBase: "calendar"},
+					function(newPrimarySMTP) { self.exchWebServicesCheckServerAndMailboxOK(newPrimarySMTP);},
 					function(aExchangeRequest, aCode, aMsg) { self.exchWebServicesCheckServerAndMailboxError(aExchangeRequest, aCode, aMsg);});
 			}
 		}
@@ -367,11 +367,11 @@ exchSettingsOverlay.prototype = {
 			this._window.setCursor("wait");
 			var self = this;
 			var tmpObject = new erGetFolderRequest(
-				{user: this.exchWebServicesGetUsername(), 
+				{user: this.exchWebServicesGetUsername(),
 				 mailbox: aMailbox,
 				 serverUrl: this.exchWebServicesgServer,
-				 folderID: aFolderID}, 
-				function(aExchangeRequest, aFolderID, aChangeKey, aFolderClass){ self.exchWebServicesGetFolderOK(aExchangeRequest, aFolderID, aChangeKey, aFolderClass);}, 
+				 folderID: aFolderID},
+				function(aExchangeRequest, aFolderID, aChangeKey, aFolderClass){ self.exchWebServicesGetFolderOK(aExchangeRequest, aFolderID, aChangeKey, aFolderClass);},
 				function(aExchangeRequest, aCode, aMsg){ self.exchWebServicesGetFolderError(aExchangeRequest, aCode, aMsg);});
 		}
 		catch(err) {
@@ -412,7 +412,7 @@ exchSettingsOverlay.prototype = {
 		else {
 			alert(this.globalFunctions.getString("calExchangeCalendar", "ecErrorServerAndMailboxCheck", [aMsg, aCode], "exchangecalendar"));
 		}
-	
+
 		this._document.getElementById("exchWebService_serverandmailboxcheckbutton").disabled = false;
 
 		this.exchWebServicesCheckRequired();
@@ -463,8 +463,8 @@ exchSettingsOverlay.prototype = {
 		case -6:
 			alert(this.globalFunctions.getString("calExchangeCalendar", "ecErrorServerCheckURLInvalid", [this.exchWebServicesgServer], "exchangecalendar"));
 			break;
-		case -7: 
-		case -208:  // folderNotFound. 
+		case -7:
+		case -208:  // folderNotFound.
 			this.checkUserAvailability();
 			return;
 		case -212:
@@ -490,15 +490,15 @@ exchSettingsOverlay.prototype = {
 		end.addDuration(offset);
 
 		var tmpObject = new erGetUserAvailabilityRequest(
-			{user: this.exchWebServicesGetUsername(), 
+			{user: this.exchWebServicesGetUsername(),
 			 mailbox: this.exchWebServicesgMailbox,
 			 serverUrl: this.exchWebServicesgServer,
-			 folderBase: "calendar", 
+			 folderBase: "calendar",
 			 email: this.exchWebServicesgMailbox,
 			 attendeeType: 'Required',
 			 start: cal.toRFC3339(start),
 			 end: cal.toRFC3339(end) },
-			function(erGetUserAvailabilityRequest, aEvents) { self.checkUserAvailabilityOk(erGetUserAvailabilityRequest, aEvents);}, 
+			function(erGetUserAvailabilityRequest, aEvents) { self.checkUserAvailabilityOk(erGetUserAvailabilityRequest, aEvents);},
 			function(erGetUserAvailabilityRequest, aCode, aMsg) { self.checkUserAvailabilityError(erGetUserAvailabilityRequest, aCode, aMsg);});
 
 	},
@@ -528,17 +528,17 @@ exchSettingsOverlay.prototype = {
 	{
 		this._document.getElementById("exchWebService_servercheckbutton").disabled = true;
 
-	
+
 		try {
 			this._window.setCursor("wait");
 			var self = this;
 			var tmpObject = new erGetFolderRequest(
-				{user: this.exchWebServicesGetUsername(), 
+				{user: this.exchWebServicesGetUsername(),
 				 mailbox: "",
 				 folderBase: "publicfoldersroot",
 				 folderPath: "/",
-				 serverUrl: this.exchWebServicesgServer}, 
-				function(folderID, changeKey, folderClass){ self.exchWebServicesCheckServerOK(folderID, changeKey, folderClass);}, 
+				 serverUrl: this.exchWebServicesgServer},
+				function(folderID, changeKey, folderClass){ self.exchWebServicesCheckServerOK(folderID, changeKey, folderClass);},
 				function(aExchangeRequest, aCode, aMsg){ self.exchWebServicesCheckServerError(aExchangeRequest, aCode, aMsg);})
 		}
 		catch(err) {
@@ -596,11 +596,11 @@ exchSettingsOverlay.prototype = {
 		try {
 			this._window.setCursor("wait");
 			this.exchAutoDiscovery2010 = true;  // We first try Autodiscovery for Exchange2010 and higher.
-			var self = this; 
-			var tmpObject = new erAutoDiscoverySOAPRequest( 
-				{user: this.exchWebServicesGetUsername(), 
-				 mailbox: this.exchWebServicesgMailbox}, 
-				 function(ewsUrls, DisplayName, SMTPAddress, redirectAddr){ self.exchWebServicesAutodiscoveryOK(ewsUrls, DisplayName, SMTPAddress, redirectAddr);}, 
+			var self = this;
+			var tmpObject = new erAutoDiscoverySOAPRequest(
+				{user: this.exchWebServicesGetUsername(),
+				 mailbox: this.exchWebServicesgMailbox},
+				 function(ewsUrls, DisplayName, SMTPAddress, redirectAddr){ self.exchWebServicesAutodiscoveryOK(ewsUrls, DisplayName, SMTPAddress, redirectAddr);},
 				 function(aExchangeRequest, aCode, aMsg){ self.exchWebServicesAutodiscoveryError(aExchangeRequest, aCode, aMsg);}, null);
 		}
 		catch(err) {
@@ -632,7 +632,7 @@ exchSettingsOverlay.prototype = {
 				this._window.openDialog("chrome://exchangecalendar/content/selectEWSUrl.xul",
 					"selectfrommultipleews",
 					"chrome,titlebar,toolbar,centerscreen,dialog,modal=yes,resizable=no",
-					ewsUrls, selectedEWSUrl); 
+					ewsUrls, selectedEWSUrl);
 
 				if ((!selectedEWSUrl.value) || (selectedEWSUrl.value == "")) {
 					this.globalFunctions.LOG("  ++++ Selection canceled by user");
@@ -655,9 +655,9 @@ exchSettingsOverlay.prototype = {
 				this.exchWebServicesgMailbox = SMTPAddress;
 				this._document.getElementById("exchWebService_mailbox").value = SMTPAddress;
 			}
-	
+
 			this.exchWebServicesgServer = selectedEWSUrl.value;
-			this._document.getElementById("exchWebService_server").value = selectedEWSUrl.value; 
+			this._document.getElementById("exchWebService_server").value = selectedEWSUrl.value;
 
 			//this.gexchWebServicesDetailsChecked = true;
 			this._document.getElementById("exchWebService_autodiscovercheckbutton").disabled = false;
@@ -686,10 +686,10 @@ exchSettingsOverlay.prototype = {
 
 			try {
 				var self = this;
-				var tmpObject = new erAutoDiscoverRequest( 
-					{user: this.exchWebServicesGetUsername(), 
-					 mailbox: this.exchWebServicesgMailbox}, 
-					 function(ewsUrls, DisplayName, SMTPAddress, redirectAddr){ self.exchWebServicesAutodiscoveryOK(ewsUrls, DisplayName, SMTPAddress, redirectAddr);}, 
+				var tmpObject = new erAutoDiscoverRequest(
+					{user: this.exchWebServicesGetUsername(),
+					 mailbox: this.exchWebServicesgMailbox},
+					 function(ewsUrls, DisplayName, SMTPAddress, redirectAddr){ self.exchWebServicesAutodiscoveryOK(ewsUrls, DisplayName, SMTPAddress, redirectAddr);},
 					 function(aExchangeRequest, aCode, aMsg){ self.exchWebServicesAutodiscoveryError(aExchangeRequest, aCode, aMsg);}, null);
 				return;
 			}
@@ -806,18 +806,18 @@ exchSettingsOverlay.prototype = {
 	exchWebServicesDoFolderBrowse: function _exchWebServicesDoFolderBrowse()
 	{
 		var input = { answer: "",
-				parentFolder: {user: this.exchWebServicesGetUsername(), 
+				parentFolder: {user: this.exchWebServicesGetUsername(),
 						mailbox: this.exchWebServicesgMailbox,
 						folderBase: this.exchWebServicesgFolderBase,
 						serverUrl: this.exchWebServicesgServer,
 						folderID: null,
-						changeKey: null} 
+						changeKey: null}
 				};
 
 		this._window.openDialog("chrome://exchangecalendar/content/browseFolder.xul",
 				"browseFolder",
 				"chrome,titlebar,toolbar,centerscreen,dialog,modal=yes,resizable=no",
-				input); 
+				input);
 
 		if (input.answer == "select") {
 			this._document.getElementById("exchWebService_folderpath").value = input.fullPath;
@@ -935,7 +935,7 @@ exchSettingsOverlay.prototype = {
 				folderPath: this.exchWebServicesgFolderPath,
 				folderID: this.exchWebServicesgFolderID,
 				changeKey: this.exchWebServicesgChangeKey,
-				folderIDOfShare: this.exchWebServicesgFolderIdOfShare 
+				folderIDOfShare: this.exchWebServicesgFolderIdOfShare
 			};
 	},
 }

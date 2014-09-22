@@ -14,10 +14,10 @@
  * -- Exchange 2007/2010 Calendar and Tasks Provider.
  * -- For Thunderbird with the Lightning add-on.
  *
- * This work is a combination of the Storage calendar, part of the default Lightning add-on, and 
+ * This work is a combination of the Storage calendar, part of the default Lightning add-on, and
  * the "Exchange Data Provider for Lightning" add-on currently, october 2011, maintained by Simon Schubert.
- * Primarily made because the "Exchange Data Provider for Lightning" add-on is a continuation 
- * of old code and this one is build up from the ground. It still uses some parts from the 
+ * Primarily made because the "Exchange Data Provider for Lightning" add-on is a continuation
+ * of old code and this one is build up from the ground. It still uses some parts from the
  * "Exchange Data Provider for Lightning" project.
  *
  * Author: Michel Verbraak (info@1st-setup.nl)
@@ -40,11 +40,12 @@ var Cu = Components.utils;
 var Cr = Components.results;
 var components = Components;
 
-Cu.import("resource://exchangecalendar/ecExchangeRequest.js");
+Cu.import("resource://exchangeEws/ecExchangeRequest.js");
 //Cu.import("resource://exchangecalendar/ecFunctions.js");
 Cu.import("resource://interfaces/xml2json/xml2json.js");
 
-var EXPORTED_SYMBOLS = ["makeParentFolderIds2", "makeParentFolderIds3", "publicFoldersMap"];
+var EXPORTED_SYMBOLS = ["makeParentFolderIds2", "makeParentFolderIds3",
+	"publicFoldersMap"];
 
 const publicFoldersMap = { "publicfoldersroot" : true };
 
@@ -54,17 +55,20 @@ function makeParentFolderIds2(aParentItem, aArgument)
 	var globalFunctions = Cc["@1st-setup.nl/global/functions;1"]
 			.getService(Ci.mivFunctions);
 
-	var ParentFolderIds = globalFunctions.xmlToJxon('<nsMessages:'+aParentItem+' xmlns:nsMessages="'+nsMessagesStr+'" xmlns:nsTypes="'+nsTypesStr+'"/>');
+	var ParentFolderIds = globalFunctions.xmlToJxon('<nsMessages:'+aParentItem+
+		' xmlns:nsMessages="'+nsMessagesStr+'" xmlns:nsTypes="'+nsTypesStr+'"/>');
 
 	if (! aArgument.folderID) {
-		var DistinguishedFolderId = globalFunctions.xmlToJxon('<nsTypes:DistinguishedFolderId xmlns:nsTypes="'+nsTypesStr+'"/>');
+		var DistinguishedFolderId = globalFunctions.xmlToJxon(
+			'<nsTypes:DistinguishedFolderId xmlns:nsTypes="'+nsTypesStr+'"/>');
 		DistinguishedFolderId.setAttribute("Id", aArgument.folderBase);
 
 		// If the folderBase is a public folder then do not provide mailbox if
 		// available.
 		if (! publicFoldersMap[aArgument.folderBase]) {
 			if (aArgument.mailbox) {
-				DistinguishedFolderId.addChildTag("Mailbox", "nsTypes", null).addChildTag("EmailAddress", "nsTypes", aArgument.mailbox);
+				DistinguishedFolderId.addChildTag("Mailbox", "nsTypes", null)
+					.addChildTag("EmailAddress", "nsTypes", aArgument.mailbox);
 			}
 		}
 		ParentFolderIds.addChildTagObject(DistinguishedFolderId);
@@ -76,7 +80,7 @@ function makeParentFolderIds2(aParentItem, aArgument)
 		if ((aArgument.changeKey) && (aArgument.changeKey != "")) {
 			FolderId.setAttribute("ChangeKey", aArgument.changeKey);
 		}
-		
+
 		ParentFolderIds.addChildTagObject(FolderId);
 		FolderId = null;
 	}
