@@ -25,13 +25,13 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-Cu.import("resource://exchangecalendar/ecExchangeRequest.js");
-Cu.import("resource://exchangecalendar/soapFunctions.js");
-Cu.import("resource://exchangecalendar/ecFunctions.js");
+Cu.import("resource://exchangeEws/ecExchangeRequest.js");
+Cu.import("resource://exchangeEws/soapFunctions.js");
+Cu.import("resource://exchangeEws/ecFunctions.js");
 
-var EXPORTED_SYMBOLS = ["erFindContactsRequest"];
+var EXPORTED_SYMBOLS = ["erFindMessagesRequest"];
 
-function erFindContactsRequest(aArgument, aCbOk, aCbError, aListener)
+function erFindMessagesRequest(aArgument, aCbOk, aCbError, aListener)
 {
 	this.mCbOk = aCbOk;
 	this.mCbError = aCbError;
@@ -55,7 +55,7 @@ function erFindContactsRequest(aArgument, aCbOk, aCbError, aListener)
 	this.execute();
 }
 
-erFindContactsRequest.prototype = {
+erFindMessagesRequest.prototype = {
 
 	execute: function _execute()
 	{
@@ -69,20 +69,14 @@ erFindContactsRequest.prototype = {
 
 		var additionalProperties = itemShape.addChildTag("AdditionalProperties", "nsTypes", null);
 		additionalProperties.addChildTag("FieldURI", "nsTypes", null).setAttribute("FieldURI", "item:Subject");
-		additionalProperties.addChildTag("FieldURI", "nsTypes", null).setAttribute("FieldURI", "folder:DisplayName");
 
-		var restr = exchWebService.commonFunctions.xmlToJxon('<nsMessages:Restriction xmlns:nsMessages="'+nsMessagesStr+'" xmlns:nsTypes="'+nsTypesStr+'"/>');
-		var or = restr.addChildTag("Or", "nsTypes", null);
-		var isEqualTo1 = or.addChildTag("IsEqualTo", "nsTypes", null);
-		isEqualTo1.addChildTag("FieldURI", "nsTypes", null).setAttribute("FieldURI", "item:ItemClass");
-		isEqualTo1.addChildTag("FieldURIOrConstant", "nsTypes", null).addChildTag("Constant", "nsTypes", null).setAttribute("Value", "IPM.Contact");
+		var pageItemView = req.addChildTag('IndexedPageItemView', 'nsMessages', null);
+		pageItemView.setAttribute('MaxEntriesReturned', this.argument.maxReturned);
+		pageItemView.setAttribute('BasePoint', 'Beginning');
+		pageItemView.setAttribute('Offset', '0');
 
-		var isEqualTo2 = or.addChildTag("IsEqualTo", "nsTypes", null);
-		isEqualTo2.addChildTag("FieldURI", "nsTypes", null).setAttribute("FieldURI", "item:ItemClass");
-		isEqualTo2.addChildTag("FieldURIOrConstant", "nsTypes", null).addChildTag("Constant", "nsTypes", null).setAttribute("Value", "IPM.DistList");
-
-		req.addChildTagObject(restr);
-		restr = null;
+		// var sortOrder = req.addChildTag('SortOrder', 'nsMessages', null);
+		// sortOrder.addChildTag('FieldOrder', )
 
 		var parentFolder = makeParentFolderIds2("ParentFolderIds", this.argument);
 		req.addChildTagObject(parentFolder);
@@ -92,7 +86,7 @@ erFindContactsRequest.prototype = {
 
 		//exchWebService.commonFunctions.LOG("erFindContactsRequest.execute:"+String(this.parent.makeSoapMessage(req)));
 
-                this.parent.sendRequest(this.parent.makeSoapMessage(req), this.serverUrl);
+    this.parent.sendRequest(this.parent.makeSoapMessage(req), this.serverUrl);
 		req = null;
 	},
 
@@ -111,8 +105,7 @@ erFindContactsRequest.prototype = {
 
 		if (responseCode == "NoError") {
 
-			var contacts = [];
-			var distlists = [];
+			var messages = [];
 
 			var rootFolder = aResp.XPath("/s:Envelope/s:Body/m:FindItemResponse/m:ResponseMessages/m:FindItemResponseMessage/m:RootFolder");
 			if (rootFolder.length == 0) {
@@ -124,23 +117,17 @@ erFindContactsRequest.prototype = {
 			var totalItemsInView = rootFolder[0].getAttribute("TotalItemsInView", 0);
 			var includesLastItemInRange = rootFolder[0].getAttribute("IncludesLastItemInRange", "true");
 
-			for each (var contact in rootFolder[0].XPath("/t:Items/t:Contact")) {
-				exchWebService.commonFunctions.LOG("erFindContactsRequest.contacts: id:"+contact.getAttributeByTag("t:ItemId", "Id")+", changekey:"+contact.getAttributeByTag("t:ItemId", "ChangeKey"));
-				contacts.push({Id: contact.getAttributeByTag("t:ItemId", "Id"),
-					  ChangeKey: contact.getAttributeByTag("t:ItemId", "ChangeKey"),
-					  name: contact.getTagValue("t:Subject"),
-					  displayName: contact.getTagValue("t:DisplayName")});
+			for each (var msg in rootFolder[0].XPath("/t:Items/t:Message")) {
+				messages.push({
+						Id: msg.getAttributeByTag("t:ItemId", "Id"),
+					  ChangeKey: msg.getAttributeByTag("t:ItemId", "ChangeKey"),
+					  name: msg.getTagValue("t:Subject")
+					});
 			}
 
-			for each (var distlist in rootFolder[0].XPath("/t:Items/t:DistributionList")) {
-				distlists.push({Id: distlist.getAttributeByTag("t:ItemId", "Id"),
-					  ChangeKey: distlist.getAttributeByTag("t:ItemId", "ChangeKey"),
-					  name: distlist.getTagValue("t:Subject"),
-					  displayName: distlist.getTagValue("t:DisplayName")});
-			}
 
 			if (this.mCbOk) {
-				this.mCbOk(this, contacts, distlists);
+				this.mCbOk(this, messages);
 			}
 			this.isRunning = false;
 		}

@@ -1,20 +1,20 @@
 
-QUnit.module('erBrowseFolder test', {
+QUnit.module('erGetFolder test', {
   setup: function() {
     QUnit.Cc = Components.classes;
     QUnit.Ci = Components.interfaces;
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
-    QUnit.Cu.import('resource://exchangeEws/erBrowseFolder.js', QUnit);
+    QUnit.Cu.import('resource://exchangeEws/erGetFolder.js', QUnit);
     QUnit.baseLog = QUnit.commonFunctions.baseLog;
   },
   teardown: function() {
-    delete QUnit.erBrowseFolderRequest;
+    delete QUnit.erGetFolderRequest;
     delete QUnit.commonFunctions;
   }
 });
 
-QUnit.asyncTest('request folder find', function(assert) {
+QUnit.asyncTest('get folder info', function(assert) {
   expect(1);
   var requestConfig = {
     serverUrl: 'https://bjmail.kingsoft.com/EWS/exchange.asmx',
@@ -23,9 +23,9 @@ QUnit.asyncTest('request folder find', function(assert) {
     password: 'abcd.ABCD'
   };
 
-  function requestOK(request, childFolders) {
+  function requestOK(request, folderInfo) {
     assert.ok(true, 'the find folder request ok!');
-    QUnit.baseLog.info(QUnit.dump.parse(childFolders));
+    QUnit.baseLog.info(QUnit.dump.parse(folderInfo));
     QUnit.start();
   }
   function requestError(request, code, msg) {
@@ -33,6 +33,6 @@ QUnit.asyncTest('request folder find', function(assert) {
     assert.ok(false, 'request failed!');
     QUnit.start();
   }
-  var folderRequest = new QUnit.erBrowseFolderRequest(requestConfig,
+  var folderRequest = new QUnit.erGetFolderRequest(requestConfig,
     requestOK, requestError);
 });

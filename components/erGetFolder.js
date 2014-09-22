@@ -14,10 +14,10 @@
  * -- Exchange 2007/2010 Calendar and Tasks Provider.
  * -- For Thunderbird with the Lightning add-on.
  *
- * This work is a combination of the Storage calendar, part of the default Lightning add-on, and 
+ * This work is a combination of the Storage calendar, part of the default Lightning add-on, and
  * the "Exchange Data Provider for Lightning" add-on currently, october 2011, maintained by Simon Schubert.
- * Primarily made because the "Exchange Data Provider for Lightning" add-on is a continuation 
- * of old code and this one is build up from the ground. It still uses some parts from the 
+ * Primarily made because the "Exchange Data Provider for Lightning" add-on is a continuation
+ * of old code and this one is build up from the ground. It still uses some parts from the
  * "Exchange Data Provider for Lightning" project.
  *
  * Author: Michel Verbraak (info@1st-setup.nl)
@@ -39,15 +39,15 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-Cu.import("resource://exchangecalendar/ecFunctions.js");
+Cu.import("resource://exchangeEws/ecFunctions.js");
 
 /*Cu.import("resource://calendar/modules/calUtils.jsm");
 Cu.import("resource://calendar/modules/calAlarmUtils.jsm");
 Cu.import("resource://calendar/modules/calProviderUtils.jsm");
 Cu.import("resource://calendar/modules/calAuthUtils.jsm");*/
 
-Cu.import("resource://exchangecalendar/ecExchangeRequest.js");
-Cu.import("resource://exchangecalendar/soapFunctions.js");
+Cu.import("resource://exchangeEws/ecExchangeRequest.js");
+Cu.import("resource://exchangeEws/soapFunctions.js");
 
 var EXPORTED_SYMBOLS = ["erGetFolderRequest"];
 
@@ -58,14 +58,14 @@ function erGetFolderRequest(aArgument, aCbOk, aCbError, aListener)
 
 	var self = this;
 
-	this.parent = new ExchangeRequest(aArgument, 
+	this.parent = new ExchangeRequest(aArgument,
 		function(aExchangeRequest, aResp) { self.onSendOk(aExchangeRequest, aResp);},
 		function(aExchangeRequest, aCode, aMsg) { self.onSendError(aExchangeRequest, aCode, aMsg);},
 		aListener);
 
 	this.parent.debug = false;
 	this.argument = aArgument;
-	
+
 	this.serverUrl = aArgument.serverUrl;
 	this.folderID = aArgument.folderID;
 	this.folderBase = aArgument.folderBase;
@@ -86,9 +86,12 @@ erGetFolderRequest.prototype = {
 	{
 		//exchWebService.commonFunctions.LOG("erGetFolderRequest.execute 1");
 
-		var req = exchWebService.commonFunctions.xmlToJxon('<nsMessages:GetFolder xmlns:nsMessages="'+nsMessagesStr+'" xmlns:nsTypes="'+nsTypesStr+'"/>');
+		var req = exchWebService.commonFunctions.xmlToJxon(
+			'<nsMessages:GetFolder xmlns:nsMessages="'+nsMessagesStr+
+			'" xmlns:nsTypes="'+nsTypesStr+'"/>');
 
-		req.addChildTag("FolderShape", "nsMessages", null).addChildTag("BaseShape", "nsTypes", "AllProperties");
+		req.addChildTag("FolderShape", "nsMessages", null)
+			.addChildTag("BaseShape", "nsTypes", "AllProperties");
 
 		var parentFolder = makeParentFolderIds2("FolderIds", this.argument);
 		req.addChildTagObject(parentFolder);
@@ -111,19 +114,19 @@ erGetFolderRequest.prototype = {
 		var aCode = 0;
 		var aMsg = "";
 		var aResult = undefined;
-
+		exchWebService.commonFunctions.LOG('response is ' + aResp);
 		var rm = aResp.XPath("/s:Envelope/s:Body/m:GetFolderResponse/m:ResponseMessages/m:GetFolderResponseMessage[@ResponseClass='Success' and m:ResponseCode='NoError']");
-
+		var folderInfo = {};
 		if (rm.length > 0) {
-			var calendarFolder = rm[0].XPath("/m:Folders/t:CalendarFolder");
-			if (calendarFolder.length == 0) {
-				var calendarFolder = rm[0].XPath("/m:Folders/t:TasksFolder");
-			}
-			if (calendarFolder.length > 0) {
-				var folderID = calendarFolder[0].getAttributeByTag("t:FolderId", "Id");
-				var changeKey = calendarFolder[0].getAttributeByTag("t:FolderId", "ChangeKey");
-				var folderClass = calendarFolder[0].getTagValue("t:FolderClass");
-				this.displayName = calendarFolder[0].getTagValue("t:DisplayName");
+			var folderList = rm[0].XPath("/m:Folders/t:Folder");
+			if (folderList.length > 0) {
+				folderInfo.folderID = folderList[0].getAttributeByTag("t:FolderId", "Id");
+				folderInfo.changeKey = folderList[0].getAttributeByTag("t:FolderId", "ChangeKey");
+				folderInfo.folderClass = folderList[0].getTagValue("t:FolderClass");
+				folderInfo.displayName = folderList[0].getTagValue("t:DisplayName");
+				folderInfo.totalCount = folderList[0].getTagValue('t:TotalCount');
+				folderInfo.childFolderCount = folderList[0].getTagValue('t:ChildFolderCount');
+				folderInfo.unreadCount = folderList[0].getTagValue('t:UnreadCount');
 			}
 			else {
 				aMsg = "Did not find any CalendarFolder parts.";
@@ -153,7 +156,7 @@ erGetFolderRequest.prototype = {
 		else {
 			if (this.mCbOk) {
 				this.properties = aResp;
-				this.mCbOk(this, folderID, changeKey, folderClass);
+				this.mCbOk(this, folderInfo);
 			}
 			this.isRunning = false;
 		}
