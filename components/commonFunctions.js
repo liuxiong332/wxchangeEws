@@ -31,10 +31,20 @@ commonFunctions.Log = {
 			return args;
 		}
 	},
+  level: Log4Moz.Level,
+
+  getInfoLevelLogger: function(loggerName) {
+    var infoLevel = Log4Moz.Level.Info;
+    return this.getConfiguredLogger(loggerName, infoLevel, infoLevel,
+      infoLevel);
+  },
+  getErrorLevelLogger: function(loggerName) {
+    var errorLevel = Log4Moz.Level.Error;
+    return this.getConfiguredLogger(loggerName, errorLevel, errorLevel,
+      errorLevel);
+  },
 	getBaseLog: function() {
-		var infoLevel = Log4Moz.Level.Info;
-		return this.getConfiguredLogger('exchange.base', infoLevel, infoLevel,
-			infoLevel);
+		return this.getInfoLevelLogger('exchange.base');
 	}
 };
 

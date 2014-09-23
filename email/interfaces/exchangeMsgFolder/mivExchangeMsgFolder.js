@@ -29,14 +29,16 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://exchangeEws/ecFunctions.js");
 Cu.import("resource://exchangeEws/commonFunctions.js");
 
-var baseLog = CommonFunctions.baseLog;
+Cu.import('resource:///modules/mailServices.js');
+
+var folderLog = commonFunctions.Log.getInfoLevelLogger('exchange-folder');
 
 var EXPORTED_SYMBOLS = ["mivExchangeMsgFolder"];
 
 function mivExchangeMsgFolder() {
 
 	//this.logInfo("mivExchangeMsgFolder: init");
- 	this._uri = null;	 
+ 	this._uri = null;
 	this._baseMessageUri = null;
 	this._database = null;
 	this._name = null;
@@ -50,8 +52,7 @@ function mivExchangeMsgFolder() {
 mivExchangeMsgFolder.EXCHANGE_SCHEMA = "exchange:/";
 mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA = "exchange-message:/";
 mivExchangeMsgFolder.INCOMING_SERVER_TYPE = "exchange";
-mivExchangeMsgFolder.accountManager = Cc["@mozilla.org/messenger/account-manager;1"]
-	.getService(Ci.nsIMsgAccountManager);
+
 mivExchangeMsgFolder.globalFunc = Cc["@1st-setup.nl/global/functions;1"]
 	.createInstance(Ci.mivFunctions);
 
@@ -89,8 +90,7 @@ mivExchangeMsgFolder.prototype = {
 		return null;
 	},
 
-	getInterfaces : function _getInterfaces(count) 
-	{
+	getInterfaces : function _getInterfaces(count) {
 		var ifaces = [Ci.mivExchangeMsgFolder,
 				Ci.nsIRDFResource,
 				Ci.nsIMsgFolder,
@@ -107,9 +107,9 @@ mivExchangeMsgFolder.prototype = {
 
 	Init: function(baseUri) {
 		//register this resource in the RDF service
-		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"]
-  			.getService(Ci.nsIRDFService);
-  		this._uriStr = baseUri;
+		// var rdf = Cc["@mozilla.org/rdf/rdf-service;1"]
+    // 			.getService(Ci.nsIRDFService);
+  	this._uri = baseUri;
   	//	rdf.RegisterResource(this.QueryInterface(Ci.nsIRDFResource), true);
 
 		this._baseMessageUri = generateBaseMessageUri();
@@ -121,7 +121,6 @@ mivExchangeMsgFolder.prototype = {
 				++biasIndex;
 			return mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA + baseUri.slice(biasIndex+1);
 		}
-		
 	},
 
 	get Value() {
@@ -156,8 +155,8 @@ mivExchangeMsgFolder.prototype = {
 	},
 
 	parseUri: function(needServer) {
-
-		var url = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURL);
+		var url = Cc["@mozilla.org/network/standard-url;1"]
+      .createInstance(Ci.nsIURL);
 		url.spec = this._uri;
 		//parse isServer from the uri
 		if(!this._isServerIsValid) {	//if the server has not initialized
@@ -175,15 +174,20 @@ mivExchangeMsgFolder.prototype = {
 			if(parentMsgFolder)
 				this._server = parentMsgFolder.server;
 			if(!this._server) {
-				this._server = 
-					mivExchangeMsgFolder.accountManager.findServerByURI(url, false);
+				this._server = MailServices.accounts
+          .FindServer(url.username, url.host, url.scheme);
+        if(!this._server)
+          folderLog.error('cannot get the server by FindServer, the url is ' +
+            JSON.stringify(url, null, 2));
 			}
 		}
 		//parse the local path from the uri
 		if(!this._path && this._server) {
-			let serverPath = this._server.localPath;
+			let serverPath = this._server.localPath.clone();
 			serverPath.append(url.fileName);
-			this._path = mivExchangeMsgFolder.createLocalFile(serverPath);
+      serverPath.exists() || serverPath.create(serverPath.DIRECTORY_TYPE, 0755);
+			this._path = serverPath;
+      folderLog.info('the file path is ' + serverPath.path);
 		}
 	},
 //  const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -310,7 +314,6 @@ dump("mivExchangeMsgFolder: get canDeleteMessages\n");
 //  readonly attribute boolean canCreateSubfolders;
 	get canCreateSubfolders()
 	{
-dump("mivExchangeMsgFolder: get canCreateSubfolders\n");
 		return true;
 	},
 
@@ -344,7 +347,7 @@ dump("mivExchangeMsgFolder: get rootFolder\n");
 	},
 
   /**
-   * Get the server's list of filters. (Or in the case of news, the 
+   * Get the server's list of filters. (Or in the case of news, the
    * filter list for this newsgroup)
    * This list SHOULD be used for all incoming messages.
    *
@@ -474,10 +477,23 @@ dump("mivExchangeMsgFolder: function createSubfolder\n");
    * @param aFolderName Name of the folder to add.
    * @returns The folder added.
    */
-//  nsIMsgFolder addSubfolder(in AString aFolderName);
-	addSubfolder: function _addSubfolder(aFolderName)
-	{
-dump("mivExchangeMsgFolder: function addSubfolder\n");
+	addSubfolder: function _addSubfolder(aFolderName) {
+    var newFolder = new mivExchangeMsgFolder;
+    var newUri = this._uri;
+    /\\$/.test(newUri) || (newUri += '\\');
+    newFolder.Init( newUri + aFolderName);
+    newFolder.parent = this;
+
+    var folderFlags = Ci.nsMsgFolderFlags.Mail;
+    if(this._server) {
+      switch(aFolderName) {
+        case 'inbox': { folderFlags |= Ci.nsMsgFolderFlags.Inbox; break; }
+        case 'trash': { folderFlags |= Ci.nsMsgFolderFlags.Trash; break; }
+      }
+    }
+    newFolder.flags = folderFlags;
+    this._subfolders.push(newFolder);
+    return newFolder;
 	},
 
   /* this method ensures the storage for the folder exists.
@@ -508,10 +524,10 @@ dump("mivExchangeMsgFolder: function compact\n");
   /**
    * Compact all folders in the account corresponding to this folder/
    * Optionally compact their offline stores as well (imap/news)
-   * 
+   *
    * @param aListener   Notified of completion, can be null.
    * @param aMsgWindow  For progress/status, can be null.
-   * @param aCompactOfflineAlso  This controls whether we compact all 
+   * @param aCompactOfflineAlso  This controls whether we compact all
    *                             offline stores as well.
    */
 //  void compactAll(in nsIUrlListener aListener, in nsIMsgWindow aMsgWindow,
@@ -794,32 +810,31 @@ dump("mivExchangeMsgFolder: function toggleFlag\n");
 
   /**
    * Called to notify the database and/or listeners of a change of flag. The
-   * known flags are defined in nsMsgFolderFlags.h 
+   * known flags are defined in nsMsgFolderFlags.h
    *
    * @note        This doesn't need to be called for normal flag changes via
    *              the *Flag functions on this interface.
    *
    * @param flag  The flag that was changed.
    */
-//  void onFlagChange(in unsigned long flag);
-	onFlagChange: function _onFlagChange(flag)
-	{
-dump("mivExchangeMsgFolder: function onFlagChange\n");
+	onFlagChange: function _onFlagChange(flag) {
+
 	},
+
 
   /**
    * Direct access to the set/get all the flags at once.
    */
 //  attribute unsigned long flags;
-	get flags()
-	{
-dump("mivExchangeMsgFolder: get flags\n");
-		return 0;
+	get flags() {
+		return this._flags;
 	},
 
-	set flags(aValue)
-	{
-dump("mivExchangeMsgFolder: set flags\n");
+	set flags(flags) {
+    if(this._flags === flags) return;
+    var changeFlags = this._flags ^ flags;
+    this._flags = flags;
+    this.onFlagChange(changeFlags);
 	},
 
   /**
@@ -1042,9 +1057,8 @@ dump("mivExchangeMsgFolder: set gettingNewMessages\n");
    * local path of this folder
    */
 //  attribute nsIFile filePath;
-	get filePath()
-	{
-		baseLog("filepath is " + this._path);
+	get filePath() {
+    if(!this._path)  this.parseUri(true);
 		return this._path.clone();
 	},
 
@@ -1439,7 +1453,7 @@ dump("mivExchangeMsgFolder: get URI\n");
 //  attribute AString name;
 	get name()
 	{
-		if(!this._name) 
+		if(!this._name)
 			this.parseUri(false);
 		return this._name;
 	},
@@ -1473,8 +1487,7 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
 		return this._parent;
 	},
 
-	set parent(parent)
-	{
+	set parent(parent) {
 		this._parent = parent;
 		if(parent) {
 			this._isServer = false;
@@ -1483,16 +1496,20 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
 		}
 	},
 
+  createSubFolder: function(folderName) {
+    var msgStore = this.server.msgStore;
+    return msgStore.createFolder(this, folderName);
+  },
   /**
+   * readonly attribute nsISimpleEnumerator subFolders;
    * Returns an enumerator containing a list of nsIMsgFolder items that are
    * subfolders of the instance this is called on.
    */
-//  readonly attribute nsISimpleEnumerator subFolders;
-	get subFolders()
-	{
-		baseLog.info("get subFolders");
+	get subFolders() {
 		if(!this._initialize) {
-			this.server.msgStore.discoverSubFolders(this, true);
+		  //	this.server.msgStore.discoverSubFolders(this, true);
+      this.createSubFolder('Inbox');
+      this.createSubFolder('Trash');
 			this._initialize = true;
 		}
 		return exchWebService.commonFunctions
@@ -1756,10 +1773,10 @@ dump("mivExchangeMsgFolder: function removeKeywordsFromMessages\n");
    *             for an HTML part, this will be "text/html" even though aStripHTMLTags might be true
    */
 //  AUTF8String getMsgTextFromStream(in nsIInputStream aStream, in ACString aCharset,
-//                                   in unsigned long aBytesToRead, in unsigned long aMaxOutputLen, 
+//                                   in unsigned long aBytesToRead, in unsigned long aMaxOutputLen,
 //                                   in boolean aCompressQuotes, in boolean aStripHTMLTags,
 //                                   out ACString aContentType);
-	getMsgTextFromStream: function _getMsgTextFromStream(aStream, aCharset, aBytesToRead, aMaxOutputLen, 
+	getMsgTextFromStream: function _getMsgTextFromStream(aStream, aCharset, aBytesToRead, aMaxOutputLen,
 								aCompressQuotes, aStripHTMLTags, aContentType)
 	{
 dump("mivExchangeMsgFolder: function getMsgTextFromStream\n");
@@ -1832,7 +1849,7 @@ dump("mivExchangeMsgFolder: function andProcessingFlags\n");
    *
    * Note nsIMsgIncomingServer.getCharValue for a server inherits from
    * the preference mail.server.default.(propertyName) as a global value
-   * 
+   *
    * (ex: if propertyName = "IAmAGlobal" and no folder nor server properties
    * are set, then the inherited property will return the preference value
    * mail.server.default.IAmAGlobal)

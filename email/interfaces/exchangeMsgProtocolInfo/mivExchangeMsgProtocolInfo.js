@@ -28,12 +28,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://exchangeEws/commonFunctions.js");
 
-var baseLog = CommonFunctions.baseLog;
+function getProtocolLog() {
+  var Log = commonFunctions.Log;
+  var infoLevel = Log.level.Info;
+  return Log.getConfiguredLogger('exchange-protocolinfo', infoLevel, infoLevel);
+}
+
+var protocolLog = getProtocolLog();
 
 function mivExchangeMsgProtocolInfo() {
-
-	//this.logInfo("mivExchangeMsgProtocolInfo: init");
-
+  this._defLocalPath = null;
 }
 
 var mivExchangeMsgProtocolInfoGUID = "ea4d2e73-b0bc-4b70-9f7d-95dbcb648930";
@@ -54,8 +58,7 @@ mivExchangeMsgProtocolInfo.prototype = {
 	flags : Ci.nsIClassInfo.THREADSAFE,
 	implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
-	getInterfaces : function _getInterfaces(count) 
-	{
+	getInterfaces : function _getInterfaces(count) {
 		var ifaces = [Ci.mivExchangeMsgProtocolInfo,
 				Ci.nsIMsgProtocolInfo,
 				Ci.nsIClassInfo,
@@ -71,10 +74,11 @@ mivExchangeMsgProtocolInfo.prototype = {
 //    attribute nsIFile defaultLocalPath;
 	get defaultLocalPath()
 	{
+    if(this._defLocalPath)  return this._defLocalPath;
 		var file = Cc["@mozilla.org/file/directory_service;1"].
 				getService(Ci.nsIProperties).
 				get("ProfD", Ci.nsIFile);
-		baseLog.info(file.path);
+		protocolLog.info('ProfD directory is '+ file.path);
 		if (!file) return Cr.NS_ERROR_FAILURE;
 
 
@@ -85,6 +89,8 @@ mivExchangeMsgProtocolInfo.prototype = {
 		if(!file.exists()) {
 			file.create(file.DIRECTORY_TYPE, 0775);
 		}
+    protocolLog.info('the exchange directory is ' + file.path);
+    this._defLocalPath = file;
 		return file;
 	},
 
@@ -155,7 +161,7 @@ mivExchangeMsgProtocolInfo.prototype = {
     /* the default port
        This is similar to nsIProtocolHanderl.defaultPort,
        but for architectural reasons, there is a mail-specific interface to this.
-       When the input param isSecure is set to true, for all supported protocols, 
+       When the input param isSecure is set to true, for all supported protocols,
        the secure port value is returned. If isSecure is set to false the default
        port value is returned  */
 //    long getDefaultServerPort(in boolean isSecure);
@@ -165,8 +171,8 @@ mivExchangeMsgProtocolInfo.prototype = {
 	},
 
     /**
-     * An attribute that tell us whether on not we can 
-     * get messages for the given server type 
+     * An attribute that tell us whether on not we can
+     * get messages for the given server type
    * this is poorly named right now.
    * it's really is there an inbox for this type?
    * XXX todo, rename this.
@@ -177,7 +183,7 @@ mivExchangeMsgProtocolInfo.prototype = {
 		return true;
 	},
 
-    /** 
+    /**
    * do messages arrive for this server
    * if they do, we can use our junk controls on it.
    */
@@ -197,7 +203,7 @@ mivExchangeMsgProtocolInfo.prototype = {
 	},
 
     /**
-     * do we need to show compose message link in the AccountCentral page ? 
+     * do we need to show compose message link in the AccountCentral page ?
      */
 //    readonly attribute boolean showComposeMsgLink;
 	get showComposeMsgLink()
