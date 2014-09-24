@@ -252,8 +252,7 @@ dump("mivExchangeMsgFolder: get showDeletedMessages\n");
    * this folder's parent server
    */
 //  readonly attribute nsIMsgIncomingServer server;
-	get server()
-	{
+	get server() {
 		if(!this._server)
 			this.parseUri(true);
 		return this._server;
@@ -263,8 +262,7 @@ dump("mivExchangeMsgFolder: get showDeletedMessages\n");
    * is this folder the "phantom" server folder?
    */
 //  readonly attribute boolean isServer;
-	get isServer()
-	{
+	get isServer() {
 		if(!this._isServerIsValid) {
 			this.parseUri(false);
 		}
@@ -340,10 +338,8 @@ dump("mivExchangeMsgFolder: get canCompact\n");
    * the phantom server folder
    */
 //  readonly attribute nsIMsgFolder rootFolder;
-	get rootFolder()
-	{
-dump("mivExchangeMsgFolder: get rootFolder\n");
-		return true;
+	get rootFolder() {
+		return this.server.rootFolder;
 	},
 
   /**
@@ -461,7 +457,7 @@ dump("mivExchangeMsgFolder: function recursiveDelete\n");
    * @param aFolderName Name of the folder to add.
    * @returns The folder added.
    */
-	addSubfolder: function _addSubfolder(aFolderName) {
+	addSubfolder: function(aFolderName) {
     folderLog.info('addSubfolder folder name is ' + aFolderName);
     var newFolder = new mivExchangeMsgFolder;
     var newUri = this._uri;
@@ -472,8 +468,8 @@ dump("mivExchangeMsgFolder: function recursiveDelete\n");
     var folderFlags = Ci.nsMsgFolderFlags.Mail;
     if(this._server) {
       switch(aFolderName) {
-        case 'inbox': { folderFlags |= Ci.nsMsgFolderFlags.Inbox; break; }
-        case 'trash': { folderFlags |= Ci.nsMsgFolderFlags.Trash; break; }
+        case 'Inbox': { folderFlags |= Ci.nsMsgFolderFlags.Inbox; break; }
+        case 'Trash': { folderFlags |= Ci.nsMsgFolderFlags.Trash; break; }
       }
     }
     newFolder.flags = folderFlags;
@@ -832,20 +828,33 @@ dump("mivExchangeMsgFolder: function toggleFlag\n");
    *                 the specified flags set, or null if there are none.
    */
 	getFolderWithFlags: function(flags) {
-    if(this._flags & flags) return this;
+    folderLog.info('the folder flags is ' + this._flags + ', the flags is ' +
+      flags);
+    if( (this._flags & flags) === flags) return this;
+    var subFolders = this._subfolders;
+    var length = subFolders.length;
+    for(var i = 0; i < length; ++i) {
+      var folder = subFolders[i].getFolderWithFlags(flags);
+      if(folder)  return folder;
+    }
+    return null;
 	},
 
   /**
+   * nsIArray getFoldersWithFlags(in unsigned long flags);
    * Gets the folders that have the specified flag set.
    *
    * @param flags    The flag(s) to check for.
    * @return         An array of folders that have the specified flags set.
    *                 The array may have zero elements.
    */
-//  nsIArray getFoldersWithFlags(in unsigned long flags);
-	getFoldersWithFlags: function _getFoldersWithFlags(flags)
-	{
-dump("mivExchangeMsgFolder: function getFoldersWithFlags\n");
+	getFoldersWithFlags: function(flags) {
+    var folders = [];
+    if( (this._flags & flags) === flags) folders.push(this);
+    this._subfolders.forEach( function(subfolder) {
+      folders.concat(subfolder.getFoldersWithFlags(flags));
+    });
+    return folders;
 	},
 
   /**
@@ -1024,7 +1033,7 @@ dump("mivExchangeMsgFolder: function writeToFolderCache\n");
    */
 	get filePath() {
     if(!this._path)  this.parseUri(true);
-		return this._path.clone();
+		return this._path;
 	},
 
 	set filePath(aValue) {
@@ -1465,6 +1474,10 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
     var msgStore = this.server.msgStore;
     return msgStore.createFolder(this, folderName);
   },
+
+  getSubFolder: function(folderName) {
+    return this.getChildNamed(folderName) || this.createSubFolder(folderName);
+  },
   /**
    * readonly attribute nsISimpleEnumerator subFolders;
    * Returns an enumerator containing a list of nsIMsgFolder items that are
@@ -1472,9 +1485,21 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
    */
 	get subFolders() {
 		if(!this._initialize) {
-		  //	this.server.msgStore.discoverSubFolders(this, true);
-      this.createSubFolder('Inbox');
-      this.createSubFolder('Trash');
+		  this.server.msgStore.discoverSubFolders(this, true);
+
+      var filePath = this.filePath;
+      var FolderFlags = Ci.nsMsgFolderFlags;
+
+      if(filePath.isDirectory()) {
+        this.flags = FolderFlags.Mail |
+          FolderFlags.Directory | FolderFlags.Elided;
+      }
+
+      if(this._isServer) {
+
+      }
+      this.getSubFolder('Inbox');
+      this.getSubFolder('Trash');
 			this._initialize = true;
 		}
 		return exchWebService.commonFunctions
@@ -1532,9 +1557,12 @@ dump("mivExchangeMsgFolder: function containsChildNamed\n");
    * @exception NS_ERROR_FAILURE Thrown if the folder with aName does not exist
    */
 //  nsIMsgFolder getChildNamed(in AString aName);
-	getChildNamed: function _getChildNamed(aName)
-	{
-dump("mivExchangeMsgFolder: function getChildNamed\n");
+	getChildNamed: function _getChildNamed(aName) {
+    var subfolders = this._subfolders;
+    var length = subfolders.length;
+    for(var i = 0; i < length; ++i) {
+      if(subfolders[i].name === aName)  return subfolders[i];
+    }
 	},
 
   /**
