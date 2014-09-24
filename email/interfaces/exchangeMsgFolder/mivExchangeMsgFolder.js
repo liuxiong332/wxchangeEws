@@ -452,22 +452,6 @@ dump("mivExchangeMsgFolder: function recursiveDelete\n");
 	},
 
   /**
-   * Create a subfolder of the current folder with the passed in name.
-   * For IMAP, this will be an async operation and the folder won't exist
-   * until it is created on the server.
-   *
-   * @param folderName name of the folder to create.
-   * @param msgWindow msgWindow to display status feedback in.
-   *
-   * @exception NS_MSG_FOLDER_EXISTS
-   */
-//  void createSubfolder(in AString folderName, in nsIMsgWindow msgWindow);
-	createSubfolder: function _createSubfolder(folderName, msgWindow)
-	{
-dump("mivExchangeMsgFolder: function createSubfolder\n");
-	},
-
-  /**
    * Adds the subfolder with the passed name to the folder hierarchy.
    * This is used internally during folder discovery; It shouldn't be
    * used to create folders since it won't create storage for the folder,
@@ -478,9 +462,10 @@ dump("mivExchangeMsgFolder: function createSubfolder\n");
    * @returns The folder added.
    */
 	addSubfolder: function _addSubfolder(aFolderName) {
+    folderLog.info('addSubfolder folder name is ' + aFolderName);
     var newFolder = new mivExchangeMsgFolder;
     var newUri = this._uri;
-    /\\$/.test(newUri) || (newUri += '\\');
+    /\/$/.test(newUri) || (newUri += '\/');
     newFolder.Init( newUri + aFolderName);
     newFolder.parent = this;
 
@@ -823,9 +808,9 @@ dump("mivExchangeMsgFolder: function toggleFlag\n");
 
 
   /**
+   * attribute unsigned long flags;
    * Direct access to the set/get all the flags at once.
    */
-//  attribute unsigned long flags;
 	get flags() {
 		return this._flags;
 	},
@@ -838,16 +823,16 @@ dump("mivExchangeMsgFolder: function toggleFlag\n");
 	},
 
   /**
+   * nsIMsgFolder getFolderWithFlags(in unsigned long flags);
+   *
    * Gets the first folder that has the specified flags set.
    *
    * @param flags    The flag(s) to check for.
    * @return         The folder or the first available child folder that has
    *                 the specified flags set, or null if there are none.
    */
-//  nsIMsgFolder getFolderWithFlags(in unsigned long flags);
-	getFolderWithFlags: function _getFolderWithFlags(flags)
-	{
-dump("mivExchangeMsgFolder: function getFolderWithFlags\n");
+	getFolderWithFlags: function(flags) {
+    if(this._flags & flags) return this;
 	},
 
   /**
@@ -986,39 +971,27 @@ dump("mivExchangeMsgFolder: function writeToFolderCache\n");
    * the charset of this folder
    */
 //  attribute ACString charset;
-	get charset()
-	{
-dump("mivExchangeMsgFolder: get charset\n");
-		return true;
+	get charset() {
+    return true;
 	},
 
-	set charset(aValue)
-	{
-dump("mivExchangeMsgFolder: set charset\n");
+	set charset(aValue) {
 	},
 
 //  attribute boolean charsetOverride;
-	get charsetOverride()
-	{
-dump("mivExchangeMsgFolder: get charsetOverride\n");
+	get charsetOverride() {
 		return true;
 	},
 
-	set charsetOverride(aValue)
-	{
-dump("mivExchangeMsgFolder: set charsetOverride\n");
+	set charsetOverride(aValue) {
 	},
 
 //  attribute unsigned long biffState;
-	get biffState()
-	{
-dump("mivExchangeMsgFolder: get biffState\n");
+	get biffState() {
 		return true;
 	},
 
-	set biffState(aValue)
-	{
-dump("mivExchangeMsgFolder: set biffState\n");
+	set biffState(aValue) {
 	},
 
   /**
@@ -1027,55 +1000,44 @@ dump("mivExchangeMsgFolder: set biffState\n");
    */
 
 //   long getNumNewMessages (in boolean deep);
-	getNumNewMessages: function _getNumNewMessages(deep)
-	{
-dump("mivExchangeMsgFolder: function getNumNewMessages\n");
+	getNumNewMessages: function _getNumNewMessages(deep) {
 	},
 
 //   void setNumNewMessages(in long numNewMessages);
-	setNumNewMessages: function _setNumNewMessages(numNewMessages)
-	{
-dump("mivExchangeMsgFolder: function setNumNewMessages\n");
+	setNumNewMessages: function _setNumNewMessages(numNewMessages) {
 	},
 
   /**
+   * attribute boolean gettingNewMessages;
    * are we running a url as a result of the user clicking get msg?
    */
-//  attribute boolean gettingNewMessages;
-	get gettingNewMessages()
-	{
-dump("mivExchangeMsgFolder: get gettingNewMessages\n");
+	get gettingNewMessages() {
 		return true;
 	},
 
-	set gettingNewMessages(aValue)
-	{
-dump("mivExchangeMsgFolder: set gettingNewMessages\n");
+	set gettingNewMessages(aValue) {
 	},
 
   /**
+   * attribute nsIFile filePath;
    * local path of this folder
    */
-//  attribute nsIFile filePath;
 	get filePath() {
     if(!this._path)  this.parseUri(true);
 		return this._path.clone();
 	},
 
-	set filePath(aValue)
-	{
+	set filePath(aValue) {
 		this._path = aValue;
 	},
 
-//  readonly attribute ACString baseMessageURI;
-	get baseMessageURI()
-	{
+  //  readonly attribute ACString baseMessageURI;
+	get baseMessageURI() {
 		return this._baseMessageUri;
 	},
 
 //  ACString generateMessageURI(in nsMsgKey msgKey);
-	generateMessageURI: function _generateMessageURI(msgKey)
-	{
+	generateMessageURI: function _generateMessageURI(msgKey) {
 		var uri = baseMessageURI;
 		uri.append('#');
 		uri.append(msgKey);
@@ -1496,7 +1458,10 @@ dump("mivExchangeMsgFolder: get abbreviatedName\n");
 		}
 	},
 
-  createSubFolder: function(folderName) {
+  /*
+   * void createSubfolder(in AString folderName, in nsIMsgWindow msgWindow);
+   */
+  createSubFolder: function(folderName, msgWindow) {
     var msgStore = this.server.msgStore;
     return msgStore.createFolder(this, folderName);
   },

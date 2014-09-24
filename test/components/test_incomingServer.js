@@ -37,8 +37,9 @@ QUnit.test('set incoming server test', function(assert) {
 
   var account = QUnit.MailServices.accounts.createAccount();
   account.addIdentity(identity);
-  account.incomingServer = server;
-
   assert.ok(server.rootFolder, 'can get the root folder');
-  var subFolders = server.rootFolder.subFolders;
+  assert.ok(server.rootFolder.filePath, 'get the root folder file path');
+
+  account.incomingServer = server;
+//  var subFolders = server.rootFolder.subFolders;
 });
