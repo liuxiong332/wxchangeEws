@@ -28,7 +28,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://exchangeEws/commonFunctions.js");
 
-var baseLog = CommonFunctions.baseLog;
+var serverLog = commonFunctions.Log.getInfoLevelLogger('exchange-server');
 
 function mivExchangeMsgIncomingServer() {
 
@@ -42,6 +42,8 @@ function mivExchangeMsgIncomingServer() {
 	this._hostName = null;
  	this._rootFolder = null;
  	this._password = null;
+
+  this._localPath = null;
 
  	this._msgStore = null;
  	this._filterList = null;
@@ -57,17 +59,20 @@ var mivExchangeMsgIncomingServerGUID = "79d87edc-020e-48d4-8c04-b894edab4bd2";
 var PROTOCOL_NAME = "exchange";
 
 mivExchangeMsgIncomingServer.getBranch = function(branchName) {
-	return Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch(branchName);
+	return Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService)
+    .getBranch(branchName);
 };
 
 mivExchangeMsgIncomingServer.createNewFile = function() {
 	return Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 }
 //create a new preference for the file and the relative key to the directory
-// @param file: nsIFile 
+// @param file: nsIFile
 // @param relativeToKey a directory service key for the directory
-mivExchangeMsgIncomingServer.newRelativeFilePref = function(file, relativeToKey) {
-	var local = Cc["@mozilla.org/pref-relativefile;1"].createInstance(Ci.nsIRelativeFilePref);
+mivExchangeMsgIncomingServer.newRelativeFilePref = function(file,
+  relativeToKey) {
+	var local = Cc["@mozilla.org/pref-relativefile;1"]
+    .createInstance(Ci.nsIRelativeFilePref);
 	local.file = file;
 	local.relativeToKey = relativeToKey;
 	return local;
@@ -91,7 +96,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	flags : Ci.nsIClassInfo.THREADSAFE,
 	implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
-	getInterfaces : function _getInterfaces(count) 
+	getInterfaces : function _getInterfaces(count)
 	{
 		var ifaces = [Ci.mivExchangeMsgIncomingServer,
 				Ci.nsIMsgIncomingServer,
@@ -111,13 +116,11 @@ mivExchangeMsgIncomingServer.prototype = {
 		this._prefBranch = mivExchangeMsgIncomingServer.getBranch(branchName);
 	},
 
-	get key()
-	{
+	get key() {
 		return this._serverKey;
 	},
 
-	set key(aValue)
-	{
+	set key(aValue) {
 		this._serverKey = aValue;
 		this.resetPrefBranch();
 	},
@@ -133,7 +136,6 @@ mivExchangeMsgIncomingServer.prototype = {
    * pretty name - should be "userid on hostname"
    * if the pref is not set
    */
-//  attribute AString prettyName;
 	get prettyName()
 	{
 		return this._prettyName;
@@ -167,7 +169,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		this._hostName = aValue;
 	},
-  
+
   /**
    * real hostname of the server (if server name is changed it's stored here)
    */
@@ -181,7 +183,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		this.hostName = aValue;
 	},
-  
+
   /* port of the server */
 //  attribute long port;
 	get port()
@@ -256,7 +258,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	getProtocolInfo: function() {
 		if(!this._protocolInfo) {
 			let protocolStr = "@mozilla.org/messenger/protocol/info;1?type=" + this.type;
-			this._protocolInfo = 
+			this._protocolInfo =
 				Cc[protocolStr].createInstance(Ci.nsIMsgProtocolInfo);
 		}
 		return this._protocolInfo;
@@ -272,7 +274,7 @@ mivExchangeMsgIncomingServer.prototype = {
   // Perform specific tasks (reset flags, remove files, etc) for account user/server name changes.
 //  void onUserOrHostNameChanged(in ACString oldName, in ACString newName,
 //                               in bool hostnameChanged);
-	onUserOrHostNameChanged: function _onUserOrHostNameChanged(oldName, newName, hostnameChanged) 
+	onUserOrHostNameChanged: function _onUserOrHostNameChanged(oldName, newName, hostnameChanged)
 	{
 		dump("function onUserOrHostNameChanged\n");
 	},
@@ -305,8 +307,6 @@ mivExchangeMsgIncomingServer.prototype = {
    *       if the prompt was presented to the user but the user cancelled the
    *       prompt.
    */
-//  ACString getPasswordWithUI(in AString aPromptString, in AString aPromptTitle,
-//                             in nsIMsgWindow aMsgWindow);
 	getPasswordWithUI: function _getPasswordWithUI(aPromptString, aPromptTitle, aMsgWindow)
 	{
 		if(!this.password) {
@@ -315,7 +315,7 @@ mivExchangeMsgIncomingServer.prototype = {
 		if(!this.password) {
 			var dialog = aMsgWindow.authPrompt;
 			var resPassword = {};
-			if(!dialog.promptPassword(aPromptTitle, aPromptString, this.serverURI, 
+			if(!dialog.promptPassword(aPromptTitle, aPromptString, this.serverURI,
 				dialog.SAVE_PASSWORD_PERMANENTLY, resPassword))
 				this.password = "";
 			else
@@ -344,7 +344,6 @@ mivExchangeMsgIncomingServer.prototype = {
 		}
 	},
   /* forget the password in memory and in single signon database */
-//  void forgetPassword();
 	forgetPassword: function _forgetPassword() {
 		var loginManager = mivExchangeMsgIncomingServer.loginManager;
 		var logins = this.getLoginInfos();
@@ -355,14 +354,12 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* forget the password in memory which is cached for the session */
-//  void forgetSessionPassword();
 	forgetSessionPassword: function _forgetSessionPassword()
 	{
 		this.password = "";
 	},
 
   /* should we download whole messages when biff goes off? */
-//  attribute boolean downloadOnBiff;
 	get downloadOnBiff()
 	{
 		return this.getBoolValue("download_on_biff");
@@ -374,7 +371,6 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* should we biff the server? */
-//  attribute boolean doBiff;
 	get doBiff()
 	{
 		var hasBiff = this._prefBranch.prefHasUserValue("check_new_mail");
@@ -389,7 +385,6 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* how often to biff */
-//  attribute long biffMinutes;
 	get biffMinutes()
 	{
 		return this.getIntValue("check_time");
@@ -401,7 +396,6 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* current biff state */
-//  attribute unsigned long biffState;
 	get biffState()
 	{
 		return this.getIntValue("biff_state");
@@ -413,7 +407,6 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* are we running a url as a result of biff going off? (different from user clicking get msg) */
-//  attribute boolean performingBiff; 
 	get performingBiff()
 	{
 		return this.getBoolValue("performing_biff");
@@ -425,36 +418,35 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* the on-disk path to message storage for this server */
-//  attribute nsIFile localPath;
-	get localPath()
-	{
+	get localPath() {
+    if(this._localPath) return this._localPath;
 		var localPath = this.getFileValue("directory-rel", "directory");
-		if(localPath)
-			return localPath;
+		if(localPath) return localPath;
+
 		var protocolInfo = this.getProtocolInfo();
-		localPath = protocolInfo.defaultLocalPath;
+		localPath = protocolInfo.defaultLocalPath.clone();
 		//create the default local directory
-		localPath.create(defLocalPath.DIRECTORY_TYPE, 0755);
+		localPath.exists() || localPath.create(localPath.DIRECTORY_TYPE, 0755);
 		//the hostname as sub directory
 		localPath.append(this.hostName);
 		localPath.createUnique(localPath.DIRECTORY_TYPE, 0755);
-		this.localPath = localPath;
+    serverLog.info('the server path is ' + localPath.path);
+
+    this.localPath = localPath;
 		return localPath;
 	},
 
-	set localPath(localPath)
-	{
-		// nsIFile stand for the file path, the create function will create the file or directory 
+	set localPath(localPath) {
+    this._localPath = localPath;
+		// nsIFile stand for the file path, the create function will create the file or directory
 		//if they have not exist
-		localPath.create(localPath.DIRECTORY_TYPE, 0755);
+		localPath.exists() || localPath.create(localPath.DIRECTORY_TYPE, 0755);
 		//save the file path into the preference
 		this.setFileValue("directory-rel", "directory", localPath);
 	},
 
-  /// message store to use for the folders under this server.
-//  readonly attribute nsIMsgPluggableStore msgStore;
-	get msgStore()
-	{
+  /*msgStore is used for create folder directory and find the directory*/
+	get msgStore() {
 		if(!this._msgStore) {
 			var storeContractId = this.getCharValue("storeContractID");
 			if(!storeContractId) {
@@ -462,30 +454,34 @@ mivExchangeMsgIncomingServer.prototype = {
 				this.setCharValue("storeContractID", storeContractId);
 			}
 
-			this._msgStore = Cc[storeContractId].createInstance(Ci.nsIMsgPluggableStore);
+			this._msgStore = Cc[storeContractId]
+        .createInstance(Ci.nsIMsgPluggableStore);
+      this._msgStore || serverLog.error('create msg store failed');
 		}
 		return this._msgStore;
 	},
 
   /* the RDF URI for the root mail folder */
-//  readonly attribute ACString serverURI;
 	get serverURI()
 	{
-		return PROTOCOL_NAME + "://" + this.username + "@" + this.hostName + ":" + this.port;
+		return PROTOCOL_NAME + "://" + this.username + "@" +
+      this.hostName + ":" + this.port;
 	},
 
-  /* the root folder for this server, even if server is deferred */
-//  attribute nsIMsgFolder rootFolder;
-	get rootFolder()
-	{
-		baseLog.info("get rootFolder");
+  createLocalFolder: function(folderName) {
+    var rootFolder = this.rootFolder;
+    var child = rootFolder.getChildNamed(folderName);
+    if(child)   return child;
+    return this.msgStore.createFolder(rootFolder, folderName);
+  },
+
+	get rootFolder() {
 		if(!this._rootFolder)
 			this._rootFolder = this.createRootFolder();
 		return this._rootFolder;
 	},
 
-	set rootFolder(rootFloder)
-	{
+	set rootFolder(rootFloder) {
 		this._rootFolder = rootFloder;
 	},
 
@@ -493,10 +489,9 @@ mivExchangeMsgIncomingServer.prototype = {
 		var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
 		var res = rdf.GetResource(this.serverURI);
 		return res.QueryInterface(Ci.nsIMsgFolder);
-	}, 
-  /* root folder for this account 
+	},
+  /* root folder for this account
      - if account is deferred, root folder of deferred-to account */
-//  readonly attribute nsIMsgFolder rootMsgFolder;
 	get rootMsgFolder()
 	{
 		if(!this._rootFolder)
@@ -507,7 +502,6 @@ mivExchangeMsgIncomingServer.prototype = {
   /* are we already getting new Messages on the current server..
      This is used to help us prevent multiple get new msg commands from
      going off at the same time. */
-//  attribute boolean serverBusy;
 	get serverBusy()
 	{
 		return this.getBoolValue("server_busy");
@@ -521,7 +515,6 @@ mivExchangeMsgIncomingServer.prototype = {
   /**
    * Is the server using a secure channel (SSL or STARTTLS).
    */
-//  readonly attribute boolean isSecure;
 	get isSecure()
 	{
 		return true;
@@ -533,7 +526,6 @@ mivExchangeMsgIncomingServer.prototype = {
    * @see nsMsgAuthMethod (in MailNewsTypes2.idl)
    * Same as "mail.server...authMethod" pref
    */
-//  attribute nsMsgAuthMethodValue authMethod;
 	get authMethod()
 	{
 		return this.getIntValue("authMethod");
@@ -550,7 +542,6 @@ mivExchangeMsgIncomingServer.prototype = {
    * @see nsMsgSocketType (in MailNewsTypes2.idl)
    * Same as "mail.server...socketType" pref
    */
-//  attribute nsMsgSocketTypeValue socketType;
 	get socketType()
 	{
 		var socketType = this.getIntValue("socketType");
@@ -565,7 +556,6 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* empty trash on exit */
-//  attribute boolean emptyTrashOnExit;
 	get emptyTrashOnExit()
 	{
 		return this.getBoolValue("empty_trash_on_exit");
@@ -588,7 +578,6 @@ mivExchangeMsgIncomingServer.prototype = {
    * @param aMsgWindow  @ref msgwindow "The standard message window"
    * @return            The list of filters.
    */
-//  nsIMsgFilterList getFilterList(in nsIMsgWindow aMsgWindow);
 	getFilterList: function _getFilterList(aMsgWindow)
 	{
 		if(!this._filterList) {
@@ -632,7 +621,6 @@ mivExchangeMsgIncomingServer.prototype = {
    *
    * @param aFilterList The new list of filters.
    */
-//  void setFilterList(in nsIMsgFilterList aFilterList);
 	setFilterList: function _setFilterList(aFilterList)
 	{
 		this._filterList = aFilterList;
@@ -648,7 +636,6 @@ mivExchangeMsgIncomingServer.prototype = {
    * @param aMsgWindow  @ref msgwindow "The standard message window"
    * @return            The list of filters.
    */
-//  nsIMsgFilterList getEditableFilterList(in nsIMsgWindow aMsgWindow);
 	getEditableFilterList: function _getEditableFilterList(aMsgWindow)
 	{
 		return this.getFilterList(aMsgWindow);
@@ -662,14 +649,14 @@ mivExchangeMsgIncomingServer.prototype = {
    *
    * @param aFilterList The new list of filters.
    */
-//  void setEditableFilterList(in nsIMsgFilterList aFilterList);
+  //  void setEditableFilterList(in nsIMsgFilterList aFilterList);
 	setEditableFilterList: function _setEditableFilterList(aFilterList)
 	{
 		dump("function setEditableFilterList\n");
 	},
 
   /* we use this to set the default local path.  we use this when migrating prefs */
-//  void setDefaultLocalPath(in nsIFile aDefaultLocalPath);
+  //  void setDefaultLocalPath(in nsIFile aDefaultLocalPath);
 	setDefaultLocalPath: function _setDefaultLocalPath(aDefaultLocalPath)
 	{
 		this.getProtocolInfo().defaultLocalPath = aDefaultLocalPath;
@@ -677,12 +664,12 @@ mivExchangeMsgIncomingServer.prototype = {
 
   /**
    * Verify that we can logon
-   * 
+   *
    * @param  aUrlListener - gets called back with success or failure.
    * @param aMsgWindow         nsIMsgWindow to use for notification callbacks.
    * @return - the url that we run.
    */
-//  nsIURI verifyLogon(in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
+  //  nsIURI verifyLogon(in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 	verifyLogon: function _verifyLogon(aUrlListener, aMsgWindow)
 	{
 		dump("function verifyLogon\n");
@@ -694,9 +681,9 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		dump("function performBiff\n");
 	},
-  
+
   /* get new messages */
-//  void getNewMessages(in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow, 
+//  void getNewMessages(in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow,
 //                      in nsIUrlListener aUrlListener);
 	getNewMessages: function _getNewMessages(aFolder, aMsgWindow, aUrlListener)
 	{
@@ -730,7 +717,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		dump("function closeCachedConnections\n");
 	},
- 
+
   /* ... */
 //  void shutdown();
 	shutdown: function _shutdown()
@@ -796,7 +783,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		this._prefBranch.setComplexValue(attr, Ci.nsISupportsString, value);
 	},
-  
+
 //  long getIntValue(in string attr);
 	getIntValue: function _getIntValue(attr)
 	{
@@ -840,9 +827,10 @@ mivExchangeMsgIncomingServer.prototype = {
 //  nsIFile getFileValue(in string relpref, in string abspref);
 	getFileValue: function _getFileValue(relpref, abspref)
 	{
-		var relFilePref = this._prefBranch.getComplexValue(relpref, Ci.nsIRelativeFilePref);
-		if(!relFilePref)
-			relFilePref = this._defaultPrefBranch.getComplexValue(relpref, Ci.nsIRelativeFilePref);
+    var pref = this._prefBranch;
+		var relFilePref = pref.prefHasUserValue(relpref) &&
+      pref.getComplexValue(relpref, Ci.nsIRelativeFilePref);
+
 		if(relFilePref) {
 			var file = relFilePref.file;
 			file.normalize();
@@ -854,7 +842,8 @@ mivExchangeMsgIncomingServer.prototype = {
 //  void setFileValue(in string relpref, in string abspref, in nsIFile aValue);
 	setFileValue: function _setFileValue(relpref, abspref, file)
 	{
-		var relFilePref = mivExchangeMsgIncomingServer.newRelativeFilePref(file, "ProfD");
+		var relFilePref = mivExchangeMsgIncomingServer
+      .newRelativeFilePref(file, "ProfD");
 		this._prefBranch.setComplexValue(relpref, Ci.nsIRelativeFilePref, relFilePref);
 	},
 
@@ -870,7 +859,7 @@ mivExchangeMsgIncomingServer.prototype = {
 		dump("function clearAllValues\n");
 	},
 
-  /** 
+  /**
    * this is also very dangerous.  this will remove the files
    * associated with this server on disk.
    */
@@ -879,7 +868,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		dump("function removeFiles\n");
 	},
-  
+
 //  attribute boolean valid;
 	get valid()
 	{
@@ -890,7 +879,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	{
 		this.setBoolValue("value", aValue);
 	},
-  
+
 //  AString toString();
 	toString: function _toString()
 	{
@@ -912,7 +901,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* Get Messages at startup */
-//  readonly attribute boolean downloadMessagesAtStartup; 
+//  readonly attribute boolean downloadMessagesAtStartup;
 	get downloadMessagesAtStartup()
 	{
 		dump("get downloadMessagesAtStartup\n");
@@ -934,7 +923,7 @@ mivExchangeMsgIncomingServer.prototype = {
 
   /**
    * can this server be removed from the account manager?  for
-   * instance, local mail is not removable, but an imported folder is 
+   * instance, local mail is not removable, but an imported folder is
    */
 //  attribute boolean canDelete;
 	get canDelete()
@@ -1043,20 +1032,20 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /*
-   * Offline support level. Support level can vary based on abilities 
+   * Offline support level. Support level can vary based on abilities
    * and features each server can offer wrt to offline service.
    * Here is the legend to determine the each support level details
    *
-   * supportLevel == 0  --> no offline support (default) 
+   * supportLevel == 0  --> no offline support (default)
    * supportLevel == 10 --> regular offline feature support
-   * supportLevel == 20 --> extended offline feature support 
+   * supportLevel == 20 --> extended offline feature support
    *
    * Each server can initialize itself to the support level if needed
    * to override the default choice i.e., no offline support.
    *
-   * POP3, None and Movemail will default to 0. 
-   * IMAP level 10 and NEWS with level 20. 
-   * 
+   * POP3, None and Movemail will default to 0.
+   * IMAP level 10 and NEWS with level 20.
+   *
    */
 //  attribute long offlineSupportLevel;
 	get offlineSupportLevel()
@@ -1071,7 +1060,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /* create pretty name for migrated accounts */
-//  AString generatePrettyNameForMigration(); 
+//  AString generatePrettyNameForMigration();
 	generatePrettyNameForMigration: function _generatePrettyNameForMigration()
 	{
 		return this.prettyName;
@@ -1089,7 +1078,7 @@ mivExchangeMsgIncomingServer.prototype = {
   /**
    * Hide this server/account from the UI - used for smart mailboxes.
    * The server can be retrieved from the account manager by name using the
-   * various Find methods, but nsIMsgAccountManager's GetAccounts and 
+   * various Find methods, but nsIMsgAccountManager's GetAccounts and
    * GetAllServers methods won't return the server/account.
    */
 //  attribute boolean hidden;
@@ -1104,7 +1093,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /**
-   * If the server supports Fcc/Sent/etc, default prefs can point to 
+   * If the server supports Fcc/Sent/etc, default prefs can point to
    * the server. Otherwise, copies and folders prefs should point to
    * Local Folders.
    *
@@ -1180,12 +1169,12 @@ mivExchangeMsgIncomingServer.prototype = {
 		dump("get searchScope\n");
 	},
 
-  /** 
-   * If the password for the server is available either via authentication 
+  /**
+   * If the password for the server is available either via authentication
    * in the current session or from password manager stored entries, return
-   * false. Otherwise, return true. If password is obtained from password 
+   * false. Otherwise, return true. If password is obtained from password
    * manager, set the password member variable.
-   */ 
+   */
 //  readonly attribute boolean passwordPromptRequired;
 	get passwordPromptRequired()
 	{
@@ -1210,7 +1199,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
   /**
-   * If Sent folder pref is changed we need to clear the temporary 
+   * If Sent folder pref is changed we need to clear the temporary
    * return receipt filter so that the new return receipt filter can
    * be recreated (by ConfigureTemporaryReturnReceiptsFilter()).
    */

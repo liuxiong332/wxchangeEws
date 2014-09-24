@@ -6,7 +6,9 @@ QUnit.module('erGetFolder test', {
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/erGetFolder.js', QUnit);
-    QUnit.baseLog = QUnit.commonFunctions.baseLog;
+
+    QUnit.folderLog = QUnit.commonFunctions.Log
+      .getErrorLevelLogger('test-get-folder');
   },
   teardown: function() {
     delete QUnit.erGetFolderRequest;
@@ -25,11 +27,11 @@ QUnit.asyncTest('get folder info', function(assert) {
 
   function requestOK(request, folderInfo) {
     assert.ok(true, 'the find folder request ok!');
-    QUnit.baseLog.info(QUnit.dump.parse(folderInfo));
+    QUnit.folderLog.info(QUnit.dump.parse(folderInfo));
     QUnit.start();
   }
   function requestError(request, code, msg) {
-    QUnit.baseLog.info('the response code is' + code + " message is " + msg);
+    QUnit.folderLog.info('the response code is' + code + " message is " + msg);
     assert.ok(false, 'request failed!');
     QUnit.start();
   }

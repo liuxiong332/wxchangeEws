@@ -6,7 +6,9 @@ QUnit.module('erBrowseFolder test', {
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/erBrowseFolder.js', QUnit);
-    QUnit.baseLog = QUnit.commonFunctions.baseLog;
+
+    QUnit.browseLog = QUnit.commonFunctions.Log
+      .getErrorLevelLogger('test-browse-folder');
   },
   teardown: function() {
     delete QUnit.erBrowseFolderRequest;
@@ -25,11 +27,11 @@ QUnit.asyncTest('request folder find', function(assert) {
 
   function requestOK(request, childFolders) {
     assert.ok(true, 'the find folder request ok!');
-    QUnit.baseLog.info(QUnit.dump.parse(childFolders));
+    QUnit.browseLog.info(QUnit.dump.parse(childFolders));
     QUnit.start();
   }
   function requestError(request, code, msg) {
-    QUnit.baseLog.info('the response code is' + code + " message is " + msg);
+    QUnit.browseLog.info('the response code is' + code + " message is " + msg);
     assert.ok(false, 'request failed!');
     QUnit.start();
   }

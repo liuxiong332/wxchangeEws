@@ -1,3 +1,3 @@
-set node_file=E:\workspace\mozilla_test\node\index.js
-node %node_file% .\test_config.json
+set node_file=%~dp0..\moztest\node\index.js
+node %node_file% %~dp0test_config.json
 pause
