@@ -1108,7 +1108,7 @@ dump("mivExchangeMsgFolder: function setLabelForMessages\n");
     var dbService = Cc['@mozilla.org/msgDatabase/msgDBService;1']
       .getService(Ci.nsIMsgDBService);
     try {
-      this._database = dbService.openFolderDB(this.msgFolder, true);
+      this._database = dbService.openFolderDB(this, true);
     } catch(e) {
       if(e.result === Cr.NS_MSG_ERROR_FOLDER_SUMMARY_MISSING) {
         var db = dbService.createNewDB(this);
