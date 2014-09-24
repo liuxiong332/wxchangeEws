@@ -143,17 +143,6 @@ mivExchangeMsgFolder.prototype = {
 
 	},
 
-	get database() {
-		if(!this._database) {
-			let dbService = Cc["@mozilla.org/msgDatabase/msgDBService;1"].getService(Ci.nsIMsgDBService);
-			let db = dbService.OpenFolderDB(this, false);
-			if(!db)
-				db = dbService.CreateNewDB(this);
-			this._database = db;
-		}
-		return this._database;
-	},
-
 	parseUri: function(needServer) {
 		var url = Cc["@mozilla.org/network/standard-url;1"]
       .createInstance(Ci.nsIURL);
@@ -852,35 +841,36 @@ dump("mivExchangeMsgFolder: function toggleFlag\n");
     var folders = [];
     if( (this._flags & flags) === flags) folders.push(this);
     this._subfolders.forEach( function(subfolder) {
-      folders.concat(subfolder.getFoldersWithFlags(flags));
+      folders = folders.concat(subfolder.getFoldersWithFlags(flags));
     });
     return folders;
 	},
 
   /**
+   * void listFoldersWithFlags(in unsigned long flags,
+                           in nsIMutableArray folders);
    * Lists the folders that have the specified flag set.
    *
    * @param flags    The flag(s) to check for.
    * @param folders  The array in which to append the found folder(s).
    */
-//  void listFoldersWithFlags(in unsigned long flags,
-//                            in nsIMutableArray folders);
-	listFoldersWithFlags: function _listFoldersWithFlags(flags, folders)
-	{
-dump("mivExchangeMsgFolder: function listFoldersWithFlags\n");
+	listFoldersWithFlags: function(flags, folders) {
+    var folderList = getFoldersWithFlags(flags);
+    folderList.forEach(function(folder) {
+      folders.appendElement(folder, false);
+    });
 	},
 
   /**
+   * boolean isSpecialFolder(in unsigned long flags,
+                           [optional] in boolean checkAncestors);
    * Check if this folder (or one of its ancestors) is special.
    *
    * @param flags          The "special" flags to check.
    * @param checkAncestors Should ancestors be checked too.
    */
-//  boolean isSpecialFolder(in unsigned long flags,
-//                          [optional] in boolean checkAncestors);
-	isSpecialFolder: function _isSpecialFolder(flags, checkAncestors)
-	{
-dump("mivExchangeMsgFolder: function isSpecialFolder\n");
+  isSpecialFolder: function(flags, checkAncestors) {
+    return false;
 	},
 
 //  ACString getUriForMsg(in nsIMsgDBHdr msgHdr);
@@ -1094,6 +1084,7 @@ dump("mivExchangeMsgFolder: function setLabelForMessages\n");
 	},
 
   /**
+   * attribute nsIMsgDatabase msgDatabase;
    * Gets the message database for the folder.
    *
    * Note that if the database is out of date, the implementation MAY choose to
@@ -1106,18 +1097,30 @@ dump("mivExchangeMsgFolder: function setLabelForMessages\n");
    *                         out of date information.
    * @see nsIMsgFolder::getDBFolderInfoAndDB.
    */
-//  attribute nsIMsgDatabase msgDatabase;
-	get msgDatabase()
-	{
-dump("mivExchangeMsgFolder: get msgDatabase\n");
+	get msgDatabase() {
 		return true;
 	},
 
-	set msgDatabase(aValue)
-	{
-dump("mivExchangeMsgFolder: set msgDatabase\n");
-	},
+	set msgDatabase(aValue) {
+  },
 
+  openDatabase: function() {
+    var dbService = Cc['@mozilla.org/msgDatabase/msgDBService;1']
+      .getService(Ci.nsIMsgDBService);
+    try {
+      this._database = dbService.openFolderDB(this.msgFolder, true);
+    } catch(e) {
+      if(e.result === Cr.NS_MSG_ERROR_FOLDER_SUMMARY_MISSING) {
+        var db = dbService.createNewDB(this);
+        if(!db) return;
+        updateSummaryTotals(true);
+        db.close(true);
+        this._database = dbService.openFolderDB(this, false);
+      } else {
+        throw e;
+      }
+    }
+  },
   /**
    * Get the backup message database, used in reparsing. This database must
    * be created first using closeAndBackupFolderDB()
@@ -1148,10 +1151,14 @@ dump("mivExchangeMsgFolder: function removeBackupMsgDatabase\n");
 dump("mivExchangeMsgFolder: function openBackupMsgDatabase\n");
 	},
 
-//  nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
-	getDBFolderInfoAndDB: function _getDBFolderInfoAndDB(folderInfo)
-	{
-dump("mivExchangeMsgFolder: function getDBFolderInfoAndDB\n");
+  //  nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
+	getDBFolderInfoAndDB: function(folderInfo) {
+    if(this._isServer) return null;
+    if(!this._database)
+      this.openDatabase();
+    var db = this._database;
+    //if(db && folderInfo)  folderInfo.value = db.dBFolderInfo;
+    return db;
 	},
 
 //  nsIMsgDBHdr GetMessageHeader(in nsMsgKey msgKey);
@@ -1889,8 +1896,7 @@ dump("mivExchangeMsgFolder: function getForcePropertyEmpty\n");
    * as the pluggable store for the server.
    */
 //  readonly attribute nsIMsgPluggableStore msgStore;
-	get msgStore()
-	{
+	get msgStore() {
 		return this.server.msgStore;
 	},
 

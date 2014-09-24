@@ -42,19 +42,44 @@ QUnit.test('set incoming server test', function(assert) {
 
   var account = QUnit.MailServices.accounts.createAccount();
   account.addIdentity(identity);
-  assert.ok(server.rootFolder, 'can get the root folder');
-  assert.ok(server.rootFolder.filePath, 'get the root folder file path');
+
+  function assertRootFolder() {
+    assert.ok(server.rootFolder, 'can get the root folder');
+    assert.ok(server.rootFolder.filePath, 'get the root folder file path');
+  }
+  assertRootFolder();
 
   account.incomingServer = server;
 
-  var subfolders = server.rootFolder.subFolders;
-  while(subfolders.hasMoreElements()) {
-    var folder = subfolders.getNext().QueryInterface(QUnit.Ci.nsIMsgFolder);
-    QUnit.log.info('the folder ' + folder.filePath.path
-       + ' flags: ' + folder.flags);
+  // var subfolders = server.rootFolder.subFolders;
+  // while(subfolders.hasMoreElements()) {
+  //   var folder = subfolders.getNext().QueryInterface(QUnit.Ci.nsIMsgFolder);
+  //   QUnit.log.info('the folder ' + folder.filePath.path
+  //      + ' flags: ' + folder.flags);
+  // }
+  function assertSubFolders() {
+    var inboxFolder = server.rootFolder.getFolderWithFlags(
+      QUnit.Ci.nsMsgFolderFlags.Inbox);
+    assert.ok(inboxFolder, 'can get the inbox folder');
+
+    var inboxFolders = server.rootFolder.getFoldersWithFlags(
+      QUnit.Ci.nsMsgFolderFlags.Inbox);
+    assert.ok(inboxFolders, 'can get inbox folder array');
+    assert.equal(inboxFolders.length, 1, 'only 1 inbox folder');
   }
-  var inboxFolder = server.rootFolder.getFolderWithFlags(
-    QUnit.Ci.nsMsgFolderFlags.Inbox);
-  assert.ok(inboxFolder, 'can get the inbox folder');
-//  var subFolders = server.rootFolder.subFolders;
-});
+  assertSubFolders();
+
+  function assertDatabase() {
+    assert.ok(server.rootFolder.server, 'get server from the root folder');
+    assert.ok(server.rootFolder.msgStore, 'get msgStore from the root folder');
+    var subfolders = server.rootFolder.subFolders;
+    var msgStore = server.msgStore;
+    while(subfolders.hasMoreElements()) {
+      var folder = subfolders.getNext().QueryInterface(QUnit.Ci.nsIMsgFolder);
+      QUnit.log.info('summary file is ' + msgStore.getSummaryFile(folder).path);
+      assert.ok(folder.getDBFolderInfoAndDB({}), 'get the folder database');
+    }
+  }
+  assertDatabase();
+
+ });

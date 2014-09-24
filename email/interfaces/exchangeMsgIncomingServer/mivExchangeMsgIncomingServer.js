@@ -249,7 +249,7 @@ mivExchangeMsgIncomingServer.prototype = {
    * as "mailbox", "imap", or "news"
    * used to construct URIs
    */
-//  readonly attribute ACString localStoreType;
+  //  readonly attribute ACString localStoreType;
 	get localStoreType()
 	{
 		return "mailbox";
