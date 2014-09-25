@@ -98,3 +98,20 @@ QUnit.test('set incoming server test', function(assert) {
   newAccount.destroy();
 });
 
+QUnit.test('incoming server notify test', function(assert) {
+  expect(1);
+  var newAccount = new QUnit.NewExchangeAccount;
+  var server = newAccount.server;
+  var newFlag = QUnit.Ci.nsMsgFolderFlags.Virtual;
+
+  var folderListener = {
+    OnItemIntPropertyChanged: function(item, property, oldValue, newValue) {
+      assert.ok(newValue & newFlag, 'the new flag is set');
+    }
+  };
+  QUnit.MailServices.mailSession.AddFolderListener(folderListener,
+    QUnit.Ci.nsIFolderListener.intPropertyChanged);
+  server.rootFolder.flags = newFlag;
+  QUnit.MailServices.mailSession.RemoveFolderListener(folderListener);
+  newAccount.destroy();
+});

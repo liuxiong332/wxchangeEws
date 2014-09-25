@@ -45,6 +45,12 @@ function FolderAtomList() {
 }
 var folderAtomList = new FolderAtomList;
 
+/*listener manager used for send the folder notification*/
+function getListenerManager() {
+  return MailServices.mailSession.QueryInterface(Ci.nsIFolderListener);
+}
+var listenerManager = getListenerManager();
+
 function mivExchangeMsgFolder() {
 
 	//this.logInfo("mivExchangeMsgFolder: init");
@@ -1492,24 +1498,28 @@ mivExchangeMsgFolder.prototype = {
       listener.OnItemIntPropertyChanged(self, property, oldValue, newValue);
     });
 
-    var listenerManager =
-      MailServices.mailSession.QueryInterface(Ci.nsIFolderListener);
-    listenerManager.OnItemIntPropertyChanged(this, property, oldValue, newValue);
+    listenerManager.OnItemIntPropertyChanged(self, property,
+      oldValue, newValue);
 	},
 
   //  void NotifyBoolPropertyChanged(in nsIAtom property,
   //                                 in boolean oldValue,
   //                                 in boolean newValue);
-	NotifyBoolPropertyChanged: function(property, oldValue, newValue)
-	{
+	NotifyBoolPropertyChanged: function(property, oldValue, newValue) {
+    var self = this;
+    this._listeners.forEach(function(listener) {
+      listener.OnItemBoolPropertyChanged(self, property, oldValue, newValue);
+    });
+
+    listenerManager.OnItemBoolPropertyChanged(self, property,
+      oldValue, newValue);
 	},
 
   //  void NotifyPropertyFlagChanged(in nsIMsgDBHdr item,
   //                                 in nsIAtom property,
   //                                 in unsigned long oldValue,
   //                                 in unsigned long newValue);
-	NotifyPropertyFlagChanged: function _NotifyPropertyFlagChanged(item, property, oldValue, newValue)
-	{
+	NotifyPropertyFlagChanged: function(item, property, oldValue, newValue) {
 	},
 
   //  void NotifyUnicharPropertyChanged(in nsIAtom property,
