@@ -949,7 +949,8 @@ mivExchangeMsgFolder.prototype = {
    * local path of this folder
    */
 	get filePath() {
-		return this._path;
+    //must be the copy version, otherwise, this.path may changed by other
+		return this._path.clone();
 	},
 
 	set filePath(aValue) {
