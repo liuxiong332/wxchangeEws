@@ -705,28 +705,28 @@ mivExchangeMsgFolder.prototype = {
    * @param flag  The flag that was changed.
    */
 	onFlagChange: function(changeFlags) {
-    // var db =  this.getDBFolderInfoAndDB();
-    // var folderFlag = this._flags;
-    // if(db) {
-    //   db.dBFolderInfo.flags = folderFlag;
-    //   db.Commit(Ci.nsMsgDBCommitType.kLargeCommit);
-    // }
+    var db =  this.getDBFolderInfoAndDB();
+    var folderFlag = this._flags;
+    if(db) {
+      db.dBFolderInfo.flags = folderFlag;
+      db.Commit(Ci.nsMsgDBCommitType.kLargeCommit);
+    }
 
-    // var oldFlag = folderFlag | changeFlags; //changeFlags used for clear
-    // if(folderFlag & changeFlags)
-    //   oldFlag = folderFlag & ~changeFlags;  //changeFlags to add the flag
-    // this.NotifyIntPropertyChanged(folderAtomList.folderFlag,
-    //   oldFlag, folderFlag);
+    var oldFlag = folderFlag | changeFlags; //changeFlags used for clear
+    if(folderFlag & changeFlags)
+      oldFlag = folderFlag & ~changeFlags;  //changeFlags to add the flag
+    this.NotifyIntPropertyChanged(folderAtomList.folderFlag,
+      oldFlag, folderFlag);
 
-    // var newValue;
-    // if(newValue = (changeFlags & Ci.nsMsgFolderFlags.Offline)) {
-    //   this.NotifyBoolPropertyChanged(folderAtomList.synchronizeAtom, !newValue,
-    //     newValue);
-    // }
-    // else if(newValue = (changeFlags & Ci.nsMsgFolderFlags.Elided)) {
-    //   this.NotifyBoolPropertyChanged(folderAtomList.openAtom, newValue,
-    //     !newValue);
-    // }
+    var newValue;
+    if(newValue = (changeFlags & Ci.nsMsgFolderFlags.Offline)) {
+      this.NotifyBoolPropertyChanged(folderAtomList.synchronizeAtom, !newValue,
+        newValue);
+    }
+    else if(newValue = (changeFlags & Ci.nsMsgFolderFlags.Elided)) {
+      this.NotifyBoolPropertyChanged(folderAtomList.openAtom, newValue,
+        !newValue);
+    }
 	},
 
 
