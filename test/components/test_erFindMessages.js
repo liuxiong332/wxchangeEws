@@ -6,10 +6,8 @@ QUnit.module('erFindMessages and erGetMessage test', {
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/erFindMessages.js', QUnit);
-    QUnit.Cu.import('resource://exchangeEws/erGetMessage.js', QUnit);
-
-    QUnit.log = QUnit.commonFunctions.Log
-      .getErrorLevelLogger('test-find-messages');
+    QUnit.Cu.import('resource://exchangeEws/erGetMessage.js', QUnit)
+    QUnit.baseLog = QUnit.commonFunctions.baseLog;
   },
   teardown: function() {
     delete QUnit.erGetMessageRequest;
@@ -33,7 +31,7 @@ QUnit.asyncTest('request messages find', function(assert) {
       QUnit.start();
     }
     function msgRequestError(request, code, msg) {
-      QUnit.log.info('the response code is' + code + " message is " + msg);
+      QUnit.baseLog.info('the response code is' + code + " message is " + msg);
       assert.ok(false, 'request failed!');
       QUnit.start();
     }
@@ -46,11 +44,11 @@ QUnit.asyncTest('request messages find', function(assert) {
 
   function requestOK(request, messages) {
     assert.ok(true, 'the find messages request ok!');
-    QUnit.log.info(QUnit.dump.parse(messages));
+    QUnit.baseLog.info(QUnit.dump.parse(messages));
     getMessages(messages);
   }
   function requestError(request, code, msg) {
-    QUnit.log.info('the response code is' + code + " message is " + msg);
+    QUnit.baseLog.info('the response code is' + code + " message is " + msg);
     assert.ok(false, 'request failed!');
     QUnit.start();
   }

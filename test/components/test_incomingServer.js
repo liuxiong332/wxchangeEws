@@ -83,3 +83,9 @@ QUnit.test('set incoming server test', function(assert) {
   assertDatabase();
 
  });
+
+QUnit.test('folder atom test', function(assert) {
+  var atomService = QUnit.Cc['@mozilla.org/atom-service;1']
+    .getService(QUnit.Ci.nsIAtomService);
+  assert.ok(atomService.getAtom('FolderFlag'), 'get folder flag atom');
+});
