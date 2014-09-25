@@ -15,7 +15,12 @@ QUnit.module('nsIMstIncomingServer test', {
   }
 });
 
-QUnit.test('set incoming server test', function(assert) {
+QUnit.NewExchangeAccount = function() {
+  this.account = null;
+  this.server = null;
+  this.create();
+}
+QUnit.NewExchangeAccount.prototype.create = function() {
   var config = {
     username: 'liuxiong',
     hostname: 'kingsoft.com',
@@ -23,17 +28,12 @@ QUnit.test('set incoming server test', function(assert) {
     type: 'exchange',
     password: 'abcd.ABCD'
   };
+  this.config = config;
 
   var server = QUnit.MailServices.accounts.createIncomingServer(config.username,
     config.hostname, config.type);
-  assert.deepEqual(QUnit.MailServices.accounts.FindServer(config.username,
-    config.hostname, config.type), server,
-    'create and insert server successfully');
-
-  assert.ok(server, 'get the server');
   server.password = config.password;
   server.valid = true;
-  assert.ok(server.localPath, 'server local path is ' + server.localPath.path);
 
   var identity = QUnit.MailServices.accounts.createIdentity();
   identity.fullName = config.username;
@@ -42,14 +42,34 @@ QUnit.test('set incoming server test', function(assert) {
 
   var account = QUnit.MailServices.accounts.createAccount();
   account.addIdentity(identity);
+  account.incomingServer = server;
+
+  this.account = account;
+  this.server = server;
+};
+
+QUnit.NewExchangeAccount.prototype.destroy = function() {
+  QUnit.MailServices.accounts.removeAccount(this.account);
+};
+
+QUnit.test('set incoming server test', function(assert) {
+  var newAccount = new QUnit.NewExchangeAccount;
+
+  var server = newAccount.server;
+  var config = newAccount.config;
+
+  assert.deepEqual(QUnit.MailServices.accounts.FindServer(config.username,
+    config.hostname, config.type), server,
+    'create and insert server successfully');
+
+  assert.ok(server, 'get the server');
+  assert.ok(server.localPath, 'server local path is ' + server.localPath.path);
 
   function assertRootFolder() {
     assert.ok(server.rootFolder, 'can get the root folder');
     assert.ok(server.rootFolder.filePath, 'get the root folder file path');
   }
-  assertRootFolder();
-
-  account.incomingServer = server;
+  // assertRootFolder();
 
   function assertSubFolders() {
     var inboxFolder = server.rootFolder.getFolderWithFlags(
@@ -75,11 +95,6 @@ QUnit.test('set incoming server test', function(assert) {
     }
   }
   assertDatabase();
-
- });
-
-QUnit.test('folder atom test', function(assert) {
-  var atomService = QUnit.Cc['@mozilla.org/atom-service;1']
-    .getService(QUnit.Ci.nsIAtomService);
-  assert.ok(atomService.getAtom('FolderFlag'), 'get folder flag atom');
+  newAccount.destroy();
 });
+

@@ -26,6 +26,7 @@ var components = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/mailServices.js");
 Cu.import("resource://exchangeEws/ecFunctions.js");
 Cu.import("resource://exchangeEws/commonFunctions.js");
 
@@ -56,6 +57,8 @@ function mivExchangeMsgFolder() {
 	this._flags = null;
 	this._parent = null;
 	this._subfolders = [];
+
+  this._listeners = [];
 }
 
 mivExchangeMsgFolder.EXCHANGE_SCHEMA = "exchange:/";
@@ -1364,6 +1367,10 @@ mivExchangeMsgFolder.prototype = {
   getSubFolder: function(folderName) {
     return this.getChildNamed(folderName) || this.createSubFolder(folderName);
   },
+
+  get descendants() {
+    return this._subfolders;
+  },
   /**
    * readonly attribute nsISimpleEnumerator subFolders;
    * Returns an enumerator containing a list of nsIMsgFolder items that are
@@ -1479,8 +1486,15 @@ mivExchangeMsgFolder.prototype = {
   //  void NotifyIntPropertyChanged(in nsIAtom property,
   //                                in long oldValue,
   //                                in long newValue);
-	NotifyIntPropertyChanged: function(property, oldValue, newValue)
-	{
+	NotifyIntPropertyChanged: function(property, oldValue, newValue) {
+    var self = this;
+    this._listeners.forEach(function(listener) {
+      listener.OnItemIntPropertyChanged(self, property, oldValue, newValue);
+    });
+
+    var listenerManager =
+      MailServices.mailSession.QueryInterface(Ci.nsIFolderListener);
+    listenerManager.OnItemIntPropertyChanged(this, property, oldValue, newValue);
 	},
 
   //  void NotifyBoolPropertyChanged(in nsIAtom property,
