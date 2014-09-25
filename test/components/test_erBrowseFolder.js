@@ -6,7 +6,8 @@ QUnit.module('erBrowseFolder test', {
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/erBrowseFolder.js', QUnit);
-    QUnit.baseLog = QUnit.commonFunctions.baseLog;
+    QUnit.baseLog = QUnit.commonFunctions.Log
+      .getErrorLevelLogger('test-browse-folder');
   },
   teardown: function() {
     delete QUnit.erBrowseFolderRequest;

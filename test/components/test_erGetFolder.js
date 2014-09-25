@@ -6,7 +6,8 @@ QUnit.module('erGetFolder test', {
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/erGetFolder.js', QUnit);
-    QUnit.baseLog = QUnit.commonFunctions.baseLog;
+    QUnit.baseLog = QUnit.commonFunctions.Log
+      .getErrorLevelLogger('test-get-folder');
   },
   teardown: function() {
     delete QUnit.erGetFolderRequest;

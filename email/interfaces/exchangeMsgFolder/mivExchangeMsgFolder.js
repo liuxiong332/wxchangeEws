@@ -108,86 +108,51 @@ mivExchangeMsgFolder.prototype = {
 		return ifaces;
 	},
 
-  //  nsIRDFResource implementation
-	EqualsNode: function(aNode) {
-		return (aNode instanceof Ci.nsIRDFResource) &&
-		aNode.QueryInterface(Ci.nsIRDFResource) === this;
-	},
+  initWithIncomingServer: function(baseUri, server) {
+    this._uri = baseUri;
+    this._server = server;
+    this.parseUri();
+    this._baseMessageUri = generateBaseMessageUri();
+    folderLog.info('init successfully');
 
-	Init: function(baseUri) {
-		//register this resource in the RDF service
-		// var rdf = Cc["@mozilla.org/rdf/rdf-service;1"]
-    // 			.getService(Ci.nsIRDFService);
-  	this._uri = baseUri;
-  	//	rdf.RegisterResource(this.QueryInterface(Ci.nsIRDFResource), true);
+    function generateBaseMessageUri() {
+      var biasIndex = baseUri.indexOf('/');
+      if(biasIndex === -1)
+        throw new Error("server URI isnot correct");
+      while(baseUri[biasIndex+1] === '/')
+        ++biasIndex;
+      return mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA +
+        baseUri.slice(biasIndex+1);
+    }
+  },
 
-		this._baseMessageUri = generateBaseMessageUri();
-		function generateBaseMessageUri() {
-			var biasIndex = baseUri.indexOf('/');
-			if(biasIndex === -1)
-				throw new Error("server URI isnot correct");
-			while(baseUri[biasIndex+1] === '/')
-				++biasIndex;
-			return mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA + baseUri.slice(biasIndex+1);
-		}
-	},
-
-	get Value() {
-		return this._uri;
-	},
-
-	get ValueUTF8() {
-		return this._uri;
-	},
-
-	EqualsString: function(aURI) {
-		return this._uri === aURI;
-	},
-
-	GetDelegate: function(aKey, aIID) {
-		return null;
-	},
-
-	ReleaseDelegate: function(aKey) {
-
-	},
-
-	parseUri: function(needServer) {
+	parseUri: function() {
 		var url = Cc["@mozilla.org/network/standard-url;1"]
       .createInstance(Ci.nsIURL);
 		url.spec = this._uri;
 		//parse isServer from the uri
-		if(!this._isServerIsValid) {	//if the server has not initialized
-			let path = url.path;
-			this._isServer = (path === "/");
-			this._isServerIsValid = true;
-		}
+		this._isServer = (url.path === "/");
 		//parse name from the uri
 		if(!this._name) {
 			this._name = url.fileName;
 		}
-		//parse server from the uri
-		if(needServer && !this._server) {
-			let parentMsgFolder = this.parent;
-			if(parentMsgFolder)
-				this._server = parentMsgFolder.server;
-			if(!this._server) {
-				this._server = MailServices.accounts
-          .FindServer(url.username, url.host, url.scheme);
-        if(!this._server)
-          folderLog.error('cannot get the server by FindServer, the url is ' +
-            JSON.stringify(url, null, 2));
-			}
-		}
 		//parse the local path from the uri
-		if(!this._path && this._server) {
-			let serverPath = this._server.localPath.clone();
-			serverPath.append(url.fileName);
-      serverPath.exists() || serverPath.create(serverPath.DIRECTORY_TYPE, 0755);
-			this._path = serverPath;
-      folderLog.info('the file path is ' + serverPath.path);
-		}
-	},
+		if(!this._server) return ;
+
+    var localPath = this._server.localPath.clone();
+		localPath.append(url.fileName);
+    this._path = localPath;
+    folderLog.info('the file path is: ' + localPath.path + ' is server: ' +
+      this._isServer);
+
+    var self = this;
+    function createRootDirectory() {
+      //create root folder
+      if(self._isServer && !localPath.exists())
+        localPath.create(localPath.DIRECTORY_TYPE, 0755);
+    }
+    createRootDirectory();
+ 	},
   //  const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
   //  const nsMsgBiffState nsMsgBiffState_NoMail =  1; // No new mail is waiting.
   //  const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is new mail.
@@ -244,8 +209,6 @@ mivExchangeMsgFolder.prototype = {
    */
   //  readonly attribute nsIMsgIncomingServer server;
 	get server() {
-		if(!this._server)
-			this.parseUri(true);
 		return this._server;
 	},
 
@@ -254,9 +217,6 @@ mivExchangeMsgFolder.prototype = {
    */
   //  readonly attribute boolean isServer;
 	get isServer() {
-		if(!this._isServerIsValid) {
-			this.parseUri(false);
-		}
 		return this._isServer;
 	},
 
@@ -436,8 +396,10 @@ mivExchangeMsgFolder.prototype = {
     var newFolder = new mivExchangeMsgFolder;
     var newUri = this._uri;
     /\/$/.test(newUri) || (newUri += '\/');
-    newFolder.Init( newUri + aFolderName);
+    newFolder.initWithIncomingServer( newUri + aFolderName, this.server);
     newFolder.parent = this;
+
+    folderLog.info('begin set flags');
 
     var folderFlags = Ci.nsMsgFolderFlags.Mail;
     if(this._server) {
@@ -447,6 +409,7 @@ mivExchangeMsgFolder.prototype = {
       }
     }
     newFolder.flags = folderFlags;
+    folderLog.info('end set flags');
     this._subfolders.push(newFolder);
     return newFolder;
 	},
@@ -742,7 +705,7 @@ mivExchangeMsgFolder.prototype = {
    * @param flag  The flag that was changed.
    */
 	onFlagChange: function(changeFlags) {
-    var db =  this.getDBFolderInfoAndDB();
+    // var db =  this.getDBFolderInfoAndDB();
     // var folderFlag = this._flags;
     // if(db) {
     //   db.dBFolderInfo.flags = folderFlag;
@@ -752,7 +715,7 @@ mivExchangeMsgFolder.prototype = {
     // var oldFlag = folderFlag | changeFlags; //changeFlags used for clear
     // if(folderFlag & changeFlags)
     //   oldFlag = folderFlag & ~changeFlags;  //changeFlags to add the flag
-    // this.NotifyIntPropertyChanged(folderAtomList.folderFlag, 
+    // this.NotifyIntPropertyChanged(folderAtomList.folderFlag,
     //   oldFlag, folderFlag);
 
     // var newValue;
@@ -761,7 +724,7 @@ mivExchangeMsgFolder.prototype = {
     //     newValue);
     // }
     // else if(newValue = (changeFlags & Ci.nsMsgFolderFlags.Elided)) {
-    //   this.NotifyBoolPropertyChanged(folderAtomList.openAtom, newValue, 
+    //   this.NotifyBoolPropertyChanged(folderAtomList.openAtom, newValue,
     //     !newValue);
     // }
 	},
@@ -986,7 +949,6 @@ mivExchangeMsgFolder.prototype = {
    * local path of this folder
    */
 	get filePath() {
-    if(!this._path)  this.parseUri(true);
 		return this._path;
 	},
 
@@ -1349,10 +1311,7 @@ mivExchangeMsgFolder.prototype = {
 	},
 
   //  attribute AString name;
-	get name()
-	{
-		if(!this._name)
-			this.parseUri(false);
+	get name() {
 		return this._name;
 	},
 
@@ -1411,7 +1370,7 @@ mivExchangeMsgFolder.prototype = {
    */
 	get subFolders() {
 		if(!this._initialize) {
-		  this.server.msgStore.discoverSubFolders(this, true);
+		  this._isServer && this.server.msgStore.discoverSubFolders(this, true);
 
       var filePath = this.filePath;
       var FolderFlags = Ci.nsMsgFolderFlags;
@@ -1422,10 +1381,9 @@ mivExchangeMsgFolder.prototype = {
       }
 
       if(this._isServer) {
-
+        this.getSubFolder('Inbox');
+        this.getSubFolder('Trash');
       }
-      this.getSubFolder('Inbox');
-      this.getSubFolder('Trash');
 			this._initialize = true;
 		}
 		return exchWebService.commonFunctions

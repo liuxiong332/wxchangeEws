@@ -24,4 +24,7 @@
 [scriptable, uuid(364ed353-d3ad-41d2-9df3-2fab209d9ac1)]
 interface mivExchangeMsgFolder : nsIMsgFolder
 {
+  /*init the folder with the uri and the server*/
+  void initWithIncomingServer(in ACString baseUri,
+    in nsIMsgIncomingServer server);
 };

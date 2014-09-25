@@ -7,7 +7,8 @@ QUnit.module('erFindMessages and erGetMessage test', {
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/erFindMessages.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/erGetMessage.js', QUnit)
-    QUnit.baseLog = QUnit.commonFunctions.baseLog;
+    QUnit.baseLog = QUnit.commonFunctions.Log
+      .getErrorLevelLogger('test-find-messages');
   },
   teardown: function() {
     delete QUnit.erGetMessageRequest;

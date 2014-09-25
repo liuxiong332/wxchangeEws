@@ -1,4 +1,4 @@
 interfaces mivExchangeMsgFolder.xpt
 component {364ed353-d3ad-41d2-9df3-2fab209d9ac1} mivExchangeMsgFolder.js
-contract @mozilla.org/rdf/resource-factory;1?name=exchange {364ed353-d3ad-41d2-9df3-2fab209d9ac1}
+contract @kingsoft.com/exchange-folder;1 {364ed353-d3ad-41d2-9df3-2fab209d9ac1}
 

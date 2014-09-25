@@ -51,12 +51,6 @@ QUnit.test('set incoming server test', function(assert) {
 
   account.incomingServer = server;
 
-  // var subfolders = server.rootFolder.subFolders;
-  // while(subfolders.hasMoreElements()) {
-  //   var folder = subfolders.getNext().QueryInterface(QUnit.Ci.nsIMsgFolder);
-  //   QUnit.log.info('the folder ' + folder.filePath.path
-  //      + ' flags: ' + folder.flags);
-  // }
   function assertSubFolders() {
     var inboxFolder = server.rootFolder.getFolderWithFlags(
       QUnit.Ci.nsMsgFolderFlags.Inbox);

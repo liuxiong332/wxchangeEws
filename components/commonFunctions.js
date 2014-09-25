@@ -8,7 +8,8 @@ commonFunctions.Log = {
 	//get the configured logger, loggerName is the name of the logger, level
 	// is the logger level
 	getConfiguredLogger: function(loggerName, level, consoleLevel, dumpLevel) {
-		var logger = Log4Moz.getConfiguredLogger(loggerName, level, consoleLevel, dumpLevel);
+		var logger = Log4Moz.getConfiguredLogger(loggerName, level, consoleLevel,
+      dumpLevel);
 		if(logger._hasConfigured)
 			return logger;
 		logger._hasConfigured = true;
@@ -24,10 +25,15 @@ commonFunctions.Log = {
 		function addFileLine(args) {
 			let jsFrame = Components.stack.caller.caller.caller;
 			try {
-				var str = "\n(in file " + jsFrame.filename + ",function name "
-					+ jsFrame.name + ",line " + jsFrame.lineNumber + ")";
+        var filename = jsFrame.filename.slice(
+          jsFrame.filename.lastIndexOf('/')+1);
+        var prefixStr = '\n' + filename + ':' + jsFrame.name +
+          ':' + jsFrame.lineNumber + '\n';
+        args.unshift(prefixStr);
+				var str = "\n(in file " + jsFrame.filename;
+        args.push(str);
 			} catch(e) {}
-			args.push(str);
+
 			return args;
 		}
 	},
