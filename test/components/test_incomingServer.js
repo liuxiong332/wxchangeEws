@@ -160,5 +160,9 @@ QUnit.test('insert new message', function(assert) {
   newHdr = newHdr.value;
   assert.ok(newHdr && outStream, 'get new hdr and output stream');
 
+  newHdr.author = 'liuxiong332';
+  msgHdr.subject = 'test';
+  msgHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
+  inbox.msgDatabase.AddNewHdrToDB(msgHdr, true);
   newAccount.destroy();
 });
