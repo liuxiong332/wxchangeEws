@@ -115,3 +115,50 @@ QUnit.test('incoming server notify test', function(assert) {
   QUnit.MailServices.mailSession.RemoveFolderListener(folderListener);
   newAccount.destroy();
 });
+
+// QUnit.test('get new msg for inbox', function(assert) {
+//   var newAccount = new QUnit.NewExchangeAccount;
+//   var server = newAccount.server;
+
+//   var inbox = server.rootFolder.getFolderWithFlags(
+//     QUnit.Ci.nsMsgFolderFlags.Inbox);
+
+//   //clear the old new messages
+//   inbox.biffState = nsMsgBiffState_NoMail;
+//   inbox.clearNewMessages();
+//   server.getNewMessages(inbox, null, null);
+//   newAccount.destroy();
+// });
+
+// QUnit.test('open inbox folder', function(assert) {
+//   var newAccount = new QUnit.NewExchangeAccount;
+//   var server = newAccount.server;
+
+//   var inbox = server.rootFolder.getFolderWithFlags(
+//     QUnit.Ci.nsMsgFolderFlags.Inbox);
+
+//   assert.ok(inbox.msgDatabase, 'get msgDatabase');
+//   assert.ok(inbox.server, 'get server from inbox');
+//   assert.ok(server.type, 'get server type');
+
+//   var db = inbox.getDBFolderInfoAndDB({});
+//   assert.ok(db, 'get the db');
+
+// });
+
+QUnit.test('insert new message', function(assert) {
+  var newAccount = new QUnit.NewExchangeAccount;
+  var server = newAccount.server;
+
+  var inbox = server.rootFolder.getFolderWithFlags(
+    QUnit.Ci.nsMsgFolderFlags.Inbox);
+  assert.ok(inbox, 'get inbox');
+
+  var msgStore = server.msgStore;
+  var newHdr = {};
+  var outStream = msgStore.getNewMsgOutputStream(inbox, newHdr, {});
+  newHdr = newHdr.value;
+  assert.ok(newHdr && outStream, 'get new hdr and output stream');
+
+  newAccount.destroy();
+});

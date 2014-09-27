@@ -1028,7 +1028,8 @@ mivExchangeMsgFolder.prototype = {
    * @see nsIMsgFolder::getDBFolderInfoAndDB.
    */
 	get msgDatabase() {
-		return true;
+    if(!this._database) this.openDatabase();
+		return this._database;
 	},
 
 	set msgDatabase(aValue) {
