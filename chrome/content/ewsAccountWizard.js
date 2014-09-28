@@ -7,7 +7,7 @@ if(!exchangeEws) {
 }
 if(!exchangeEws.accountWizard)
   exchangeEws.accountWizard = {};
- 
+
 
 exchangeEws.accountWizard.identityPageUnload = function() {
   var pageData = GetPageData();
@@ -16,30 +16,31 @@ exchangeEws.accountWizard.identityPageUnload = function() {
   if(matchRes == null)
     return false;
 
+  this._email = email;
   this._name = matchRes[1];
   this._host = matchRes[2];
   this._password = document.getElementById("password").value;
   this._ewsUrl = document.getElementById("exchangeEwsUrl").value.trim();
- 
+
   document.documentElement.canAdvance = true;
   return true;
-}; 
+};
 
 exchangeEws.accountWizard.finishAccount = function() {
   const SERVER_TYPE = "exchange";
-  server = MailServices.accounts.createIncomingServer(this._name, this._host, SERVER_TYPE);
-  CommonFunctions.baseLog.info("CreateIncomingServer username: " + this._name + 
-    " host: " + this._host );
+  var server = MailServices.accounts.createIncomingServer(this._name,
+    this._host, SERVER_TYPE);
+  server.password = this._password;
+  server.valid = true;
   // Create an account.
   let account = MailServices.accounts.createAccount();
-  CommonFunctions.baseLog.info("CreateAccount successfully!");
-  // only create an identity for this account if we really have one
-  // (use the email address as a check)
+
   let identity = MailServices.accounts.createIdentity();
-  CommonFunctions.baseLog.info("CreateAccount Identity!");
+  identity.fullName = this._name;
+  identity.email = this._email;
+  identity.valid = true;
+
   account.addIdentity(identity);
-  // Set the new account to use the new server.
-  CommonFunctions.baseLog.info("add server into the account!");
   account.incomingServer = server;
   server.valid = true;
 

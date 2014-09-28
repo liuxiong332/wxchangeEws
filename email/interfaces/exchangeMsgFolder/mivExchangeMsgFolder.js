@@ -64,6 +64,9 @@ function mivExchangeMsgFolder() {
 	this._parent = null;
 	this._subfolders = [];
 
+  this._username = null;
+  this._hostname = null;
+
   this._listeners = [];
 }
 
@@ -145,6 +148,8 @@ mivExchangeMsgFolder.prototype = {
 		if(!this._name) {
 			this._name = url.fileName;
 		}
+    this._username = url.username;
+    this._hostname = url.host;
 		//parse the local path from the uri
 		if(!this._server) return ;
 
@@ -645,16 +650,11 @@ mivExchangeMsgFolder.prototype = {
 	{
 	},
 
-  //  readonly attribute ACString username;
-	get username()
-	{
-		return true;
+	get username() {
+		return this._username;
 	},
-
-  //  readonly attribute ACString hostname;
-	get hostname()
-	{
-		return true;
+	get hostname() {
+		return this._hostname;
 	},
 
   /**
@@ -1326,26 +1326,26 @@ mivExchangeMsgFolder.prototype = {
 		return this._name;
 	},
 
-	set name(name)
-	{
+	set name(name) {
 		this._name = name;
 	},
 
   //  attribute AString prettyName;
-	get prettyName()
-	{
+	get prettyName() {
 		return this.name;
 	},
 
-	set prettyName(name)
-	{
+	set prettyName(name) {
 		this.name = name;
 	},
 
-  //  readonly attribute AString abbreviatedName;
-	get abbreviatedName()
-	{
-		return true;
+  /*  readonly attribute AString abbreviatedName;
+      abbreviated name is used to show in the folder view
+  */
+	get abbreviatedName() {
+    if(this._isServer)
+      return this._username + '@' + this._hostname;
+		return this._name;
 	},
 
   //  attribute nsIMsgFolder parent;
