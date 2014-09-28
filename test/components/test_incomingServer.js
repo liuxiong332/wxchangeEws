@@ -150,6 +150,7 @@ QUnit.test('insert new message', function(assert) {
   var newAccount = new QUnit.NewExchangeAccount;
   var server = newAccount.server;
 
+  var msgId = '@MsgNo.1';
   var inbox = server.rootFolder.getFolderWithFlags(
     QUnit.Ci.nsMsgFolderFlags.Inbox);
   assert.ok(inbox, 'get inbox');
@@ -161,8 +162,12 @@ QUnit.test('insert new message', function(assert) {
   assert.ok(newHdr && outStream, 'get new hdr and output stream');
 
   newHdr.author = 'liuxiong332';
-  msgHdr.subject = 'test';
-  msgHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
-  inbox.msgDatabase.AddNewHdrToDB(msgHdr, true);
+  newHdr.subject = 'test new Message';
+  newHdr.recipients = 'All test Users';
+  newHdr.messageId = msgId;
+  newHdr.accountKey = newAccount.account.key;
+  newHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
+
+  inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
   newAccount.destroy();
 });
