@@ -109,7 +109,7 @@ mivExchangeMsgIncomingServer.prototype = {
   /**
    * internal pref key - guaranteed to be unique across all servers
    */
-//  attribute ACString key;
+  //  attribute ACString key;
 	//when the key change, the branch preference change
 	resetPrefBranch : function() {
 		var branchName = "mail.server." + this._serverKey + ".";
@@ -150,7 +150,7 @@ mivExchangeMsgIncomingServer.prototype = {
   * helper function to construct the pretty name in a server type
   * specific way - e.g., mail for foo@test.com, news on news.mozilla.org
   */
-//  readonly attribute AString constructedPrettyName;
+  //  readonly attribute AString constructedPrettyName;
 	get constructedPrettyName()
 	{
 		return this.prettyName;
@@ -159,7 +159,7 @@ mivExchangeMsgIncomingServer.prototype = {
   /**
    * hostname of the server
    */
-//  attribute ACString hostName;
+  //  attribute ACString hostName;
 	get hostName()
 	{
 		return this._hostName;

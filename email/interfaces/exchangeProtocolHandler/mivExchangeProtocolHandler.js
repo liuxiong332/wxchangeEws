@@ -28,9 +28,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function mivExchangeProtocolHandler() {
-
-	//this.logInfo("mivExchangeProtocolHandler: init");
-
 }
 
 var mivExchangeProtocolHandlerGUID = "62eab4a0-d5b1-4ce8-9910-2ed3661d0ff9";
@@ -56,7 +53,7 @@ mivExchangeProtocolHandler.prototype = {
 		return null;
 	},
 
-	getInterfaces : function _getInterfaces(count) 
+	getInterfaces : function _getInterfaces(count)
 	{
 		var ifaces = [Ci.mivExchangeProtocolHandler,
 				Ci.nsIProtocolHandler,
@@ -69,36 +66,32 @@ mivExchangeProtocolHandler.prototype = {
     /**
      * The scheme of this protocol (e.g., "file").
      */
-//    readonly attribute ACString scheme;
-	get scheme()
-	{
-dump("exchangeProtocolhandler: get scheme\n");
-		return "exchWebServiceMail";
+    //    readonly attribute ACString scheme;
+	get scheme() {
+		return "exchange";
 	},
 
-    /** 
+    /**
      * The default port is the port that this protocol normally uses.
      * If a port does not make sense for the protocol (e.g., "about:")
      * then -1 will be returned.
      */
-//    readonly attribute long defaultPort;
-	get defaultPort()
-	{
-dump("exchangeProtocolhandler: get defaultPort\n");
+	get defaultPort() {
 		return 443;
 	},
 
     /**
-     * Returns the protocol specific flags (see flag definitions below).  
+     * readonly attribute unsigned long protocolFlags;
+     * Returns the protocol specific flags (see flag definitions below).
      */
-//    readonly attribute unsigned long protocolFlags;
-	get protocolFlags()
-	{
-dump("exchangeProtocolhandler: get protocolFlags\n");
+	get protocolFlags() {
 		return this.URI_LOADABLE_BY_ANYONE;
 	},
 
     /**
+     * nsIURI newURI(in AUTF8String aSpec,
+                 in string aOriginCharset,
+                 in nsIURI aBaseURI);
      * Makes a URI object that is suitable for loading by this protocol,
      * where the URI string is given as an UTF-8 string.  The caller may
      * provide the charset from which the URI string originated, so that
@@ -119,42 +112,33 @@ dump("exchangeProtocolhandler: get protocolFlags\n");
      *                         no charset transformation from aSpec).
      * @param aBaseURI       - if null, aSpec must specify an absolute URI.
      *                         otherwise, aSpec may be resolved relative
-     *                         to aBaseURI, depending on the protocol. 
-     *                         If the protocol has no concept of relative 
+     *                         to aBaseURI, depending on the protocol.
+     *                         If the protocol has no concept of relative
      *                         URI aBaseURI will simply be ignored.
      */
-//    nsIURI newURI(in AUTF8String aSpec,
-//                  in string aOriginCharset,
-//                  in nsIURI aBaseURI);
-	newURI: function _newURI(aSpec, aOriginCharset, aBaseURI)
-	{
-dump("exchangeProtocolhandler: newURI\n");
 
+	newURI: function _newURI(aSpec, aOriginCharset, aBaseURI) {
 	},
 
     /**
-     * Constructs a new channel from the given URI for this protocol handler. 
+     * nsIChannel newChannel(in nsIURI aURI);
+     * Constructs a new channel from the given URI for this protocol handler.
      */
-//    nsIChannel newChannel(in nsIURI aURI);
-	newChannel: function _newChannel(aURI)
-	{
-dump("exchangeProtocolhandler: newChannel\n");
-
+	newChannel: function _newChannel(aURI) {
 	},
 
     /**
+     * boolean allowPort(in long port, in string scheme);
      * Allows a protocol to override blacklisted ports.
      *
-     * This method will be called when there is an attempt to connect to a port 
+     * This method will be called when there is an attempt to connect to a port
      * that is blacklisted.  For example, for most protocols, port 25 (Simple Mail
-     * Transfer) is banned.  When a URI containing this "known-to-do-bad-things" 
-     * port number is encountered, this function will be called to ask if the 
-     * protocol handler wants to override the ban.  
+     * Transfer) is banned.  When a URI containing this "known-to-do-bad-things"
+     * port number is encountered, this function will be called to ask if the
+     * protocol handler wants to override the ban.
      */
-//    boolean allowPort(in long port, in string scheme);
 	allowPort: function _allowPort(aSpec, aOriginCharset, aBaseURI)
 	{
-dump("exchangeProtocolhandler: allowPort\n");
 		return true;
 	},
 
