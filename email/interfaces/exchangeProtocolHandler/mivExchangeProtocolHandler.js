@@ -26,6 +26,7 @@ var components = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import('resource://gre/modules/mailServices.js');
 
 function mivExchangeProtocolHandler() {
 }
@@ -34,115 +35,144 @@ var mivExchangeProtocolHandlerGUID = "62eab4a0-d5b1-4ce8-9910-2ed3661d0ff9";
 
 mivExchangeProtocolHandler.prototype = {
 
-	QueryInterface : XPCOMUtils.generateQI([Ci.mivExchangeProtocolHandler,
-				Ci.nsIProtocolHandler,
-                Ci.nsIMsgMessageService,
-				Ci.nsIClassInfo,
-				Ci.nsISupports]),
+  QueryInterface : XPCOMUtils.generateQI([Ci.mivExchangeProtocolHandler,
+  			Ci.nsIProtocolHandler,
+              Ci.nsIMsgMessageService,
+  			Ci.nsIClassInfo,
+  			Ci.nsISupports]),
 
-	_className : "mivExchangeProtocolHandler",
+  _className : "mivExchangeProtocolHandler",
 
-	classDescription : "Exchange EWS Protocol handler",
+  classDescription : "Exchange EWS Protocol handler",
 
-	classID : components.ID("{"+mivExchangeProtocolHandlerGUID+"}"),
-	contractID : "@mozilla.org/messenger/protocol;1?type=exchangeWebServiceMail",
-	flags : Ci.nsIClassInfo.THREADSAFE,
-	implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
+  classID : components.ID("{"+mivExchangeProtocolHandlerGUID+"}"),
+  contractID : "@mozilla.org/messenger/protocol;1?type=exchangeWebServiceMail",
+  flags : Ci.nsIClassInfo.THREADSAFE,
+  implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
-	// nsISupports getHelperForLanguage(in PRUint32 language);
-	getHelperForLanguage: function _getHelperForLanguage(language) {
-		return null;
-	},
+  // nsISupports getHelperForLanguage(in PRUint32 language);
+  getHelperForLanguage: function _getHelperForLanguage(language) {
+  	return null;
+  },
 
-	getInterfaces : function _getInterfaces(count)
-	{
-		var ifaces = [Ci.mivExchangeProtocolHandler,
-				Ci.nsIProtocolHandler,
-				Ci.nsIClassInfo,
-				Ci.nsISupports];
-		count.value = ifaces.length;
-		return ifaces;
-	},
+  getInterfaces : function _getInterfaces(count)
+  {
+  	var ifaces = [Ci.mivExchangeProtocolHandler,
+  			Ci.nsIProtocolHandler,
+              Ci.nsIMsgMessageService,
+  			Ci.nsIClassInfo,
+  			Ci.nsISupports];
+  	count.value = ifaces.length;
+  	return ifaces;
+  },
 
-    /**
-     * The scheme of this protocol (e.g., "file").
-     */
-    //    readonly attribute ACString scheme;
-	get scheme() {
-		return "exchange";
-	},
+  /**
+   * The scheme of this protocol (e.g., "file").
+   */
+  //    readonly attribute ACString scheme;
+  get scheme() {
+  	return "exchange";
+  },
 
-    /**
-     * The default port is the port that this protocol normally uses.
-     * If a port does not make sense for the protocol (e.g., "about:")
-     * then -1 will be returned.
-     */
-	get defaultPort() {
-		return 443;
-	},
+  /**
+   * The default port is the port that this protocol normally uses.
+   * If a port does not make sense for the protocol (e.g., "about:")
+   * then -1 will be returned.
+   */
+  get defaultPort() {
+  	return 443;
+  },
 
-    /**
-     * readonly attribute unsigned long protocolFlags;
-     * Returns the protocol specific flags (see flag definitions below).
-     */
-	get protocolFlags() {
-		return this.URI_LOADABLE_BY_ANYONE;
-	},
+  /**
+   * readonly attribute unsigned long protocolFlags;
+   * Returns the protocol specific flags (see flag definitions below).
+   */
+  get protocolFlags() {
+  	return this.URI_LOADABLE_BY_ANYONE;
+  },
 
-    /**
-     * nsIURI newURI(in AUTF8String aSpec,
-                 in string aOriginCharset,
-                 in nsIURI aBaseURI);
-     * Makes a URI object that is suitable for loading by this protocol,
-     * where the URI string is given as an UTF-8 string.  The caller may
-     * provide the charset from which the URI string originated, so that
-     * the URI string can be translated back to that charset (if necessary)
-     * before communicating with, for example, the origin server of the URI
-     * string.  (Many servers do not support UTF-8 IRIs at the present time,
-     * so we must be careful about tracking the native charset of the origin
-     * server.)
-     *
-     * @param aSpec          - the URI string in UTF-8 encoding. depending
-     *                         on the protocol implementation, unicode character
-     *                         sequences may or may not be %xx escaped.
-     * @param aOriginCharset - the charset of the document from which this URI
-     *                         string originated.  this corresponds to the
-     *                         charset that should be used when communicating
-     *                         this URI to an origin server, for example.  if
-     *                         null, then UTF-8 encoding is assumed (i.e.,
-     *                         no charset transformation from aSpec).
-     * @param aBaseURI       - if null, aSpec must specify an absolute URI.
-     *                         otherwise, aSpec may be resolved relative
-     *                         to aBaseURI, depending on the protocol.
-     *                         If the protocol has no concept of relative
-     *                         URI aBaseURI will simply be ignored.
-     */
+  /**
+   * nsIURI newURI(in AUTF8String aSpec,
+               in string aOriginCharset,
+               in nsIURI aBaseURI);
+   * Makes a URI object that is suitable for loading by this protocol,
+   * where the URI string is given as an UTF-8 string.  The caller may
+   * provide the charset from which the URI string originated, so that
+   * the URI string can be translated back to that charset (if necessary)
+   * before communicating with, for example, the origin server of the URI
+   * string.  (Many servers do not support UTF-8 IRIs at the present time,
+   * so we must be careful about tracking the native charset of the origin
+   * server.)
+   *
+   * @param aSpec          - the URI string in UTF-8 encoding. depending
+   *                         on the protocol implementation, unicode character
+   *                         sequences may or may not be %xx escaped.
+   * @param aOriginCharset - the charset of the document from which this URI
+   *                         string originated.  this corresponds to the
+   *                         charset that should be used when communicating
+   *                         this URI to an origin server, for example.  if
+   *                         null, then UTF-8 encoding is assumed (i.e.,
+   *                         no charset transformation from aSpec).
+   * @param aBaseURI       - if null, aSpec must specify an absolute URI.
+   *                         otherwise, aSpec may be resolved relative
+   *                         to aBaseURI, depending on the protocol.
+   *                         If the protocol has no concept of relative
+   *                         URI aBaseURI will simply be ignored.
+   */
 
-	newURI: function _newURI(aSpec, aOriginCharset, aBaseURI) {
-	},
+  newURI: function _newURI(aSpec, aOriginCharset, aBaseURI) {
+  },
 
-    /**
-     * nsIChannel newChannel(in nsIURI aURI);
-     * Constructs a new channel from the given URI for this protocol handler.
-     */
-	newChannel: function _newChannel(aURI) {
-	},
+  /**
+   * nsIChannel newChannel(in nsIURI aURI);
+   * Constructs a new channel from the given URI for this protocol handler.
+   */
+  newChannel: function(aURI) {
+  },
 
-    /**
-     * boolean allowPort(in long port, in string scheme);
-     * Allows a protocol to override blacklisted ports.
-     *
-     * This method will be called when there is an attempt to connect to a port
-     * that is blacklisted.  For example, for most protocols, port 25 (Simple Mail
-     * Transfer) is banned.  When a URI containing this "known-to-do-bad-things"
-     * port number is encountered, this function will be called to ask if the
-     * protocol handler wants to override the ban.
-     */
-	allowPort: function _allowPort(aSpec, aOriginCharset, aBaseURI)
-	{
-		return true;
-	},
+  /**
+   * boolean allowPort(in long port, in string scheme);
+   * Allows a protocol to override blacklisted ports.
+   *
+   * This method will be called when there is an attempt to connect to a port
+   * that is blacklisted.  For example, for most protocols, port 25 (Simple Mail
+   * Transfer) is banned.  When a URI containing this "known-to-do-bad-things"
+   * port number is encountered, this function will be called to ask if the
+   * protocol handler wants to override the ban.
+   */
+  allowPort: function _allowPort(aSpec, aOriginCharset, aBaseURI)
+  {
+  	return true;
+  },
 
+  DisplayMessage: function(aMessageURI, aDisplayConsumer,  aMsgWindow,
+    aUrlListener, aCharsetOverride) {
+
+    var msgUri = Services.io.newURI(aMessageURI, null, null);
+    var server = MailServices.accounts.FindServer(aURI.username, aURI.host,
+      'exchange');
+    var folder = server.rootFolder.getChildNamed(aURI.path);
+
+    var urlSpec = 'mailbox://' + folder.filePath.path + '?number=' + msgUri.ref;
+    var mailUrl = Cc['@mozilla.org/messenger/mailboxurl;1']
+      .createInstance(Ci.nsIMsgMailNewsUrl);
+    mailUrl.spec = urlSpec;
+    aUrlListener && mailUrl.RegisterListener(aUrlListener);
+    mailUrl.msgWindow = aMsgWindow;
+
+    var mboxUrl = mailUrl.QueryInterface(Ci.nsIMailboxUrl);
+    mboxUrl.mailboxAction = mboxUrl.ActionFetchMessage;
+
+    var msgUrl = mailUrl.QueryInterface(Ci.nsIMsgMessageUrl);
+    if(msgUrl) {
+      msgUrl.originalSpec = aMessageURI;
+      msgUrl.uri = aMessageURI;
+    }
+
+    var docShell = aDisplayConsumer.QueryInterface(Ci.nsIDocShell);
+    docShell.loadURI(mailUrl, null, 0, false);
+    return mailUrl;
+  }
 };
 
 
