@@ -36,6 +36,7 @@ mivExchangeProtocolHandler.prototype = {
 
 	QueryInterface : XPCOMUtils.generateQI([Ci.mivExchangeProtocolHandler,
 				Ci.nsIProtocolHandler,
+                Ci.nsIMsgMessageService,
 				Ci.nsIClassInfo,
 				Ci.nsISupports]),
 

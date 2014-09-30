@@ -169,5 +169,6 @@ QUnit.test('insert new message', function(assert) {
   newHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
 
   inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
+
   newAccount.destroy();
 });

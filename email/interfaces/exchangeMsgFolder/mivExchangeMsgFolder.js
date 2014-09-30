@@ -131,10 +131,8 @@ mivExchangeMsgFolder.prototype = {
       var biasIndex = baseUri.indexOf('/');
       if(biasIndex === -1)
         throw new Error("server URI isnot correct");
-      while(baseUri[biasIndex+1] === '/')
-        ++biasIndex;
-      return mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA +
-        baseUri.slice(biasIndex+1);
+      return mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA
+        + baseUri.slice(biasIndex + 1);
     }
   },
 
@@ -821,8 +819,8 @@ mivExchangeMsgFolder.prototype = {
 	},
 
   //  ACString getUriForMsg(in nsIMsgDBHdr msgHdr);
-	getUriForMsg: function _getUriForMsg(msgHdr)
-	{
+	getUriForMsg: function(msgHdr) {
+    return this.baseMessageURI + '#' + msgHdr.messageKey;
 	},
 
   /**

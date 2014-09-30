@@ -1,6 +1,7 @@
 {
   "files": [
 
-    "components/test_incomingServer.js"
+    "components/test_incomingServer.js",
+    "components/test_protocolHandler.js"
   ]
 }
