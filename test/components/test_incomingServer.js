@@ -10,7 +10,7 @@ QUnit.module('nsIMstIncomingServer test', {
       .getInfoLevelLogger('test-incomingserver');
   },
   teardown: function() {
-    delete QUnit.MailServices;
+    // delete QUnit.MailServices;
     delete QUnit.commonFunctions;
   }
 });
@@ -168,7 +168,46 @@ QUnit.test('insert new message', function(assert) {
   newHdr.accountKey = newAccount.account.key;
   newHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
 
+
+  var message = 'From: "liuxiong332"\r\n'
+    + 'To: "All test Users"\r\n'
+    + 'Subject: "test new Message"\r\n'
+    + 'Content-Type: text/html\r\n' + '\r\n'
+    + '<html><body>Hello World</body></html>\r\n';
+
+  var converterStream = QUnit.Cc['@mozilla.org/intl/converter-output-stream;1']
+    .createInstance(QUnit.Ci.nsIConverterOutputStream);
+  converterStream.init(outStream, null, 0, 0);
+  converterStream.writeString(message);
+  converterStream.close();
+  outStream.close();
+
+  if(inbox.msgDatabase.ContainsKey(newHdr.messageKey))
+    inbox.msgDatabase.DeleteHeader(newHdr, null, true, false);
   inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
 
+  assert.ok(inbox.msgDatabase.GetMsgHdrForKey(newHdr.messageKey));
+
+  var msgUri = inbox.generateMessageURI(newHdr.messageKey);
+  assert.ok(msgUri && /^exchange-message/.test(msgUri));
   newAccount.destroy();
 });
+
+
+QUnit.test('protocol DisplayMessage', function(assert) {
+  var url = {};
+  var newAccount = new QUnit.NewExchangeAccount;
+  var config = newAccount.config;
+
+  var msgUri = 'exchange-message://' + config.username + '@' + config.hostname
+    + '/Inbox#110';
+
+  var msgServiceID =
+    '@mozilla.org/messenger/messageservice;1?type=exchange-message';
+  var msgService = QUnit.Cc[msgServiceID]
+    .getService(QUnit.Ci.nsIMsgMessageService);
+  msgService.DisplayMessage(msgUri, null, null, null, null, url);
+  url = url.value;
+  assert.ok(url);
+  newAccount.destroy();
+})

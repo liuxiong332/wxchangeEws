@@ -27,6 +27,9 @@ var components = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/mailServices.js');
+Cu.import("resource://exchangeEws/commonFunctions.js");
+
+var protocolLog = commonFunctions.Log.getInfoLevelLogger('exchange-protocol');
 
 function mivExchangeProtocolHandler() {
 }
@@ -37,7 +40,7 @@ mivExchangeProtocolHandler.prototype = {
 
   QueryInterface : XPCOMUtils.generateQI([Ci.mivExchangeProtocolHandler,
   			Ci.nsIProtocolHandler,
-              Ci.nsIMsgMessageService,
+        Ci.nsIMsgMessageService,
   			Ci.nsIClassInfo,
   			Ci.nsISupports]),
 
@@ -46,7 +49,7 @@ mivExchangeProtocolHandler.prototype = {
   classDescription : "Exchange EWS Protocol handler",
 
   classID : components.ID("{"+mivExchangeProtocolHandlerGUID+"}"),
-  contractID : "@mozilla.org/messenger/protocol;1?type=exchangeWebServiceMail",
+  contractID : '@mozilla.org/messenger/messageservice;1?type=exchange-message',
   flags : Ci.nsIClassInfo.THREADSAFE,
   implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
@@ -59,7 +62,7 @@ mivExchangeProtocolHandler.prototype = {
   {
   	var ifaces = [Ci.mivExchangeProtocolHandler,
   			Ci.nsIProtocolHandler,
-              Ci.nsIMsgMessageService,
+        Ci.nsIMsgMessageService,
   			Ci.nsIClassInfo,
   			Ci.nsISupports];
   	count.value = ifaces.length;
@@ -146,19 +149,30 @@ mivExchangeProtocolHandler.prototype = {
   },
 
   DisplayMessage: function(aMessageURI, aDisplayConsumer,  aMsgWindow,
-    aUrlListener, aCharsetOverride) {
+    aUrlListener, aCharsetOverride, aUri) {
+    protocolLog.info('the message uri is ' + aMessageURI);
+    var matRes = /[\w-]+:\/\/(\w+)@([\w\.]+)(?::\d+)?\/([\w\/]+)#(.+)/
+      .exec(aMessageURI);
+    var username = matRes[1];
+    var hostname = matRes[2];
+    var urlPath = matRes[3];
+    var urlRef = matRes[4];
 
-    var msgUri = Services.io.newURI(aMessageURI, null, null);
-    var server = MailServices.accounts.FindServer(aURI.username, aURI.host,
+    protocolLog.info('username:' + username + ' hostname:' + hostname +
+     ' urlPath:' + urlPath + ' urlRef:' + urlRef);
+    var server = MailServices.accounts.FindServer(username, hostname,
       'exchange');
-    var folder = server.rootFolder.getChildNamed(aURI.path);
+    var folder = server.rootFolder.getChildNamed(urlPath);
 
-    var urlSpec = 'mailbox://' + folder.filePath.path + '?number=' + msgUri.ref;
+    var escapePath = folder.filePath.path.replace(/\\/g, '\/');
+    var urlSpec = 'mailbox:///' + escapePath + '?number=' + urlRef;
+    protocolLog.info('the urlSpec is ' + urlSpec);
+
     var mailUrl = Cc['@mozilla.org/messenger/mailboxurl;1']
       .createInstance(Ci.nsIMsgMailNewsUrl);
     mailUrl.spec = urlSpec;
     aUrlListener && mailUrl.RegisterListener(aUrlListener);
-    mailUrl.msgWindow = aMsgWindow;
+    aMsgWindow && (mailUrl.msgWindow = aMsgWindow);
 
     var mboxUrl = mailUrl.QueryInterface(Ci.nsIMailboxUrl);
     mboxUrl.mailboxAction = mboxUrl.ActionFetchMessage;
@@ -169,9 +183,11 @@ mivExchangeProtocolHandler.prototype = {
       msgUrl.uri = aMessageURI;
     }
 
-    var docShell = aDisplayConsumer.QueryInterface(Ci.nsIDocShell);
-    docShell.loadURI(mailUrl, null, 0, false);
-    return mailUrl;
+    if(aDisplayConsumer) {
+      var docShell = aDisplayConsumer.QueryInterface(Ci.nsIDocShell);
+      docShell && docShell.loadURI(mailUrl, null, 0, false);
+    }
+    aUri && (aUri.value = mailUrl);
   }
 };
 

@@ -4,3 +4,4 @@ contract @mozilla.org/network/protocol;1?name=exchange {62eab4a0-d5b1-4ce8-9910-
 
 
 contract @mozilla.org/messenger/messageservice;1?type=exchange {62eab4a0-d5b1-4ce8-9910-2ed3661d0ff9}
+contract @mozilla.org/messenger/messageservice;1?type=exchange-message {62eab4a0-d5b1-4ce8-9910-2ed3661d0ff9}

@@ -464,8 +464,7 @@ mivExchangeMsgIncomingServer.prototype = {
   /* the RDF URI for the root mail folder */
 	get serverURI()
 	{
-		return PROTOCOL_NAME + "://" + this.username + "@" +
-      this.hostName + ":" + this.port;
+		return PROTOCOL_NAME + "://" + this.username + "@" + this.hostName;
 	},
 
   createLocalFolder: function(folderName) {

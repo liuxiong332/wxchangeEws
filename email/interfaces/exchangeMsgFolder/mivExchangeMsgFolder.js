@@ -411,17 +411,6 @@ mivExchangeMsgFolder.prototype = {
     newFolder.initWithIncomingServer( newUri + aFolderName, this.server);
     newFolder.parent = this;
 
-    folderLog.info('begin set flags');
-
-    var folderFlags = Ci.nsMsgFolderFlags.Mail;
-    if(this._server) {
-      switch(aFolderName) {
-        case 'Inbox': { folderFlags |= Ci.nsMsgFolderFlags.Inbox; break; }
-        case 'Trash': { folderFlags |= Ci.nsMsgFolderFlags.Trash; break; }
-      }
-    }
-    newFolder.flags = folderFlags;
-    folderLog.info('end set flags');
     this._subfolders.push(newFolder);
     return newFolder;
 	},
@@ -749,6 +738,7 @@ mivExchangeMsgFolder.prototype = {
     if(this._flags === flags) return;
     var changeFlags = this._flags ^ flags;
     this._flags = flags;
+    folderLog.info('flags set complete, begin to notify');
     this.onFlagChange(changeFlags);
 	},
 
@@ -971,10 +961,7 @@ mivExchangeMsgFolder.prototype = {
 
   //  ACString generateMessageURI(in nsMsgKey msgKey);
 	generateMessageURI: function _generateMessageURI(msgKey) {
-		var uri = baseMessageURI;
-		uri.append('#');
-		uri.append(msgKey);
-		return uri;
+    return this.baseMessageURI + '#' + msgKey;
 	},
 
   //  const nsMsgDispositionState nsMsgDispositionState_None = -1;
@@ -1046,6 +1033,7 @@ mivExchangeMsgFolder.prototype = {
         db.close(true);
         this._database = dbService.openFolderDB(this, false);
       } else {
+        folderLog.error('cannot open database');
         throw e;
       }
     }
@@ -1082,6 +1070,7 @@ mivExchangeMsgFolder.prototype = {
     if(this._isServer) return null;
     if(!this._database)
       this.openDatabase();
+    folderLog.info('get the dbfolder info and db');
     var db = this._database;
     if(db && folderInfo)  folderInfo.value = db.dBFolderInfo;
     return db;
@@ -1148,6 +1137,8 @@ mivExchangeMsgFolder.prototype = {
 	},
 
   /**
+   * nsIInputStream getMsgInputStream(in nsIMsgDBHdr aHdr,
+      out boolean aReusable);
    * Get an input stream for the passed message header. The stream will
    * be positioned at the start of the message.
    *
@@ -1156,9 +1147,14 @@ mivExchangeMsgFolder.prototype = {
                            case the caller might not want to close it.
    * @returns an input stream to read the message from
    */
-  //  nsIInputStream getMsgInputStream(in nsIMsgDBHdr aHdr, out boolean aReusable);
-	getMsgInputStream: function _getMsgInputStream(aHdr, aReusable)
-	{
+	getMsgInputStream: function(aHdr, aReusable) {
+    var offset = {};
+    var input = this.msgStore.getMsgInputStream(this, '', offset, aHdr,
+      aReusable);
+    var seekableStream = input.QueryInterface(Ci.nsISeekableStream);
+    offset = offset.value;
+    seekableStream && seekableStream.seek(seekableStream.NS_SEEK_SET, offset);
+    return input;
 	},
 
   //  readonly attribute nsIInputStream offlineStoreInputStream;
@@ -1314,9 +1310,8 @@ mivExchangeMsgFolder.prototype = {
 
   /* old nsIFolder properties and methods */
   //  readonly attribute ACString URI;
-	get URI()
-	{
-		return "exchangeWebServiceMail://Inbox";
+	get URI() {
+		return 'exchange://' + this.username + '@' + this.hostname + this.name;
 	},
 
   //  attribute AString name;
@@ -1376,6 +1371,17 @@ mivExchangeMsgFolder.prototype = {
   get descendants() {
     return this._subfolders;
   },
+
+  setFlagForFolder: function(folder) {
+    var folderFlags = Ci.nsMsgFolderFlags.Mail;
+    if(this._server) {
+      switch(folder.name) {
+        case 'Inbox': { folderFlags |= Ci.nsMsgFolderFlags.Inbox; break; }
+        case 'Trash': { folderFlags |= Ci.nsMsgFolderFlags.Trash; break; }
+      }
+    }
+    folder.flags = folderFlags;
+  },
   /**
    * readonly attribute nsISimpleEnumerator subFolders;
    * Returns an enumerator containing a list of nsIMsgFolder items that are
@@ -1397,6 +1403,11 @@ mivExchangeMsgFolder.prototype = {
         this.getSubFolder('Inbox');
         this.getSubFolder('Trash');
       }
+
+      var self = this;
+      this._subfolders.forEach(function(folder) {
+        self.setFlagForFolder(folder);
+      });
 			this._initialize = true;
 		}
 		return exchWebService.commonFunctions
@@ -1492,6 +1503,7 @@ mivExchangeMsgFolder.prototype = {
   //                                in long oldValue,
   //                                in long newValue);
 	NotifyIntPropertyChanged: function(property, oldValue, newValue) {
+    folderLog.info('notify int property changed');
     var self = this;
     this._listeners.forEach(function(listener) {
       listener.OnItemIntPropertyChanged(self, property, oldValue, newValue);
@@ -1664,9 +1676,8 @@ mivExchangeMsgFolder.prototype = {
   // associate an identity with a particular newsgroup, or for IMAP shared folders in
   // the other users namespace, you might want to create a delegated identity
   //  readonly attribute nsIMsgIdentity customIdentity;
-	get customIdentity()
-	{
-		return true;
+	get customIdentity() {
+		return null;
 	},
 
   /**
