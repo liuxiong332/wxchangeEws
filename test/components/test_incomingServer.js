@@ -116,35 +116,34 @@ QUnit.test('incoming server notify test', function(assert) {
   newAccount.destroy();
 });
 
-// QUnit.test('get new msg for inbox', function(assert) {
-//   var newAccount = new QUnit.NewExchangeAccount;
-//   var server = newAccount.server;
+/*QUnit.test('get new msg for inbox', function(assert) {
+  var newAccount = new QUnit.NewExchangeAccount;
+  var server = newAccount.server;
 
-//   var inbox = server.rootFolder.getFolderWithFlags(
-//     QUnit.Ci.nsMsgFolderFlags.Inbox);
+  var inbox = server.rootFolder.getFolderWithFlags(
+    QUnit.Ci.nsMsgFolderFlags.Inbox);
 
-//   //clear the old new messages
-//   inbox.biffState = nsMsgBiffState_NoMail;
-//   inbox.clearNewMessages();
-//   server.getNewMessages(inbox, null, null);
-//   newAccount.destroy();
-// });
+  //clear the old new messages
+  inbox.biffState = nsMsgBiffState_NoMail;
+  inbox.clearNewMessages();
+  server.getNewMessages(inbox, null, null);
+  newAccount.destroy();
+});
 
-// QUnit.test('open inbox folder', function(assert) {
-//   var newAccount = new QUnit.NewExchangeAccount;
-//   var server = newAccount.server;
+QUnit.test('open inbox folder', function(assert) {
+  var newAccount = new QUnit.NewExchangeAccount;
+  var server = newAccount.server;
 
-//   var inbox = server.rootFolder.getFolderWithFlags(
-//     QUnit.Ci.nsMsgFolderFlags.Inbox);
+  var inbox = server.rootFolder.getFolderWithFlags(
+    QUnit.Ci.nsMsgFolderFlags.Inbox);
 
-//   assert.ok(inbox.msgDatabase, 'get msgDatabase');
-//   assert.ok(inbox.server, 'get server from inbox');
-//   assert.ok(server.type, 'get server type');
+  assert.ok(inbox.msgDatabase, 'get msgDatabase');
+  assert.ok(inbox.server, 'get server from inbox');
+  assert.ok(server.type, 'get server type');
 
-//   var db = inbox.getDBFolderInfoAndDB({});
-//   assert.ok(db, 'get the db');
-
-// });
+  var db = inbox.getDBFolderInfoAndDB({});
+  assert.ok(db, 'get the db');
+});*/
 
 QUnit.test('insert new message', function(assert) {
   var newAccount = new QUnit.NewExchangeAccount;
@@ -175,12 +174,35 @@ QUnit.test('insert new message', function(assert) {
     + 'Content-Type: text/html\r\n' + '\r\n'
     + '<html><body>Hello World</body></html>\r\n';
 
-  var converterStream = QUnit.Cc['@mozilla.org/intl/converter-output-stream;1']
-    .createInstance(QUnit.Ci.nsIConverterOutputStream);
-  converterStream.init(outStream, null, 0, 0);
-  converterStream.writeString(message);
-  converterStream.close();
+  function convertToUTF8(str) {
+    var converter = QUnit.Cc['@mozilla.org/intl/scriptableunicodeconverter']
+      .getService(QUnit.Ci.nsIScriptableUnicodeConverter);
+    return converter.convertToByteArray(str, {});
+  }
+
+  var binaryStream = QUnit.Cc['@mozilla.org/binaryoutputstream;1']
+    .createInstance(QUnit.Ci.nsIBinaryOutputStream);
+  binaryStream.setOutputStream(outStream);
+
+  var readLineReg = /(.*?)\r\n/g;
+  var matchRes;
+  var isBody = false;
+  var byteSize = 0;
+  var byteArray, bodyLines = 0;
+  while((matchRes = readLineReg.exec(message))) {
+    if(isBody)  ++ bodyLines;
+    byteArray = convertToUTF8(matchRes[0]);
+    byteSize += byteArray.length;
+    binaryStream.writeByteArray(byteArray, byteArray.length);
+    if(matchRes[1] === '')  isBody = true;
+  }
+  newHdr.lineCount = bodyLines;
+  newHdr.messageSize = byteSize;
+  binaryStream.close();
   outStream.close();
+
+  assert.equal(bodyLines, 1);
+  assert.equal(byteSize, message.length);
 
   if(inbox.msgDatabase.ContainsKey(newHdr.messageKey))
     inbox.msgDatabase.DeleteHeader(newHdr, null, true, false);
@@ -210,4 +232,4 @@ QUnit.test('protocol DisplayMessage', function(assert) {
   url = url.value;
   assert.ok(url);
   newAccount.destroy();
-})
+});
