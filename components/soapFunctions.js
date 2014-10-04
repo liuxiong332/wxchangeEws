@@ -40,9 +40,9 @@ var Cu = Components.utils;
 var Cr = Components.results;
 var components = Components;
 
-Cu.import("resource://exchangeEws/ecExchangeRequest.js");
-//Cu.import("resource://exchangecalendar/ecFunctions.js");
+Cu.import('resource://exchangeEws/soapConstDef.js');
 Cu.import("resource://interfaces/xml2json/xml2json.js");
+Cu.import('resource://interfaces/xml2jxon/mivIxml2jxon.js');
 
 var EXPORTED_SYMBOLS = ["makeParentFolderIds2", "makeParentFolderIds3",
 	"publicFoldersMap"];
@@ -52,15 +52,18 @@ const publicFoldersMap = { "publicfoldersroot" : true };
 // This is the xml2jxon version.
 function makeParentFolderIds2(aParentItem, aArgument)
 {
-	var globalFunctions = Cc["@1st-setup.nl/global/functions;1"]
-			.getService(Ci.mivFunctions);
+	function xmlToJxon(aXMLString) {
+		return new mivIxml2jxon(aXMLString, 0, null);
+	}
 
-	var ParentFolderIds = globalFunctions.xmlToJxon('<nsMessages:'+aParentItem+
-		' xmlns:nsMessages="'+nsMessagesStr+'" xmlns:nsTypes="'+nsTypesStr+'"/>');
+	var ParentFolderIds = xmlToJxon('<nsMessages:'+aParentItem+
+		' xmlns:nsMessages="'+soapNSDef.nsMessagesStr+
+		'" xmlns:nsTypes="'+ soapNSDef.nsTypesStr+'"/>');
 
 	if (! aArgument.folderID) {
-		var DistinguishedFolderId = globalFunctions.xmlToJxon(
-			'<nsTypes:DistinguishedFolderId xmlns:nsTypes="'+nsTypesStr+'"/>');
+		var DistinguishedFolderId = xmlToJxon(
+			'<nsTypes:DistinguishedFolderId xmlns:nsTypes="'+
+			soapNSDef.nsTypesStr+'"/>');
 		DistinguishedFolderId.setAttribute("Id", aArgument.folderBase);
 
 		// If the folderBase is a public folder then do not provide mailbox if
@@ -75,7 +78,8 @@ function makeParentFolderIds2(aParentItem, aArgument)
 		DistinguishedFolderId = null;
 	}
 	else {
-		var FolderId = globalFunctions.xmlToJxon('<nsTypes:FolderId xmlns:nsTypes="'+nsTypesStr+'"/>');
+		var FolderId = globalFunctions.xmlToJxon('<nsTypes:FolderId xmlns:nsTypes="'
+			+ soapNSDef.nsTypesStr+'"/>');
 		FolderId.setAttribute("Id", aArgument.folderID);
 		if ((aArgument.changeKey) && (aArgument.changeKey != "")) {
 			FolderId.setAttribute("ChangeKey", aArgument.changeKey);
@@ -93,11 +97,13 @@ function makeParentFolderIds3(aParentItem, aArgument)
 {
 	var root = xml2json.newJSON();
 	var ParentFolderIds = xml2json.addTag(root, aParentItem, "nsMessages");
-	xml2json.setAttribute(ParentFolderIds, "xmlns:nsMessages", nsMessagesStr);
-	xml2json.setAttribute(ParentFolderIds, "xmlns:nsTypes", nsTypesStr);
+	xml2json.setAttribute(ParentFolderIds, "xmlns:nsMessages",
+		soapNSDef.nsMessagesStr);
+	xml2json.setAttribute(ParentFolderIds, "xmlns:nsTypes", soapNSDef.nsTypesStr);
 
 	if (! aArgument.folderID) {
-		let DistinguishedFolderId = xml2json.addTag(ParentFolderIds, "DistinguishedFolderId", "nsTypes", null);
+		let DistinguishedFolderId = xml2json.addTag(ParentFolderIds,
+			"DistinguishedFolderId", "nsTypes", null);
 		xml2json.setAttribute(DistinguishedFolderId, "Id", aArgument.folderBase);
 
 		// If the folderBase is a public folder then do not provide mailbox if
@@ -119,7 +125,6 @@ function makeParentFolderIds3(aParentItem, aArgument)
 		}
 		FolderId = null;
 	}
-
 	return ParentFolderIds;
 }
 

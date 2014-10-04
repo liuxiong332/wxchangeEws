@@ -49,7 +49,7 @@ mivExchangeProtocolHandler.prototype = {
   classDescription : "Exchange EWS Protocol handler",
 
   classID : components.ID("{"+mivExchangeProtocolHandlerGUID+"}"),
-  contractID : '@mozilla.org/messenger/messageservice;1?type=exchange-message',
+  contractID : '@mozilla.org/network/protocol;1?name=exchange',
   flags : Ci.nsIClassInfo.THREADSAFE,
   implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
@@ -184,8 +184,10 @@ mivExchangeProtocolHandler.prototype = {
     }
 
     if(aDisplayConsumer) {
+      protocolLog.info('get the docShell interface');
       var docShell = aDisplayConsumer.QueryInterface(Ci.nsIDocShell);
       docShell && docShell.loadURI(mailUrl, null, 0, false);
+      docShell || protocolLog.error('cannot get the docShell interface');
     }
     aUri && (aUri.value = mailUrl);
   }

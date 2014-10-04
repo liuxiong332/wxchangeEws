@@ -207,6 +207,7 @@ QUnit.test('insert new message', function(assert) {
   if(inbox.msgDatabase.ContainsKey(newHdr.messageKey))
     inbox.msgDatabase.DeleteHeader(newHdr, null, true, false);
   inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
+  inbox.msgDatabase.Commit(QUnit.Ci.nsMsgDBCommitType.kLargeCommit);
 
   assert.ok(inbox.msgDatabase.GetMsgHdrForKey(newHdr.messageKey));
 

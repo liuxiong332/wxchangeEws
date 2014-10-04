@@ -5,7 +5,7 @@ QUnit.module('erBrowseFolder test', {
     QUnit.Ci = Components.interfaces;
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
-    QUnit.Cu.import('resource://exchangeEws/erBrowseFolder.js', QUnit);
+    // QUnit.Cu.import('resource://exchangeEws/erBrowseFolder.js', QUnit);
     QUnit.baseLog = QUnit.commonFunctions.Log
       .getErrorLevelLogger('test-browse-folder');
   },
@@ -13,6 +13,13 @@ QUnit.module('erBrowseFolder test', {
     delete QUnit.erBrowseFolderRequest;
     delete QUnit.commonFunctions;
   }
+});
+
+QUnit.test('soapFunctions test', function() {
+  QUnit.Cu.import('resource://exchangeEws/soapFunctions.js', this);
+  var jxon = this.makeParentFolderIds2('parent', {folderBase: 'Inbox'});
+  var parentElement = jxon.XPath('nsMessages:parent');
+  assert.equal(parentElement.length, 1);
 });
 
 QUnit.asyncTest('request folder find', function(assert) {
@@ -34,6 +41,6 @@ QUnit.asyncTest('request folder find', function(assert) {
     assert.ok(false, 'request failed!');
     QUnit.start();
   }
-  var folderRequest = new QUnit.erBrowseFolderRequest(requestConfig,
-    requestOK, requestError);
+  // var folderRequest = new QUnit.erBrowseFolderRequest(requestConfig,
+  //   requestOK, requestError);
 });

@@ -1,6 +1,10 @@
 {
   "files": [
-
+  	"components/test_mivIxml2jxon.js",
+    "components/test_soapFunctions.js",
+    "components/test_erBrowseFolder.js",
+    "components/test_erGetFolder.js",
+    "components/test_erFindMessages.js",
     "components/test_incomingServer.js",
     "components/test_protocolHandler.js"
   ]
