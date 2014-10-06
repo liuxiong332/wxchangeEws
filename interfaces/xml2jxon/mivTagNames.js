@@ -50,7 +50,7 @@ mivTagNames.prototype = {
 	contractID: "@1st-setup.nl/conversion/tagnames;1",
 	flags: Ci.nsIClassInfo.SINGLETON || Ci.nsIClassInfo.THREADSAFE,
 	implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
-	getInterfaces: function _getInterfaces(count) 
+	getInterfaces: function _getInterfaces(count)
 	{
 		var ifaces = [Ci.mivTagNames,Ci.nsIClassInfo,Ci.nsISupports];
 		count.value = ifaces.length;
@@ -76,7 +76,7 @@ function NSGetFactory(cid) {
 		if (!NSGetFactory.mivTagNames) {
 			// Load main script from lightning that we need.
 			NSGetFactory.mivTagNames = XPCOMUtils.generateNSGetFactory([mivTagNames]);
-			
+
 	}
 
 	} catch(e) {
@@ -86,5 +86,5 @@ function NSGetFactory(cid) {
 	}
 
 	return NSGetFactory.mivTagNames(cid);
-} 
+}
 
