@@ -2,7 +2,8 @@
 Components.utils.import('resource://exchangeEws/commonFunctions.js');
 var log = commonFunctions.Log.getInfoLevelLogger('xml2jxon');
 
-var EXPORTED_SYMBOLS = ['Xml2jxonObj', 'XmlProcessor', 'RegStrExecutor'];
+var EXPORTED_SYMBOLS = ['Xml2jxonObj', 'XmlProcessor', 'RegStrExecutor',
+	'XPathProcessor'];
 
 function RegStrExecutor(str) {
 	this.str = str;
@@ -117,6 +118,186 @@ XmlProcessor.prototype = {
 	}
 };
 
+/*the XPathProcessor is process the XPath selector, but not all of
+ * XPath is supported, it can support below XPath selector:
+ *  /node, //node, node, @attr, //@attr, /@attr, . , [val1 >= val2 and|or ...]
+ */
+function XPathProcessor(xmlObj) {
+	this.rootObj = new Xml2jxonObj;
+	this.rootObj.addChildTagObject(xmlObj);
+}
+
+XPathProcessor.prototype = {
+	processXPath: function(xPath) {
+		return this.processExpr([this.rootObj], xPath);
+	},
+
+	processExpr: function(results, exprStr) {
+		// log.info(JSON.stringify(results, null, 4));
+		var tempRes = results;
+		var exprReg = /(.+?)(?=\/|\[)/gy, exprRes;
+		var exprExecutor = new RegStrExecutor(exprStr);
+		while((exprRes = exprExecutor.execute(exprReg))) {
+			tempRes = this.processOneExpr(tempRes, exprRes[1]);
+		}
+		exprRes = exprExecutor.execute(/(.+)$/gy);
+		if(exprRes) {
+			log.info('the exprRes in processExpr is:' + exprRes[1]);
+			tempRes = this.processOneExpr(tempRes, exprRes[1]);
+		}
+		return tempRes;
+	},
+
+	processOneExpr: function(results, exprStr) {
+		log.info('the exprStr in processOneExpr is:' + exprStr + '.');
+		if(exprStr === '.')
+			return results;
+		var filterReg = /\s*\[(.+?)\]\s*/;
+		var filterRes = filterReg.exec(exprStr);
+		if(filterRes) {
+			return this.processFilterExpr(results, filterRes[1]);
+		}
+		var pathReg = /\s*(\/\/?)(.+?)\s*$/;
+		var pathRes = pathReg.exec(exprStr);
+		if(pathRes) {
+			switch(pathRes[1]) {
+				case '/': 	return this.processChildExpr(results, pathRes[2]);
+				case '//':
+					return this.processRecursiveDescentExpr(results, pathRes[2]);
+			}
+		}
+		// log.info('processOneExpr the node or @attr');
+		return this.processChildExpr(results, exprStr);
+	},
+
+	processChildExpr: function(results, nodeStr) {
+		var tempResult = [];
+		if(nodeStr === '*') {		// /*
+			results.forEach(function(node) {
+				tempResult = tempResult.concat(node.getAllChildTags());
+			});
+		} else {
+			var attrRes = /@([\w:]+)/.exec(nodeStr);
+			if(!attrRes) {				// /nodeName
+				log.info('the nodeStr is:' + nodeStr + '.');
+				results.forEach(function(node) {
+					tempResult = tempResult.concat(node.getChildTags(nodeStr));
+				});
+			} else {							// /@AttrName
+				var attrName = attrRes[1];
+				// log.info('the attr name is:' + attrName + '.');
+				results.forEach(function(node) {
+					node.hasAttribute(attrName) &&
+						tempResult.push(node.getAttribute(attrName));
+				});
+			}
+		}
+		return tempResult;
+	},
+
+	processRecursiveDescentExpr: function(results, nodeStr) {
+		var tempResult = this.processChildExpr(results, nodeStr);
+		results.forEach(function(node) {
+			tempResult = tempResult.concat(
+				this.processRecursiveDescentExpr(node.getAllChildTags(), nodeStr));
+		}, this);
+		return tempResult;
+	},
+
+	processFilterExpr: function(results, filterStr) {
+		log.info('the filterStr in processFilterExpr is:' + filterStr + '.');
+		var self = this;
+		return results.filter(function(node) {
+			return self.processOneFilterExpr([node], filterStr);
+		});
+	},
+
+	processOneFilterExpr: function(node, filterStr) {
+		log.info('the filterStr is:' + filterStr + '.');
+		var AND_OPERATOR = 1, OR_OPERATOR = 2;
+		var logicOperator = AND_OPERATOR;
+		var leftOperand = true;
+
+		var self = this;
+		var filterExecutor = new RegStrExecutor(filterStr);
+		var filterRes = null;
+		var filterReg = /\s*(.+?)\s+(?=(and)|(or))/g;
+		var logicReg = /((and)|(or))\s+/g;
+		while((filterRes = filterExecutor.execute(filterReg))) {
+			log.info('the filterRes is:' + filterRes[0] + '.');
+			leftOperand = getLogicResult(node, filterRes[1]);
+			logicRes = filterExecutor.execute(logicReg)[1];
+			switch(logicRes) {
+				case 'and': {
+					if(!leftOperand) 	return false; 		//short path calculate
+					logicOperator = AND_OPERATOR;
+					break;
+				}
+				case 'or': {
+					if(leftOperand) 	return true;
+					logicOperator = OR_OPERATOR;
+					break;
+				}
+			}
+		}
+		var rightOperand = filterExecutor.execute(/\s*(.+?)\s*$/g)[1];
+		return getLogicResult(node, rightOperand);
+
+		function getLogicResult(node, rightStr) {
+			var res;
+			var rightOperand = self.processCompareExpr(node, rightStr);
+			switch(logicOperator) {
+				case AND_OPERATOR: 	res = leftOperand && rightOperand; break;
+				case OR_OPERATOR:   res = leftOperand || rightOperand; break;
+			}
+			return res;
+		}
+	},
+
+	processCompareExpr: function(results, exprStr) {
+		log.info('the exprStr is:' + exprStr + '.');
+		var exprReg = /\s*(.+?)\s*(=|>|<|(?:>=)|(?:<=)|(?:!=))\s*(.+?)\s*$/;
+		var regRes = exprReg.exec(exprStr);
+		if(!regRes)
+			return this.getValueFromExpr(results, exprStr) !== null;
+
+		var left = this.getValueFromExpr(results, regRes[1]);
+		var right = this.getValueFromExpr(results, regRes[3]);
+		// log.info('the left is:' + left + ', the right is:' + right + '.');
+		switch(regRes[2]) {
+			case '=': 	return left == right;
+			case '>': 	return left > right;
+			case '<': 	return left < right;
+			case '>=': 	return left >= right;
+			case '<=':  return left <= right;
+			case '!=':  return left != right;
+		}
+		return false;
+	},
+
+	getValueFromExpr: function(results, exprStr) {
+		log.info('the value expr str is :' + exprStr + '.');
+		var strReg = /^\s*('|")(.+?)\1\s*$/;
+		var strRegRes = strReg.exec(exprStr);
+		if(strRegRes) {
+			return strRegRes[2];
+		}
+		var numberReg = /^\s*[+-]?\d*(\.?)\d*$/;
+		var numberRegRes = numberReg.exec(exprStr);
+		if(numberRegRes) {
+			if(numberRegRes[1])		return parseFloat(exprStr);
+			return parseInt(exprStr, 10);
+		}
+		log.info('begin process expr');
+		var operand = this.processExpr(results, exprStr);
+		if(operand.length === 0)	return null;
+		operand = operand[0];
+		log.info('the value is :' + operand + '.');
+		operand.getValue && (operand = operand.getValue());	//tag element
+		return operand;
+	}
+}
+
 function convertSpecialCharatersFromXML(strXml) {
 	// Convert special characters
 	return strXml.replace(/&(quot|apos|lt|gt|amp);/g, function (str, r1) {
@@ -217,6 +398,10 @@ Xml2jxonObj.prototype = {
     return this.attr[attrTag] || defValue;
   },
 
+  hasAttribute: function(attrTag) {
+  	return !!this.attr[attrTag];
+  },
+
   getAttributeByChildTag: function(tagName, attrTag, attrDefValue) {
     var targetTag = this.getChildTag(tagName);
     if(targetTag)  return targetTag.getAttribute(attrTag, attrDefValue);
@@ -231,6 +416,18 @@ Xml2jxonObj.prototype = {
     if (!tagElements) return [];
     if (Array.isArray(tagElements)) return tagElements;
     return [tagElements];
+  },
+
+  getAllChildTags: function() {
+  	var childTags = [];
+  	for(var tagIndex in this.tags) {
+  		var tagElements = this.tags[tagIndex];
+  		if(Array.isArray(tagElements))
+  			childTags = childTags.concat(tagElements);
+  		else
+  			childTags.push(tagElements);
+  	}
+  	return childTags;
   },
 
   getChildTagValue: function(tagName, defValue) {

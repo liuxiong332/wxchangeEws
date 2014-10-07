@@ -148,3 +148,57 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
   var newObj = new QUnit.Xml2jxonObj(xmlObj.toString());
   assert.deepEqual(newObj, xmlObj);
 });
+
+QUnit.test('XPath Processor test', function(assert) {
+  var xmlStr = '<?xml version="1.0" encoding="UTF-8"?>' +
+  '<xml:note ns:attr="AttrValue">' +
+    '<to> Tove</to>' +
+  '</xml:note>';
+  var xmlObj = new QUnit.Xml2jxonObj(xmlStr);
+  var toObj = xmlObj.getChildTag('to');
+  var xPathProcessor = new QUnit.XPathProcessor(xmlObj);
+  assert.strictEqual(xPathProcessor.getValueFromExpr([], '\'Hello"World\''),
+    'Hello"World');
+  assert.strictEqual(xPathProcessor.getValueFromExpr([], '23'), 23);
+
+  assert.ok(xPathProcessor.processCompareExpr([],' 23.56 > 12.11'));
+  assert.ok(xPathProcessor.processCompareExpr([],' "zbc a" > "abc d"'));
+
+  assert.ok(xPathProcessor.processOneFilterExpr([],
+    ' 23.21 > 21.2 and "z" > "a"'), 'and filter expr');
+  assert.ok(xPathProcessor.processOneFilterExpr([],
+    ' 23.21 < 21.2 or "z" > "a"'), 'or filter expr');
+  assert.ok(xPathProcessor.processOneFilterExpr([xmlObj],
+    ' @ns:attr="AttrValue"'), 'xmlObj has ns:attr attribute');
+
+  var originRes = [xPathProcessor.rootObj];
+  assert.deepEqual(xPathProcessor.processChildExpr(originRes, '*'),
+    [xmlObj]);
+  assert.deepEqual(xPathProcessor.processChildExpr(originRes, 'xml:note'),
+    [xmlObj]);
+  assert.deepEqual(xPathProcessor.processChildExpr([xmlObj], '@ns:attr'),
+    ['AttrValue']);
+
+  assert.deepEqual(xPathProcessor.processRecursiveDescentExpr(originRes, '*'),
+    [xmlObj, toObj], 'recursive descent * match');
+  assert.deepEqual(xPathProcessor.processRecursiveDescentExpr(originRes, 'to'),
+    [toObj], 'find all to node');
+  assert.deepEqual(xPathProcessor.processRecursiveDescentExpr(originRes,
+    '@ns:attr'), ['AttrValue']);
+
+  assert.deepEqual(xPathProcessor.processOneExpr([xmlObj], '[ "32" ]'),
+    [xmlObj]);
+  assert.deepEqual(xPathProcessor.processOneExpr([xmlObj], '[ to ]'),
+    [xmlObj]);
+  assert.deepEqual(xPathProcessor.processOneExpr([xmlObj], 'to'),
+    [toObj]);
+  assert.deepEqual(xPathProcessor.processOneExpr([xmlObj], '//to'),
+    [toObj]);
+  assert.deepEqual(xPathProcessor.processOneExpr([xmlObj], '@ns:attr'),
+    ['AttrValue']);
+  assert.deepEqual(xPathProcessor.processOneExpr([xmlObj],
+    '[ @ns:attr="AttrValue" and to]'), [xmlObj]);
+
+  assert.deepEqual(xPathProcessor.processXPath(
+    'xml:note[ @ns:attr="AttrValue" and to]/to'), [toObj]);
+});
