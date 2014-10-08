@@ -328,19 +328,21 @@ function convertSpecialCharatersToXML(str) {
 	});
 }
 
-function Xml2jxonObj(xmlStr) {
-	if(xmlStr) {
-		var processor = new XmlProcessor(xmlStr);
-		return processor.processXmlObj(Xml2jxonObj.constructor);
-	}
+function Xml2jxonObj(tagName, namespace) {
   this.nameSpaces = {};
   this.tags = {};
   this.attr = {};
   this.content = [];
+  tagName && this.setTagName(tagName, nameSpace);
 }
 
 Xml2jxonObj.constructor = function() {
 	return new Xml2jxonObj;
+};
+
+Xml2jxonObj.createFromXML = function(xmlStr) {
+  var processor = new XmlProcessor(xmlStr);
+  return processor.processXmlObj(Xml2jxonObj.constructor);
 };
 
 Xml2jxonObj.prototype = {
@@ -351,20 +353,34 @@ Xml2jxonObj.prototype = {
 
   explodeAttribute: function(attrNs, attrName, attrValue) {
     if (attrNs === "xmlns") {
-      this.addNameSpace(attrName, attrValue);
+      this.addNamespace(attrName, attrValue);
     } else if(!attrNs && attrName === 'xmlns') {
-      this.addNameSpace("_default_" , attrValue);
+      this.addNamespace("_default_" , attrValue);
     } else {
     	var attrTag = attrNs? attrNs + ':' + attrName : attrName;
       this.attr[attrTag] = convertSpecialCharatersFromXML(attrValue);
     }
   },
 
-  getNameSpace: function(nsAlias) {
+  setTagName: function(tagName, namespace) {
+    if(!tagName)  return ;
+    if(nameSpaces) {
+      this.tagName = tagName;
+      this.nameSpace = nameSpace;
+    } else {
+      var tagHeadReg = /^(?:(\w+):)?(\w+)$/;
+      var res = tagHeadReg.exec(tagName);
+      if(!res)  throw new Error('the tagName format is invalid');
+      this.nameSpace = res[1];
+      this.tagName = res[2];
+    }
+  },
+
+  getNamespace: function(nsAlias) {
     !nsAlias && (nsAlias = '_default_');
     return this.nameSpaces[nsAlias];
   },
-  addNameSpace: function(nsAlias, nsUri) {
+  addNamespace: function(nsAlias, nsUri) {
     this.nameSpaces[nsAlias] = nsUri;
   },
 

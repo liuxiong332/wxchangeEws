@@ -129,7 +129,7 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
   '<xml:note ns:attr="AttrValue">' +
     '<to> Tove</to>' +
   '</xml:note>';
-  var xmlObj = new QUnit.Xml2jxonObj(xmlStr);
+  var xmlObj = QUnit.Xml2jxonObj.createFromXML(xmlStr);
   assert.strictEqual(xmlObj.nameSpace, 'xml');
   assert.strictEqual(xmlObj.tagName, 'note');
   assert.strictEqual(xmlObj.getAttribute('ns:attr'), 'AttrValue');
@@ -145,7 +145,7 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
   var newTag = xmlObj.addChildTag('from', 'xml', 'who am i');
   assert.equal(newTag, xmlObj.getChildTag('xml:from'));
 
-  var newObj = new QUnit.Xml2jxonObj(xmlObj.toString());
+  var newObj = QUnit.Xml2jxonObj.createFromXML(xmlObj.toString());
   assert.deepEqual(newObj, xmlObj);
 
   assert.deepEqual(xmlObj.XPath('/xml:note/to'), [childTag]);
@@ -156,7 +156,7 @@ QUnit.test('XPath Processor test', function(assert) {
   '<xml:note ns:attr="AttrValue">' +
     '<to> Tove</to>' +
   '</xml:note>';
-  var xmlObj = new QUnit.Xml2jxonObj(xmlStr);
+  var xmlObj = QUnit.Xml2jxonObj.createFromXML(xmlStr);
   var toObj = xmlObj.getChildTag('to');
   var xPathProcessor = new QUnit.XPathProcessor(xmlObj);
   assert.strictEqual(xPathProcessor.getValueFromExpr([], '\'Hello"World\''),

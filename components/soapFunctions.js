@@ -57,7 +57,7 @@ const publicFoldersMap = { "publicfoldersroot" : true };
 function makeParentFolderIds(aParentItem, folderInfo)
 {
 	function xmlToJxon(aXMLString) {
-		return new Xml2jxonObj(aXMLString);
+		return Xml2jxonObj.createFromXML(aXMLString);
 	}
 
 	var ParentFolderIds = xmlToJxon('<nsMessages:'+aParentItem+
@@ -92,43 +92,18 @@ function makeParentFolderIds(aParentItem, folderInfo)
 		ParentFolderIds.addChildTagObject(FolderId);
 		FolderId = null;
 	}
-
 	return ParentFolderIds;
 }
 
-// This is the xml2json version.
-// function makeParentFolderIds3(aParentItem, aArgument)
-// {
-// 	var root = xml2json.newJSON();
-// 	var ParentFolderIds = xml2json.addTag(root, aParentItem, "nsMessages");
-// 	xml2json.setAttribute(ParentFolderIds, "xmlns:nsMessages",
-// 		soapNSDef.nsMessagesStr);
-// 	xml2json.setAttribute(ParentFolderIds, "xmlns:nsTypes", soapNSDef.nsTypesStr);
+function makeSoapMessage(req) {
+	var msg = new Xml2jxonObj('nsSoap:Envelope');
+	msg.addNamespace('nsSoap', soapNSDef.nsSoapStr);
+	msg.addNamespace('nsMessages', soapNSDef.nsMessagesStr);
+	msg.addNamespace('nsTypes', soapNSDef.nsTypesStr);
 
-// 	if (! aArgument.folderID) {
-// 		let DistinguishedFolderId = xml2json.addTag(ParentFolderIds,
-// 			"DistinguishedFolderId", "nsTypes", null);
-// 		xml2json.setAttribute(DistinguishedFolderId, "Id", aArgument.folderBase);
+	msg.addChildTag("Body", "nsSoap", null).addChildTagObject(req);
 
-// 		// If the folderBase is a public folder then do not provide mailbox if
-// 		// available.
-// 		if (! publicFoldersMap[aArgument.folderBase]) {
-// 			if (aArgument.mailbox) {
-// 				let mailbox = xml2json.addTag(DistinguishedFolderId, "Mailbox", "nsTypes", null);
-// 				xml2json.addTag(mailbox, "EmailAddress", "nsTypes", aArgument.mailbox);
-// 				mailbox = null;
-// 			}
-// 		}
-// 		DistinguishedFolderId = null;
-// 	}
-// 	else {
-// 		let FolderId = xml2json.addTag(ParentFolderIds, "FolderId", "nsTypes", null);
-// 		xml2json.setAttribute(FolderId, "Id", aArgument.folderID);
-// 		if ((aArgument.changeKey) && (aArgument.changeKey != "")) {
-// 			xml2json.setAttribute(FolderId, "ChangeKey", aArgument.changeKey);
-// 		}
-// 		FolderId = null;
-// 	}
-// 	return ParentFolderIds;
-// }
-
+	var xml_tag = '<?xml version="1.0" encoding="utf-8"?>\n';
+	var tmpStr = xml_tag + msg.toString();
+	return tmpStr;
+},
