@@ -7,14 +7,6 @@ var Cr = Components.results;
 var components = Components;
 
 
-var xml_tag = '<?xml version="1.0" encoding="utf-8"?>\n';
-
-var gExchangeRequestVersion = "0.1";
-
-if (! exchWebService) var exchWebService = {};
-
-exchWebService.prePasswords = {};
-
 function ExchangeRequest(aArgument, aCbOk, aCbError, aListener)
 {
 	this.mData = "";
@@ -22,7 +14,6 @@ function ExchangeRequest(aArgument, aCbOk, aCbError, aListener)
 	this.mCbOk = aCbOk;
 	this.mCbError = aCbError;
 	this.retries = 0;
-	this.urllist = [];
 	this.currentUrl = "";
 	this.listener = aListener;
 	this.retryCount = 0;
@@ -43,174 +34,39 @@ function ExchangeRequest(aArgument, aCbOk, aCbError, aListener)
 
 	this.kerberos = true;
 
-	this.prefB = Cc["@mozilla.org/preferences-service;1"]
-			.getService(Ci.nsIPrefBranch);
-
-	this.exchangeStatistics = Cc["@1st-setup.nl/exchange/statistics;1"]
-			.getService(Ci.mivExchangeStatistics);
-
-	this.exchangeBadCertListener2 = Cc["@1st-setup.nl/exchange/badcertlistener2;1"]
-			.getService(Ci.mivExchangeBadCertListener2);
-
-	this.observerService = Cc["@mozilla.org/observer-service;1"]
-	                          .getService(Ci.nsIObserverService);
-
-	this.timeZones = Cc["@1st-setup.nl/exchange/timezones;1"]
-				.getService(Ci.mivExchangeTimeZones);
-
 }
 
 ExchangeRequest.prototype = {
-	ER_ERROR_EMPTY_FOLDERPATH: -2,
-	ER_ERROR_INVALID_URL: -6, 	// "No url to send request to."
-	ER_ERROR_RESPONS_NOT_VALID: -7, // "Respons does not contain expected field"
-	ER_ERROR_SOAP_ERROR: -8,	// "Error on creating item:"+responseCode
-	ER_ERROR_RESOLVING_HOST: -9,    // "Error during resolving of hostname"
-	ER_ERROR_CONNECTING_TO: -10,    // "Error during connecting to hostname"
-	ER_ERROR_CREATING_ITEM_UNKNOWN: -13, // "Error. Unknown item creation:"+String(aResp)
-
-	ER_ERROR_CONNECED_TO: -14, // "Error during connection to hostname '"
-	ER_ERROR_SENDING_TO: -15,  // "Error during sending data to hostname '"
-	ER_ERROR_WAITING_FOR: -16, // "Error during waiting for data of hostname '"
-	ER_ERROR_RECEIVING_FROM: -17, // "Error during receiving of data from hostname '"
-	ER_ERROR_UNKNOWN_CONNECTION: -18, // "Unknown error during communication with hostname
-	ER_ERROR_HTTP_ERROR4XX: -19,  // A HTTP 4XX error code was returned.
-
-	ER_ERROR_USER_ABORT_AUTHENTICATION: -20,	// "User aborted authentication credentials"
-	ER_ERROR_USER_ABORT_ADD_CERTIFICATE: -30,	// "User aborted adding required certificate"
-	ER_ERROR_OPEN_FAILED: -100,	// "Could not connect to specified host:"+err
-	ER_ERROR_FROM_SERVER: -101,	// HTTP error from server.
-	ER_ERROR_AUTODISCOVER_GET_EWSULR: -200,  // During auto discovery no EWS URL were discoverd in respons.
-	ER_ERROR_FINDFOLDER_NO_TOTALITEMSVIEW: -201, // Field totalitemsview missing in soap response.
-	ER_ERROR_FINDFOLDER_FOLDERID_DETAILS: -202, // Could not find folderid details in soap response.
-	ER_ERROR_FINDFOLDER_MULTIPLE_RESULTS: -203, // Found more than one results in the findfolder soap response.
-	ER_ERROR_FINDOCCURRENCES_INVALIDIDMALFORMED: -204, // Found an malformed id during find occurrences.
-	ER_ERROR_GETOCCURRENCEINDEX_NOTFOUND: -205,  // Could not found occurrence index.
-	ER_ERROR_SOAP_RESPONSECODE_NOTFOUND: -206, // Could not find the responce field in the soap response.
-	ER_ERROR_PRIMARY_SMTP_NOTFOUND: -207, // Primary SMTP address could not be found in soap response.
-	ER_ERROR_PRIMARY_SMTP_UNKNOWN: -208,  // Unknown error during Primary SMTP check.
-	ER_ERROR_UNKNOWN_MEETING_REPSONSE: -209, // Unknown Meeting Response.
-	ER_ERROR_SYNCFOLDERITEMS_UNKNOWN: -210, // Unknown error during SyncFolders.
-	ER_ERROR_ITEM_UPDATE_UNKNOWN: -211,  // Unknown error during item ipdate.
-	ER_ERROR_SPECIFIED_SMTP_NOTFOUND: -212, // Specified SMTP address does not exist.
-	ER_ERROR_CONVERTID: -214, // Specified SMTP address does not exist.
-	ER_ERROR_NOACCESSTOFREEBUSY: -215, // Specified user has no access to free/busy information of specified mailbox.
-	ER_ERROR_FINDOCCURRENCES_UNKNOWN: -216, // We received an unkown error while trying to get the occurrences.
-
-	ERR_PASSWORD_ERROR: -300, // To many password errors.
-
-	get debug()
-	{
-		if ((this.debuglevel == 0) || (!this.globalFunctions.shouldLog())) {
-			return false;
-		}
-
-		return this.globalFunctions.safeGetBoolPref(this.prefB, "extensions.1st-setup.network.debug", false, true);
-	},
-
-	get debuglevel()
-	{
-		return this.globalFunctions.safeGetIntPref(this.prefB, "extensions.1st-setup.network.debuglevel", 0, true);
-	},
-
-	logInfo: function _logInfo(aMsg, aLevel)
-	{
-		if (!aLevel) var aLevel = 1;
-
-		if ((this.debug) && (aLevel <= this.debuglevel)) {
-			this.globalFunctions.LOG(this.uuid+": "+aMsg);
-		}
-	},
-
-	get argument() {
-		return this.mArgument;
-	},
-
-	get user()
-	{
-		return this.argument.user;
-	},
-
-	set user(aValue)
-	{
-		this.argument.user = aValue;
-	},
-
-	stopRequest: function _stopRequest()
-	{
+	stopRequest: function() {
 		this.shutdown = true;
 		this.xmlReq.abort();
 	},
 
-	sendRequest: function(aData, aUrl)
-	{
-		if (this.shutdown) {
-			return;
-		}
+	createXmlHttpRequest: function() {
+		return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+	}
+	sendRequest: function(aData, requestUrl) {
+		if (this.shutdown || !requestUrl) return ;
 		this.mData = aData;
-		this.currentUrl = "";
+		this.currentUrl = requestUrl;
 
-		while ((!aUrl) && (this.urllist.length > 0 )) {
-			aUrl = this.urllist[0];
-			this.urllist.shift();
-		}
-
-		if ((!aUrl) || (aUrl == "") || (aUrl == undefined)) {
-			this.fail(this.ER_ERROR_INVALID_URL, "No url to send request to (sendRequest).");
-			return;
-		}
-
-		this.currentUrl = aUrl;
-
-		if (this.exchangeBadCertListener2.userCanceledCertProblem(this.currentUrl)) {
-			this.fail(this.ER_ERROR_USER_ABORT_AUTHENTICATION, "User canceled adding server certificate for url="+this.currentUrl+". Aborting this request.");
-			return;
-		}
-
-		// remove domain part in xmlhttprequest.open call
-		var openUser = this.mArgument.user;
-
-		var myAuthPrompt2 = Cc["@1st-setup.nl/exchange/authprompt2;1"].getService(Ci.mivExchangeAuthPrompt2);
-		if (myAuthPrompt2.getUserCanceled(this.currentUrl)) {
-
-			this.fail(this.ER_ERROR_USER_ABORT_AUTHENTICATION, "User canceled providing a valid password for url="+this.currentUrl+". Aborting this request.");
-			return;
-		}
-
-		try {
-			var password = this.mArgument.password ||
-				myAuthPrompt2.getPassword(null, openUser, this.currentUrl);
-		//var password = myAuthPrompt2.getPassword(null, this.mArgument.user, this.currentUrl);
-		}
-		catch(err) {
-			this.logInfo(err);
-			this.fail(this.ER_ERROR_USER_ABORT_AUTHENTICATION, "User canceled providing a valid password for url="+this.currentUrl+". Aborting this request.");
-			myAuthPrompt2 = null;
-			return;
-		}
-		myAuthPrompt2 = null;
-
-		this.xmlReq = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-
-		this.mXmlReq = this.xmlReq;
+		this.xmlReq = this.createXmlHttpRequest();
 
 		var tmp = this;
 
-		// http://dvcs.w3.org/hg/progress/raw-file/tip/Overview.html
-		// https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIXMLHttpRequestEventTarget
-		this.xmlReq.addEventListener("loadstart", function(evt) { tmp.loadstart(evt); }, false);
-		this.xmlReq.addEventListener("progress", function(evt) { tmp.progress(evt); }, false);
-		this.xmlReq.addEventListener("error", function(evt) { tmp.error(evt); }, false);
-		this.xmlReq.addEventListener("abort", function(evt) { tmp.abort(evt); }, false);
-		this.xmlReq.addEventListener("load", function(evt) { tmp.onLoad(evt); }, false);
-		this.xmlReq.addEventListener("loadend", function(evt) { tmp.loadend(evt); }, false);
-
-		if (this.debug) this.logInfo(": 1 ExchangeRequest.sendRequest : user="+this.mArgument.user+", url="+this.currentUrl);
+		this.xmlReq.addEventListener("error", function(evt) {
+			tmp.error(evt);
+		}, false);
+		this.xmlReq.addEventListener("load", function(evt) {
+			tmp.onLoad(evt);
+		}, false);
+		this.xmlReq.addEventListener("loadend", function(evt) {
+			tmp.loadend(evt);
+		}, false);
 
 		this._notificationCallbacks = new ecnsIAuthPrompt2(this);
 
 		try {
-
 			//this.xmlReq.open("POST", this.currentUrl, true);
 			if (password) {
 				if (this.debug) this.logInfo("We have a prePassword: *******");
@@ -243,55 +99,16 @@ ExchangeRequest.prototype = {
 
 		this.xmlReq.overrideMimeType('text/xml');
 		this.xmlReq.setRequestHeader("Content-Type", "text/xml");
-		//this.xmlReq.setRequestHeader("User-Agent", "extensions.1st-setup.nl/" + gExchangeRequestVersion+"/username="+this.mArgument.user);
-		this.xmlReq.setRequestHeader("User-Agent", this.globalFunctions.safeGetCharPref(this.prefB, "extensions.1st-setup.others.userAgent", "exchangecalendar@extensions.1st-setup.nl", true));
 
-		// This is required for NTLM authenticated sessions. Which is default for a default EWS install.
+		/* This is required for NTLM authenticated sessions. Which is default
+		  for a default EWS install.
+		 */
 		this.xmlReq.setRequestHeader("Connection", "keep-alive");
-
-		/* set channel notifications for password processing */
 		this.xmlReq.channel.notificationCallbacks = this._notificationCallbacks;
 		this.xmlReq.channel.loadGroup = null;
-
 		var httpChannel = this.xmlReq.channel.QueryInterface(Ci.nsIHttpChannel);
-
-		// XXX we want to preserve POST across 302 redirects TODO: This might go away because header params are copyied right now.
 		httpChannel.redirectionLimit = 0;
-		try{
-				httpChannel.allowPipelining = false;
-		}
-		catch(err) {
-				this.logInfo("sendRequest: ERROR on httpChannel.allowPipelining to err:"+err);
-		}
-
-		if (this.debug) this.logInfo(": sendRequest Sending: " + this.mData+"\n", 2);
-
-		//this.exchangeStatistics.addDataSend(this.currentUrl, this.mData.length);
-
 		this.xmlReq.send(this.mData);
-	},
-
-	loadstart: function _loadtstart(evt)
-	{
-		if (this.debug) this.logInfo(": ExchangeRequest.loadstart");
-		this.shutdown = false;
-		this.badCert = false;
-	},
-
-	loadend: function _loadend(evt)
-	{
-		if (this.debug) this.logInfo(": ExchangeRequest.loadend");
-
-		let xmlReq = this.mXmlReq;
-
-		if (this.debug) this.logInfo(": ExchangeRequest.loadend :"+evt.type+", readyState:"+xmlReq.readyState+", status:"+xmlReq.status);
-		if (this.debug) this.logInfo(": ExchangeRequest.loadend :"+xmlReq.responseText,2);
-
-	},
-
-	progress: function _progress(evt)
-	{
-		if (this.debug) this.logInfo(": ExchangeRequest.progress. loaded:"+evt.loaded+", total:"+evt.total);
 	},
 
 	error: function _error(evt) {
@@ -937,13 +754,8 @@ ExchangeRequest.prototype = {
                 return false;
         },
 
-	fail: function(aCode, aMsg)
-	{
-		if (this.debug) this.logInfo("ecExchangeRequest.fail: aCode:"+aCode+", aMsg:"+aMsg);
-		if (this.mCbError) {
-			this.mCbError(this, aCode, aMsg);
-		}
-		this.originalReq = null;
+	requestError: function(aCode, aMsg) {
+		this.mCbError && this.mCbError(this, aCode, aMsg);
 	},
 
 	makeSoapMessage2: function erMakeSoapMessage2(aReq)
