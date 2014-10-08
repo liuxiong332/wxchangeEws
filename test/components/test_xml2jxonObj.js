@@ -5,7 +5,7 @@ QUnit.module('MivIxml2jxon test', {
     QUnit.Ci = Components.interfaces;
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
-    QUnit.Cu.import('resource://interfaces/xml2jxon/mivIxml2jxon.js', QUnit);
+    QUnit.Cu.import('resource://exchangeEws/Xml2jxonObj.js', QUnit);
     QUnit.baseLog = QUnit.commonFunctions.baseLog;
   },
   teardown: function() {
@@ -147,6 +147,8 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
 
   var newObj = new QUnit.Xml2jxonObj(xmlObj.toString());
   assert.deepEqual(newObj, xmlObj);
+
+  assert.deepEqual(xmlObj.XPath('/xml:note/to'), [childTag]);
 });
 
 QUnit.test('XPath Processor test', function(assert) {

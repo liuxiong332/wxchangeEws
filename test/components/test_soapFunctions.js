@@ -4,15 +4,14 @@ QUnit.module('soap Functions test', {
     QUnit.Cu.import("resource://exchangeEws/soapFunctions.js", QUnit);
   },
   teardown: function() {
-    delete QUnit.makeParentFolderIds2;
-    delete QUnit.makeParentFolderIds3;
+    delete QUnit.makeParentFolderIds;
   }
 });
 
-QUnit.test('makeParentFolderIds2 ', function(assert) {
-  var jxonObj = QUnit.makeParentFolderIds2('Parent', {folderBase: 'Inbox'});
-  // var parentElements = jxonObj.XPath('/nsMessages:Parent');
-  // assert.equal(parentElements.length, 1, 'get parent element');
+QUnit.test('makeParentFolderIds ', function(assert) {
+  var jxonObj = QUnit.makeParentFolderIds('Parent', {folderBase: 'Inbox'});
+  var parentElements = jxonObj.XPath('/nsMessages:Parent');
+  assert.equal(parentElements.length, 1, 'get parent element');
 
   var folderElements = jxonObj.XPath(
     '/nsMessages:Parent/nsTypes:DistinguishedFolderId');

@@ -492,5 +492,10 @@ Xml2jxonObj.prototype = {
   		return '<' + tagName + attrStr + '>' + str + '</' + tagName + '>';
   	}
   	return '<' + tagName + attrStr + '/>';
+  },
+
+  XPath: function(xPath) {
+    var xPathProcessor = new XPathProcessor(this);
+    return xPathProcessor.processXPath(xPath);
   }
 };
