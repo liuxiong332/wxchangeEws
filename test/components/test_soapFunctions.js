@@ -18,3 +18,15 @@ QUnit.test('makeParentFolderIds ', function(assert) {
   assert.equal(folderElements.length, 1, 'get folder element');
   assert.strictEqual(folderElements[0].getAttribute('Id'), 'Inbox');
 });
+
+QUnit.test('makeSoapMessage ', function(assert) {
+  QUnit.Cu.import('resource://exchangeEws/Xml2jxonObj.js', this);
+  QUnit.Cu.import('resource://exchangeEws/soapNSDef.js', this);
+  var newObj = new this.Xml2jxonObj('nothing');
+  var msg = QUnit.makeSoapMessage(newObj);
+
+  var msgObj = this.Xml2jxonObj.createFromXML(msg);
+  assert.strictEqual(msgObj.getNamespace('nsSoap'), this.soapNSDef.nsSoapStr);
+  assert.deepEqual(msgObj.XPath('/nsSoap:Envelope/nsSoap:Body/nothing'),
+    [newObj]);
+});

@@ -42,7 +42,7 @@ XmlProcessor.prototype = {
 		var tagHeadReg = /\s*<(?:(\w+):)?(\w+)/g;
 		var res = this.strExecutor.execute(tagHeadReg);
 		if(!res)	throw new Error('the tag header parse error');
-		xmlObj.nameSpace = res[1];
+		xmlObj.namespace = res[1];
 		xmlObj.tagName = res[2];
 	},
 
@@ -76,7 +76,7 @@ XmlProcessor.prototype = {
 		var endTagReg = /<\/(?:(\w+):)?(\w+)>/g;
 		var res = this.strExecutor.execute(endTagReg);
 
-		if(!res || (res[1] !== xmlObj.nameSpace) || (res[2] !== xmlObj.tagName))
+		if(!res || (res[1] !== xmlObj.namespace) || (res[2] !== xmlObj.tagName))
 			throw new Error('the end tag is not matched');
 	},
 
@@ -329,11 +329,11 @@ function convertSpecialCharatersToXML(str) {
 }
 
 function Xml2jxonObj(tagName, namespace) {
-  this.nameSpaces = {};
+  this.namespaces = {};
   this.tags = {};
   this.attr = {};
   this.content = [];
-  tagName && this.setTagName(tagName, nameSpace);
+  tagName && this.setTagName(tagName, namespace);
 }
 
 Xml2jxonObj.constructor = function() {
@@ -364,28 +364,28 @@ Xml2jxonObj.prototype = {
 
   setTagName: function(tagName, namespace) {
     if(!tagName)  return ;
-    if(nameSpaces) {
+    if(namespace) {
       this.tagName = tagName;
-      this.nameSpace = nameSpace;
+      this.namespace = namespace;
     } else {
       var tagHeadReg = /^(?:(\w+):)?(\w+)$/;
       var res = tagHeadReg.exec(tagName);
       if(!res)  throw new Error('the tagName format is invalid');
-      this.nameSpace = res[1];
+      this.namespace = res[1];
       this.tagName = res[2];
     }
   },
 
   getNamespace: function(nsAlias) {
     !nsAlias && (nsAlias = '_default_');
-    return this.nameSpaces[nsAlias];
+    return this.namespaces[nsAlias];
   },
   addNamespace: function(nsAlias, nsUri) {
-    this.nameSpaces[nsAlias] = nsUri;
+    this.namespaces[nsAlias] = nsUri;
   },
 
   addChildTagObject: function(childTagObj) {
-  	var tagNs = childTagObj.nameSpace;
+  	var tagNs = childTagObj.namespace;
     var tagName = tagNs?tagNs + ':' + childTagObj.tagName : childTagObj.tagName;
     if (!this.tags[tagName]) {
       this.tags[tagName] = childTagObj;
@@ -399,7 +399,7 @@ Xml2jxonObj.prototype = {
 
   addChildTag: function(tagName, ns, textValue) {
     var newObj = new Xml2jxonObj;
-    newObj.nameSpace = ns;
+    newObj.namespace = ns;
     newObj.tagName = tagName;
     newObj.content.push(textValue);
     this.addChildTagObject(newObj);
@@ -465,13 +465,13 @@ Xml2jxonObj.prototype = {
   	return str;
   },
 
-  nameSpacesToString: function() {
+  namespacesToString: function() {
   	var str = '';
-  	for(var ns in this.nameSpaces) {
+  	for(var ns in this.namespaces) {
   		if(ns === '_default_')
-  			str += ' xmlns="' + this.nameSpaces[ns] + '"';
+  			str += ' xmlns="' + this.namespaces[ns] + '"';
   		else
-  			str += ' xmlns:' + ns + '="' + this.nameSpaces[ns] + '"';
+  			str += ' xmlns:' + ns + '="' + this.namespaces[ns] + '"';
   	}
   	return str;
   },
@@ -500,10 +500,10 @@ Xml2jxonObj.prototype = {
 	},
 
   toString: function() {
-  	var ns = this.nameSpace;
+  	var ns = this.namespace;
   	var tagName = ns? ns + ':' + this.tagName: this.tagName;
   	var str = this.tagsToString() + this.contentToString();
-  	var attrStr = this.attributeToString() + this.nameSpacesToString();
+  	var attrStr = this.attributeToString() + this.namespacesToString();
   	if(str) {
   		return '<' + tagName + attrStr + '>' + str + '</' + tagName + '>';
   	}

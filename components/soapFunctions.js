@@ -43,7 +43,7 @@ var components = Components;
 Cu.import('resource://exchangeEws/soapNSDef.js');
 Cu.import('resource://exchangeEws/Xml2jxonObj.js');
 
-var EXPORTED_SYMBOLS = ["makeParentFolderIds" ];
+var EXPORTED_SYMBOLS = ['makeParentFolderIds', 'makeSoapMessage'];
 
 const publicFoldersMap = { "publicfoldersroot" : true };
 
@@ -54,8 +54,7 @@ const publicFoldersMap = { "publicfoldersroot" : true };
  * 		mailbox: the smtp mmailbox address
  *		changeKey: the exchange version key
  */
-function makeParentFolderIds(aParentItem, folderInfo)
-{
+function makeParentFolderIds(aParentItem, folderInfo) {
 	function xmlToJxon(aXMLString) {
 		return Xml2jxonObj.createFromXML(aXMLString);
 	}
@@ -95,15 +94,14 @@ function makeParentFolderIds(aParentItem, folderInfo)
 	return ParentFolderIds;
 }
 
-function makeSoapMessage(req) {
+function makeSoapMessage(reqBody) {
 	var msg = new Xml2jxonObj('nsSoap:Envelope');
 	msg.addNamespace('nsSoap', soapNSDef.nsSoapStr);
 	msg.addNamespace('nsMessages', soapNSDef.nsMessagesStr);
 	msg.addNamespace('nsTypes', soapNSDef.nsTypesStr);
 
-	msg.addChildTag("Body", "nsSoap", null).addChildTagObject(req);
+	msg.addChildTag("Body", "nsSoap", null).addChildTagObject(reqBody);
 
 	var xml_tag = '<?xml version="1.0" encoding="utf-8"?>\n';
-	var tmpStr = xml_tag + msg.toString();
-	return tmpStr;
-},
+	return xml_tag + msg.toString();
+}

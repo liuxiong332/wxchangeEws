@@ -112,7 +112,7 @@ QUnit.test('XmlProcessor NS test', function(assert) {
       },
       addChildTagObject: function(obj) {
         assert.strictEqual(obj.tagName, 'to');
-        assert.ok(!obj.nameSpace);
+        assert.ok(!obj.namespace);
       },
       addToContent: function(content) {
         assert.strictEqual(content, ' Tove');
@@ -120,7 +120,7 @@ QUnit.test('XmlProcessor NS test', function(assert) {
     };
   }
   var obj = (new QUnit.XmlProcessor(xmlStr)).processXmlObj(xmlObjConstructe);
-  assert.strictEqual(obj.nameSpace, 'xml');
+  assert.strictEqual(obj.namespace, 'xml');
   assert.strictEqual(obj.tagName, 'note');
 });
 
@@ -130,7 +130,7 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
     '<to> Tove</to>' +
   '</xml:note>';
   var xmlObj = QUnit.Xml2jxonObj.createFromXML(xmlStr);
-  assert.strictEqual(xmlObj.nameSpace, 'xml');
+  assert.strictEqual(xmlObj.namespace, 'xml');
   assert.strictEqual(xmlObj.tagName, 'note');
   assert.strictEqual(xmlObj.getAttribute('ns:attr'), 'AttrValue');
   assert.strictEqual(xmlObj.getChildTagValue('to'), ' Tove');
