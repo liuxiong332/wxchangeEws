@@ -1,6 +1,6 @@
 
 Components.utils.import('resource://exchangeEws/commonFunctions.js');
-var log = commonFunctions.Log.getInfoLevelLogger('xml2jxon');
+var log = commonFunctions.Log.getInfoLevelLogger('Xml2jxonObj');
 
 var EXPORTED_SYMBOLS = ['Xml2jxonObj', 'XmlProcessor', 'RegStrExecutor',
 	'XPathProcessor'];
@@ -79,8 +79,11 @@ XmlProcessor.prototype = {
 		var res = this.strExecutor.execute(endTagReg);
     var ns = res[1] || null;
     xmlObj.namespace = xmlObj.namespace || null;
-		if(!res || (ns !== xmlObj.namespace) || (res[2] !== xmlObj.tagName))
-			throw new Error('the end tag is not matched');
+		if(!res || (ns !== xmlObj.namespace) || (res[2] !== xmlObj.tagName)) {
+      var text = this.strExecutor.str.substring(this.strExecutor.matchIndex)
+			throw new Error('the end tag is not matched! tagName:' +
+        xmlObj.namespace + ':' + xmlObj.tagName + ', match text is:' + text);
+    }
 	},
 
 	processTextContent: function() {
@@ -222,7 +225,6 @@ XPathProcessor.prototype = {
 		var filterReg = /\s*(.+?)\s+(?=(and)|(or))/g;
 		var logicReg = /((and)|(or))\s+/g;
 		while((filterRes = filterExecutor.execute(filterReg))) {
-			log.info('the filterRes is:' + filterRes[0] + '.');
 			leftOperand = getLogicResult(node, filterRes[1]);
 			logicRes = filterExecutor.execute(logicReg)[1];
 			switch(logicRes) {

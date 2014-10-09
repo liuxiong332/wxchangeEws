@@ -7,6 +7,8 @@ Cu.import('resource://exchangeEws/Xml2jxonObj.js');
 Cu.import("resource://exchangeEws/soapFunctions.js");
 Cu.import('resource://exchangeEws/soapNSDef.js');
 Cu.import('resource://exchangeEws/ExchangeRequest.js');
+Cu.import('resource://exchangeEws/commonFunctions.js');
+var browseLog = commonFunctions.Log.getInfoLevelLogger('BrowseFolderRequest');
 
 var EXPORTED_SYMBOLS = ["BrowseFolderRequest"];
 
@@ -61,6 +63,7 @@ BrowseFolderRequest.prototype = {
 			'/m:ResponseMessages/m:FindFolderResponseMessage' +
 			'[@ResponseClass="Success" and m:ResponseCode="NoError"]');
 
+		browseLog.info('length:' + rm.length);
 		if(rm.length > 0)	{
 			var rootFolder = rm[0].getChildTag("m:RootFolder");
 			var includeAttr = 'IncludesLastItemInRange';

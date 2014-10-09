@@ -117,7 +117,7 @@ ExchangeRequest.prototype = {
 		this.requestError('RequestAbort');
 	},
 
-	isHTTPRedirect: function(evt) {
+	isHTTPRedirect: function() {
 		let xmlReq = this.xmlReq;
 		switch (xmlReq.status) {
 		case 301:  // Moved Permanently
@@ -141,12 +141,14 @@ ExchangeRequest.prototype = {
 	},
 
 	onLoad: function(event) {
-		log.info('request Load!' + 'request status is:' + this.xmlReq.statusText
-			+ ', the responseText is:' + this.xmlReq.responseText);
 		var xmlReq = this.xmlReq;
+		log.info('request Load!' + 'status code:' + xmlReq.status +
+		 ',request status is:' + this.xmlReq.statusText +
+ 		 ',contentType:' + xmlReq.getResponseHeader('Content-Type') +
+		 ', the responseText is:' + this.xmlReq.responseText);
+
 		if(this.isHTTPRedirect(event))	return;
-		var contentType = xmlReq.getResponseHeader('Content-Type');
-		if((xmlReq.status !== 200) || (contentType !== 'text/xml')) {
+		if(xmlReq.status !== 200) {
 			return this.requestError(xmlReq.statusText, xmlReq.responseText);
 		}
 		var xml = xmlReq.responseText;

@@ -149,11 +149,25 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
   var emptyContentTag = xmlObj.addChildTag('empty', null, null);
   assert.equal(xmlObj.getChildTag('empty').content.length, 0);
 
-  QUnit.baseLog.info(xmlObj.toString());
   var newObj = QUnit.Xml2jxonObj.createFromXML(xmlObj.toString());
   assert.deepEqual(newObj, xmlObj);
 
   assert.deepEqual(xmlObj.XPath('/xml:note/to'), [childTag]);
+});
+
+QUnit.test('XPath exchange FindItem Response parser', function(assert) {
+  var findItemResponse = '<soap:Envelope> <soap:Header> </soap:Header>' +
+    + '<soap:Body> <FindFolderResponse > <m:ResponseMessages>'
+    + '<m:FindFolderResponseMessage ResponseClass="Success">'
+    + '<m:ResponseCode>NoError</m:ResponseCode>'
+    + '<m:Folders> </m:Folders>'
+    + '</m:FindFolderResponseMessage> </m:ResponseMessages>'
+    + '</FindFolderResponse > </soap:Body> </soap:Envelope>';
+
+    var bodyStr = '/soap:Envelope/soap:Body/*';
+    var envelopeObj = QUnit.Xml2jxonObj.createFromXML(findItemResponse);
+    var bodyChildren = envelopeObj.XPath(bodyStr);
+    assert.ok(bodyChildren.length>0);
 });
 
 QUnit.test('XPath Processor test', function(assert) {
