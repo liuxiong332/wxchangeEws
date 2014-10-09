@@ -19,7 +19,7 @@
  * ***** BEGIN LICENSE BLOCK *****/
 
 /* this class is used to ask for user to recerdential
-	when the user credential is bad, checkAndSolveCertProblem will pop a 
+	when the user credential is bad, checkAndSolveCertProblem will pop a
 	window to ask for user retry, if the user canceled, then the credential failed.
 
  */
@@ -33,13 +33,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function mivExchangeBadCertListener2() {
-
 	this.targetSites = {};
 	this.userCanceled = {};
-
-	this.globalFunctions = Cc["@1st-setup.nl/global/functions;1"]
-				.getService(Ci.mivFunctions);
-
 }
 
 var PREF_MAINPART = 'extensions.1st-setup.exchangecalendar.abcard.';
@@ -69,7 +64,7 @@ mivExchangeBadCertListener2.prototype = {
 	// External methods
 	// nsIBadCertListener2
 	// note the target site has certification problem
-	notifyCertProblem: function _notifyCertProblem(socketInfo, status, targetSite) 
+	notifyCertProblem: function _notifyCertProblem(socketInfo, status, targetSite)
 	{
 		this.logInfo("notifyCertProblem: targetSite:"+targetSite);
 
@@ -79,7 +74,7 @@ mivExchangeBadCertListener2.prototype = {
 	},
 
 	//check the certification has or not problem in the local cache
-	checkCertProblem: function _checkCertProblem(targetSite) 
+	checkCertProblem: function _checkCertProblem(targetSite)
 	{
 		if (!targetSite) return false;
 
@@ -101,7 +96,7 @@ mivExchangeBadCertListener2.prototype = {
 
 	//check the certification problem and pop a exception dialog to ask user to
 	// cerdential
-	checkAndSolveCertProblem: function _checkAndSolveCertProblem(targetSite) 
+	checkAndSolveCertProblem: function _checkAndSolveCertProblem(targetSite)
 	{
 		var waitingProblem = this.checkCertProblem(targetSite);
 
@@ -136,8 +131,8 @@ mivExchangeBadCertListener2.prototype = {
 			return { hadProblem: false };
 		}
 	},
-	// check if user cancel the targetSite in the local cache 
-	userCanceledCertProblem: function _userCanceledCertProblem(targetSite) 
+	// check if user cancel the targetSite in the local cache
+	userCanceledCertProblem: function _userCanceledCertProblem(targetSite)
 	{
 		if (this.userCanceled[targetSite]) {
 			return true;
@@ -146,7 +141,7 @@ mivExchangeBadCertListener2.prototype = {
 	},
 
 	// Internal methods.
-	logInfo: function _logInfo(aMsg, aDebugLevel) 
+	logInfo: function _logInfo(aMsg, aDebugLevel)
 	{
 		var prefB = Cc["@mozilla.org/preferences-service;1"]
 			.getService(Ci.nsIPrefBranch);
@@ -165,7 +160,7 @@ function NSGetFactory(cid) {
 		if (!NSGetFactory.mivExchangeBadCertListener2) {
 			// Load main script from lightning that we need.
 			NSGetFactory.mivExchangeBadCertListener2 = XPCOMUtils.generateNSGetFactory([mivExchangeBadCertListener2]);
-			
+
 	}
 
 	} catch(e) {
@@ -175,5 +170,5 @@ function NSGetFactory(cid) {
 	}
 
 	return NSGetFactory.mivExchangeBadCertListener2(cid);
-} 
+}
 

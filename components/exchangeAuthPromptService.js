@@ -8,7 +8,7 @@ var components = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ['ExchangeAuthPrompt2'];
+var EXPORTED_SYMBOLS = ['exchangeAuthPromptService'];
 
 function findInArray(array, callback, obj) {
 	var func = obj? callback.bind(obj) : callback;
@@ -58,7 +58,7 @@ ExchangeAuthPrompt2.prototype = {
 		var password = this.passwordCache[username+"|"+aURL];
 
 		if (!password) {
-			var savedPassword = this.passwordManagerGet(username, aURL, realm);
+			var savedPassword = this.passwordManagerGet(username, aURL, aRealm);
 			if (savedPassword.result) {
 				password = savedPassword.password;
 			}
@@ -388,3 +388,5 @@ ExchangeAuthPrompt2.prototype = {
 		};
 	}
 };
+
+var exchangeAuthPromptService = new ExchangeAuthPrompt2;
