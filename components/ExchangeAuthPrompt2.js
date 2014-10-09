@@ -1,5 +1,4 @@
 
-
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -24,8 +23,6 @@ function ExchangeAuthPrompt2() {
 	this.passwordCache = {};
 	this.details = {};
 
-	this.showPassword = false;
-
 	this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 	this.uuidGen = Cc["@mozilla.org/uuid-generator;1"]
 		.getService(Ci.nsIUUIDGenerator);
@@ -34,6 +31,7 @@ function ExchangeAuthPrompt2() {
 }
 
 ExchangeAuthPrompt2.prototype = {
+
 	getUserCanceled: function(aURL) {
 		if (this.details[aURL]) {
 			return this.details[aURL].canceled;
@@ -49,7 +47,7 @@ ExchangeAuthPrompt2.prototype = {
 
 	removePasswordCache: function(aUsername, aURL) {
 		for (var name in this.passwordCache) {
-			if (name.indexOf("|"+aURL+"|")) {
+			if (name.indexOf("|"+aURL)) {
 				delete this.passwordCache[name];
 			}
 		}
@@ -97,7 +95,6 @@ ExchangeAuthPrompt2.prototype = {
 
 	asyncPromptAuthNotifyCallback: function(aURL) {
 		while (this.details[aURL].queue.length > 0) {
-
 			var request = this.details[aURL].queue.shift();
 			var aChannel = request.channel;
 			var aCallback = request.callback;
@@ -106,7 +103,7 @@ ExchangeAuthPrompt2.prototype = {
 			var authInfo = request.authInfo;
 			var canUseBasicAuth = false;
 
-			if (this.details[aURL].previousFailedCount > 4) { // Maybe make this a user preference
+			if (this.details[aURL].previousFailedCount > 4) {
 				aCallback.onAuthCancelled(aContext, false);
 				return;
 			}
@@ -136,8 +133,7 @@ ExchangeAuthPrompt2.prototype = {
 					try {
 						password = this.getPassword(aChannel, username, aURL, realm, true,
 							!(authInfo.flags & Ci.nsIAuthInformation.PREVIOUS_FAILED));
-					}
-					catch(err) {
+					} catch(err) {
 						aCallback.onAuthCancelled(aContext, true);
 						error = true;
 					}
@@ -335,34 +331,33 @@ ExchangeAuthPrompt2.prototype = {
 	 * @param aRealm        The password realm (unused on branch)
 	 */
 	passwordManagerSave: function(aUsername, aPassword, aURL, aRealm) {
-		function createLoginInfo() {
-			return Cc["@mozilla.org/login-manager/loginInfo;1"]
-				.createInstance(Ci.nsILoginInfo);
-		}
-
 		if ((!aUsername) || (!aURL) || (!aRealm)) 	return;
 
-		try {
-			var loginManager = this.loginManager;
-			var logins = loginManager.findLogins({}, aURL, null, aRealm);
+		var loginManager = this.loginManager;
+		var logins = loginManager.findLogins({}, aURL, null, aRealm);
 
-			var newLoginInfo = createLoginInfo();
-			newLoginInfo.init(aURL, null, aRealm, aUsername, aPassword, "", "");
+		var newLoginInfo = Cc["@mozilla.org/login-manager/loginInfo;1"]
+			.createInstance(Ci.nsILoginInfo);
+		newLoginInfo.init(aURL, null, aRealm, aUsername, aPassword, "", "");
 
-			var loginInfo = findInArray(logins, function(loginInfo) {
-				return loginInfo.username === aUsername;
-			});
+		var loginInfo = findInArray(logins, function(loginInfo) {
+			return loginInfo.username === aUsername;
+		});
 
-			if(loginInfo) {
-				loginManager.modifyLogin(loginInfo, newLoginInfo):
-			} else {
-				loginManager.addLogin(newLoginInfo);
-			}
-		} catch (exc) {
-			this.logInfo(exc);
+		if(loginInfo) {
+			loginManager.modifyLogin(loginInfo, newLoginInfo);
+		} else {
+			loginManager.addLogin(newLoginInfo);
 		}
 	},
 
+	passwordManagerRemove: function(aUsername, aURL, aRealm) {
+		var logins = this.loginManager.findLogins({}, aURL, null, aRealm);
+		var loginInfo = findInArray(logins, function(loginInfo) {
+			return loginInfo.username === aUsername;
+		});
+		loginInfo && this.loginManager.removeLogin(loginInfo);
+	},
 	/**
 	 * Helper to retrieve a password from the usr via a prompt.
 	 *

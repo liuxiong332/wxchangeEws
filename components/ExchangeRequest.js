@@ -83,7 +83,6 @@ ExchangeRequest.prototype = {
 				this.xmlReq.open("POST", this.currentUrl, true, openUser);
 				//this.xmlReq.open("POST", this.currentUrl, true, this.mArgument.user);
 			}
-
 		}
 		catch(err) {
 			dump("\n ERROR sendrequest:"+err+"\n");
@@ -688,7 +687,6 @@ ExchangeRequest.prototype = {
 								xmlReq.abort();
 
 								this.retryCurrentUrl();
-
 								return true;
 							}
 							if (this.debug) this.logInfo("isHTTPError: User canceled request for prePassword.");
