@@ -70,6 +70,7 @@ QUnit.test('XmlProcessor test', function(assert) {
     QUnit.XmlProcessor.NEW_TAG);
   processor.processTagHeader(xmlObj);
   assert.strictEqual(xmlObj.tagName, 'to');
+  assert.strictEqual(xmlObj.namespace, null);
   assert.strictEqual(QUnit.XmlProcessor.TAG_CLOSED,
     processor.processTagAttributeAndEnd(xmlObj));
 
@@ -145,6 +146,10 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
   var newTag = xmlObj.addChildTag('from', 'xml', 'who am i');
   assert.equal(newTag, xmlObj.getChildTag('xml:from'));
 
+  var emptyContentTag = xmlObj.addChildTag('empty', null, null);
+  assert.equal(xmlObj.getChildTag('empty').content.length, 0);
+
+  QUnit.baseLog.info(xmlObj.toString());
   var newObj = QUnit.Xml2jxonObj.createFromXML(xmlObj.toString());
   assert.deepEqual(newObj, xmlObj);
 

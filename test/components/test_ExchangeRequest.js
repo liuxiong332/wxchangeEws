@@ -13,23 +13,23 @@ QUnit.module('ExchangeRequest test', {
   }
 });
 
-QUnit.asyncTest('XmlHttpRequest test', function(assert) {
-  QUnit.Cu.import('resource://exchangeEws/ExchangeRequest.js', QUnit);
-  var request = new QUnit.ExchangeRequest({
-    user: 'liuxiong',
-    password: 'abcd.ABCD'
-  }, onSuccess, onError);
-  function onSuccess() {
-    QUnit.start();
-  }
-  function onError(request, code, msg) {
-    QUnit.log.info('the code is:' + code + ',error msg is:' + msg);
-    assert.ok(code);
-    assert.ok(msg);
-    QUnit.start();
-  }
-  request.sendRequest('', 'https://bjmail.kingsoft.com/EWS/exchange.asmx');
-});
+// QUnit.asyncTest('XmlHttpRequest test', function(assert) {
+//   QUnit.Cu.import('resource://exchangeEws/ExchangeRequest.js', QUnit);
+//   var request = new QUnit.ExchangeRequest({
+//     user: 'liuxiong',
+//     password: 'abcd.ABCD'
+//   }, onSuccess, onError);
+//   function onSuccess() {
+//     QUnit.start();
+//   }
+//   function onError(request, code, msg) {
+//     QUnit.log.info('the code is:' + code + ',error msg is:' + msg);
+//     assert.ok(code);
+//     assert.ok(msg);
+//     QUnit.start();
+//   }
+//   request.sendRequest('', 'https://bjmail.kingsoft.com/EWS/exchange.asmx');
+// });
 
 QUnit.test('ExchangeAuthPromptService test', function(assert) {
   QUnit.Cu.import('resource://exchangeEws/exchangeAuthPromptService.js', QUnit);

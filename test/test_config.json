@@ -3,7 +3,7 @@
   	"components/test_xml2jxonObj.js",
     "components/test_soapFunctions.js",
     "components/test_ExchangeRequest.js",
-    "components/test_erBrowseFolder.js",
+    "components/test_BrowseFolderRequest.js",
     "components/test_erGetFolder.js",
     "components/test_erFindMessages.js",
     "components/test_incomingServer.js",

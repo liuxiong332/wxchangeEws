@@ -1,6 +1,6 @@
 
 Components.utils.import('resource://exchangeEws/commonFunctions.js');
-var log = commonFunctions.Log.getErrorLevelLogger('xml2jxon');
+var log = commonFunctions.Log.getInfoLevelLogger('xml2jxon');
 
 var EXPORTED_SYMBOLS = ['Xml2jxonObj', 'XmlProcessor', 'RegStrExecutor',
 	'XPathProcessor'];
@@ -42,7 +42,7 @@ XmlProcessor.prototype = {
 		var tagHeadReg = /\s*<(?:(\w+):)?(\w+)/g;
 		var res = this.strExecutor.execute(tagHeadReg);
 		if(!res)	throw new Error('the tag header parse error');
-		xmlObj.namespace = res[1];
+		xmlObj.namespace = res[1] || null;
 		xmlObj.tagName = res[2];
 	},
 
@@ -61,9 +61,9 @@ XmlProcessor.prototype = {
 
 	checkTagOrTextContent: function() {
 		var startReg = /\s*((<\/)|(<(?!\/))|[^<])/gy;
-		log.info('the text is:' + this.strExecutor.str.substring(this.strExecutor.matchIndex));
+		// log.info('the text is:' +
+      // this.strExecutor.str.substring(this.strExecutor.matchIndex));
 		var res = this.strExecutor.tryExecute(startReg);
-		if(res)	log.info('the new tag is: ' + res[1]);
 		if(!res)	return null;
 		switch(res[1]) {
 			case '</': 	return XmlProcessor.END_TAG;
@@ -73,10 +73,13 @@ XmlProcessor.prototype = {
 	},
 
 	processEndTag: function(xmlObj) {
+    // log.info('the text is:' +
+    //   this.strExecutor.str.substring(this.strExecutor.matchIndex));
 		var endTagReg = /<\/(?:(\w+):)?(\w+)>/g;
 		var res = this.strExecutor.execute(endTagReg);
-
-		if(!res || (res[1] !== xmlObj.namespace) || (res[2] !== xmlObj.tagName))
+    var ns = res[1] || null;
+    xmlObj.namespace = xmlObj.namespace || null;
+		if(!res || (ns !== xmlObj.namespace) || (res[2] !== xmlObj.tagName))
 			throw new Error('the end tag is not matched');
 	},
 
@@ -142,14 +145,12 @@ XPathProcessor.prototype = {
 		}
 		exprRes = exprExecutor.execute(/(.+)$/gy);
 		if(exprRes) {
-			log.info('the exprRes in processExpr is:' + exprRes[1]);
 			tempRes = this.processOneExpr(tempRes, exprRes[1]);
 		}
 		return tempRes;
 	},
 
 	processOneExpr: function(results, exprStr) {
-		log.info('the exprStr in processOneExpr is:' + exprStr + '.');
 		if(exprStr === '.')
 			return results;
 		var filterReg = /\s*\[(.+?)\]\s*/;
@@ -179,7 +180,6 @@ XPathProcessor.prototype = {
 		} else {
 			var attrRes = /@([\w:]+)/.exec(nodeStr);
 			if(!attrRes) {				// /nodeName
-				log.info('the nodeStr is:' + nodeStr + '.');
 				results.forEach(function(node) {
 					tempResult = tempResult.concat(node.getChildTags(nodeStr));
 				});
@@ -205,7 +205,6 @@ XPathProcessor.prototype = {
 	},
 
 	processFilterExpr: function(results, filterStr) {
-		log.info('the filterStr in processFilterExpr is:' + filterStr + '.');
 		var self = this;
 		return results.filter(function(node) {
 			return self.processOneFilterExpr([node], filterStr);
@@ -213,7 +212,6 @@ XPathProcessor.prototype = {
 	},
 
 	processOneFilterExpr: function(node, filterStr) {
-		log.info('the filterStr is:' + filterStr + '.');
 		var AND_OPERATOR = 1, OR_OPERATOR = 2;
 		var logicOperator = AND_OPERATOR;
 		var leftOperand = true;
@@ -255,7 +253,6 @@ XPathProcessor.prototype = {
 	},
 
 	processCompareExpr: function(results, exprStr) {
-		log.info('the exprStr is:' + exprStr + '.');
 		var exprReg = /\s*(.+?)\s*(=|>|<|(?:>=)|(?:<=)|(?:!=))\s*(.+?)\s*$/;
 		var regRes = exprReg.exec(exprStr);
 		if(!regRes)
@@ -276,7 +273,6 @@ XPathProcessor.prototype = {
 	},
 
 	getValueFromExpr: function(results, exprStr) {
-		log.info('the value expr str is :' + exprStr + '.');
 		var strReg = /^\s*('|")(.+?)\1\s*$/;
 		var strRegRes = strReg.exec(exprStr);
 		if(strRegRes) {
@@ -288,11 +284,9 @@ XPathProcessor.prototype = {
 			if(numberRegRes[1])		return parseFloat(exprStr);
 			return parseInt(exprStr, 10);
 		}
-		log.info('begin process expr');
 		var operand = this.processExpr(results, exprStr);
 		if(operand.length === 0)	return null;
 		operand = operand[0];
-		log.info('the value is :' + operand + '.');
 		operand.getValue && (operand = operand.getValue());	//tag element
 		return operand;
 	}
@@ -333,6 +327,7 @@ function Xml2jxonObj(tagName, namespace) {
   this.tags = {};
   this.attr = {};
   this.content = [];
+  this.tagName = this.namespace = null;
   tagName && this.setTagName(tagName, namespace);
 }
 
@@ -371,7 +366,7 @@ Xml2jxonObj.prototype = {
       var tagHeadReg = /^(?:(\w+):)?(\w+)$/;
       var res = tagHeadReg.exec(tagName);
       if(!res)  throw new Error('the tagName format is invalid');
-      this.namespace = res[1];
+      this.namespace = res[1] || null;
       this.tagName = res[2];
     }
   },
@@ -399,9 +394,9 @@ Xml2jxonObj.prototype = {
 
   addChildTag: function(tagName, ns, textValue) {
     var newObj = new Xml2jxonObj;
-    newObj.namespace = ns;
+    newObj.namespace = ns || null;
     newObj.tagName = tagName;
-    newObj.content.push(textValue);
+    textValue && newObj.content.push(textValue);
     this.addChildTagObject(newObj);
     return newObj;
   },
@@ -449,6 +444,11 @@ Xml2jxonObj.prototype = {
   getChildTagValue: function(tagName, defValue) {
     var tagElement = this.getChildTag(tagName);
     return tagElement? tagElement.getValue() : defValue;
+  },
+
+  getChildTagIntValue: function(tagName, defValue) {
+    var tagElement = this.getChildTag(tagName);
+    return tagElement? parseInt(tagElement.getValue()) : defValue;
   },
 
   getValue: function() {

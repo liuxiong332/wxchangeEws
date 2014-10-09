@@ -153,8 +153,13 @@ ExchangeRequest.prototype = {
 		var newXML = Xml2jxonObj.createFromXML(xml);
 
 		if(this.processSoapErrorMsg(newXML)) return ;
+
+		var bodyObj = newXML.XPath('/soap:Envelope/soap:Body/*');
+		if(bodyObj.length === 0) {
+			return this.requestError('NotBodyFound');
+		}
 		if (this.mCbOk) {
-			this.mCbOk(this, newXML);
+			this.mCbOk(this, bodyObj[0]);
 		}
 	},
 
