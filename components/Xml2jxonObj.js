@@ -1,6 +1,6 @@
 
 Components.utils.import('resource://exchangeEws/commonFunctions.js');
-var log = commonFunctions.Log.getInfoLevelLogger('xml2jxon');
+var log = commonFunctions.Log.getErrorLevelLogger('xml2jxon');
 
 var EXPORTED_SYMBOLS = ['Xml2jxonObj', 'XmlProcessor', 'RegStrExecutor',
 	'XPathProcessor'];
