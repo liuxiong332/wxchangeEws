@@ -48,5 +48,9 @@ ExchangeToRFC822Mail.prototype = {
 
   getMsgId: function() {
     return this.msg.itemId;
+  },
+
+  getMsgMail: function() {
+    return this.mail;
   }
 }

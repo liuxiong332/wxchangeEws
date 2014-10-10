@@ -4,6 +4,7 @@ Ci = Components.interfaces;
 Cu = Components.utils;
 Cu.import('resource://exchangeEws/commonFunctions.js');
 Cu.import('resource://exchangeEws/BrowseFolderRequest.js');
+Cu.import('resource://exchangeEws/GetFolderRequest.js');
 Cu.import('resource://exchangeEws/FindMessagesRequest.js');
 Cu.import('resource://exchangeEws/GetMessageRequest.js')
 
@@ -38,7 +39,7 @@ ExchangeService.prototype = {
     folderName [string]: the parent folder name, such as inbox
     callback [function(err, childFolders)]
    */
-  getChildFolders: function(folderName, callback) {
+  findFolders: function(folderName, callback) {
     var requestConfig = {
       serverUrl: this.ewsUrl,
       folderBase: folderName,
@@ -47,6 +48,22 @@ ExchangeService.prototype = {
     };
     new BrowseFolderRequest(requestConfig, function (request, childFolders) {
       callback(null, childFolders);
+    }, function (request, code, msg) {
+      var err = new Error(msg);
+      err.code = code;
+      callback(err);
+    });
+  },
+
+  getFolder: function(folderName, callback) {
+    var requestConfig = {
+      serverUrl: this.ewsUrl,
+      folderBase: folderName,
+      user: this.userName,
+      password: this.password
+    };
+    new GetFolderRequest(requestConfig, function (request, folder) {
+      callback(null, folder);
     }, function (request, code, msg) {
       var err = new Error(msg);
       err.code = code;
@@ -75,7 +92,7 @@ ExchangeService.prototype = {
     this._findMessages(requestConfig, callback);
   },
 
-  findMessagesByFolderName: function(folderName, itemCount, callback) {
+  findMessagesByFolderName: function(folderName,offset, itemCount, callback) {
     var requestConfig = {
       maxReturned: itemCount,
       serverUrl: this.ewsUrl,
