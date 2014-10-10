@@ -19,6 +19,7 @@ QUnit.module('FindMessagesRequest test', {
 QUnit.asyncTest('request messages find', function(assert) {
   var requestConfig = {
     maxReturned: 10,
+    basePoint: 'End',
     serverUrl: 'https://bjmail.kingsoft.com/EWS/exchange.asmx',
     folderBase: 'inbox',
     user: 'liuxiong',

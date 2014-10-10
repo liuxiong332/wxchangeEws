@@ -1,13 +1,15 @@
 /*
  * this file is used to serialize the ExchangeMessage object to RFC822 test
  */
-var EXPORTED_SYMBOLS = ["exchangeToRFC822Mail"];
+var EXPORTED_SYMBOLS = ["ExchangeToRFC822Mail"];
 
 function mailboxToStr(mailbox) {
   return mailbox.name + '<' + mailbox.emailAddress + '>';
 }
 
-function exchangeToRFC822Mail(msg) {
+function ExchangeToRFC822Mail(msg) {
+  this.msg = msg;
+
   var mailStr = '';
   if(msg.subject)
     mailStr += 'Subject: ' + msg.subject + '\r\n';
@@ -28,5 +30,23 @@ function exchangeToRFC822Mail(msg) {
 
   if(msg.body)
     mailStr += '\r\n' + msg.body + '\r\n';
-  return mailStr;
+  this.mail = mailStr;
+}
+
+ExchangeToRFC822Mail.prototype = {
+  getFrom: function() {
+    return mailboxToStr(this.msg.from);
+  },
+
+  getToRecipients: function() {
+    return mailboxToStr(this.msg.toRecipients);
+  },
+
+  getSubject: function() {
+    return this.msg.subject;
+  },
+
+  getMsgId: function() {
+    return this.msg.itemId;
+  }
 }

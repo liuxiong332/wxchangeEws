@@ -12,12 +12,18 @@ var EXPORTED_SYMBOLS = ["FindMessagesRequest"];
 
 /** requestInfo need property:
  *   	maxReturned: the max size of message item
+ *		offset: the offset from the begining of the mailbox
+ *	 	basePoint: Beginning(default) or End
  */
 function FindMessagesRequest(requestInfo, aCbOk, aCbError) {
 	this.mCbOk = aCbOk;
 	this.mCbError = aCbError;
 	this.requestInfo = requestInfo;
 	this.serverUrl = requestInfo.serverUrl;
+
+	this.maxReturned = requestInfo.maxReturned;
+	this.basePoint = requestInfo.basePoint === 'End' ? 'End' : 'Beginning';
+	this.offset = requestInfo.offset || 0;
 
 	this.exchangeRequest = new ExchangeRequest(requestInfo,
 		this.onSendOk.bind(this), this.onSendError.bind(this));
@@ -40,9 +46,9 @@ FindMessagesRequest.prototype = {
 			.setAttribute("FieldURI", "item:Subject");
 
 		var pageItemView = req.addChildTag('IndexedPageItemView', 'nsMessages', null);
-		pageItemView.setAttribute('MaxEntriesReturned', this.requestInfo.maxReturned);
-		pageItemView.setAttribute('BasePoint', 'Beginning');
-		pageItemView.setAttribute('Offset', '0');
+		pageItemView.setAttribute('MaxEntriesReturned', this.maxReturned);
+		pageItemView.setAttribute('BasePoint', this.basePoint);
+		pageItemView.setAttribute('Offset', this.offset);
 
 		// var sortOrder = req.addChildTag('SortOrder', 'nsMessages', null);
 		// sortOrder.addChildTag('FieldOrder', )

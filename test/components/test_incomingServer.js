@@ -144,77 +144,77 @@ QUnit.test('open inbox folder', function(assert) {
   var db = inbox.getDBFolderInfoAndDB({});
   assert.ok(db, 'get the db');
 });*/
+QUnit.testSkip = function() {};
+QUnit.testSkip('insert new message', function(assert) {
+  var newAccount = new QUnit.NewExchangeAccount;
+  var server = newAccount.server;
 
-// QUnit.test('insert new message', function(assert) {
-//   var newAccount = new QUnit.NewExchangeAccount;
-//   var server = newAccount.server;
+  var msgId = '@MsgNo.1';
+  var inbox = server.rootFolder.getFolderWithFlags(
+    QUnit.Ci.nsMsgFolderFlags.Inbox);
+  assert.ok(inbox, 'get inbox');
 
-//   var msgId = '@MsgNo.1';
-//   var inbox = server.rootFolder.getFolderWithFlags(
-//     QUnit.Ci.nsMsgFolderFlags.Inbox);
-//   assert.ok(inbox, 'get inbox');
+  var msgStore = server.msgStore;
+  var newHdr = {};
+  var outStream = msgStore.getNewMsgOutputStream(inbox, newHdr, {});
+  newHdr = newHdr.value;
+  assert.ok(newHdr && outStream, 'get new hdr and output stream');
 
-//   var msgStore = server.msgStore;
-//   var newHdr = {};
-//   var outStream = msgStore.getNewMsgOutputStream(inbox, newHdr, {});
-//   newHdr = newHdr.value;
-//   assert.ok(newHdr && outStream, 'get new hdr and output stream');
-
-//   newHdr.author = 'liuxiong332';
-//   newHdr.subject = 'test new Message';
-//   newHdr.recipients = 'All test Users';
-//   newHdr.messageId = msgId;
-//   newHdr.accountKey = newAccount.account.key;
-//   newHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
+  newHdr.author = 'liuxiong332';
+  newHdr.subject = 'test new Message';
+  newHdr.recipients = 'All test Users';
+  newHdr.messageId = msgId;
+  newHdr.accountKey = newAccount.account.key;
+  newHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
 
 
-//   var message = 'From: "liuxiong332"\r\n'
-//     + 'To: "All test Users"\r\n'
-//     + 'Subject: "test new Message"\r\n'
-//     + 'Content-Type: text/html\r\n' + '\r\n'
-//     + '<html><body>Hello World</body></html>\r\n';
+  var message = 'From: "liuxiong332"\r\n'
+    + 'To: "All test Users"\r\n'
+    + 'Subject: "test new Message"\r\n'
+    + 'Content-Type: text/html\r\n' + '\r\n'
+    + '<html><body>Hello World</body></html>\r\n';
 
-//   function convertToUTF8(str) {
-//     var converter = QUnit.Cc['@mozilla.org/intl/scriptableunicodeconverter']
-//       .getService(QUnit.Ci.nsIScriptableUnicodeConverter);
-//     return converter.convertToByteArray(str, {});
-//   }
+  function convertToUTF8(str) {
+    var converter = QUnit.Cc['@mozilla.org/intl/scriptableunicodeconverter']
+      .getService(QUnit.Ci.nsIScriptableUnicodeConverter);
+    return converter.convertToByteArray(str, {});
+  }
 
-//   var binaryStream = QUnit.Cc['@mozilla.org/binaryoutputstream;1']
-//     .createInstance(QUnit.Ci.nsIBinaryOutputStream);
-//   binaryStream.setOutputStream(outStream);
+  var binaryStream = QUnit.Cc['@mozilla.org/binaryoutputstream;1']
+    .createInstance(QUnit.Ci.nsIBinaryOutputStream);
+  binaryStream.setOutputStream(outStream);
 
-//   var readLineReg = /(.*?)\r\n/g;
-//   var matchRes;
-//   var isBody = false;
-//   var byteSize = 0;
-//   var byteArray, bodyLines = 0;
-//   while((matchRes = readLineReg.exec(message))) {
-//     if(isBody)  ++ bodyLines;
-//     byteArray = convertToUTF8(matchRes[0]);
-//     byteSize += byteArray.length;
-//     binaryStream.writeByteArray(byteArray, byteArray.length);
-//     if(matchRes[1] === '')  isBody = true;
-//   }
-//   newHdr.lineCount = bodyLines;
-//   newHdr.messageSize = byteSize;
-//   binaryStream.close();
-//   outStream.close();
+  var readLineReg = /(.*?)\r\n/g;
+  var matchRes;
+  var isBody = false;
+  var byteSize = 0;
+  var byteArray, bodyLines = 0;
+  while((matchRes = readLineReg.exec(message))) {
+    if(isBody)  ++ bodyLines;
+    byteArray = convertToUTF8(matchRes[0]);
+    byteSize += byteArray.length;
+    binaryStream.writeByteArray(byteArray, byteArray.length);
+    if(matchRes[1] === '')  isBody = true;
+  }
+  newHdr.lineCount = bodyLines;
+  newHdr.messageSize = byteSize;
+  binaryStream.close();
+  outStream.close();
 
-//   assert.equal(bodyLines, 1);
-//   assert.equal(byteSize, message.length);
+  assert.equal(bodyLines, 1);
+  assert.equal(byteSize, message.length);
 
-//   if(inbox.msgDatabase.ContainsKey(newHdr.messageKey))
-//     inbox.msgDatabase.DeleteHeader(newHdr, null, true, false);
-//   inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
-//   inbox.msgDatabase.Commit(QUnit.Ci.nsMsgDBCommitType.kLargeCommit);
+  if(inbox.msgDatabase.ContainsKey(newHdr.messageKey))
+    inbox.msgDatabase.DeleteHeader(newHdr, null, true, false);
+  inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
+  inbox.msgDatabase.Commit(QUnit.Ci.nsMsgDBCommitType.kLargeCommit);
 
-//   assert.ok(inbox.msgDatabase.GetMsgHdrForKey(newHdr.messageKey));
+  assert.ok(inbox.msgDatabase.GetMsgHdrForKey(newHdr.messageKey));
 
-//   var msgUri = inbox.generateMessageURI(newHdr.messageKey);
-//   assert.ok(msgUri && /^exchange-message/.test(msgUri));
-//   newAccount.destroy();
-// });
+  var msgUri = inbox.generateMessageURI(newHdr.messageKey);
+  assert.ok(msgUri && /^exchange-message/.test(msgUri));
+  newAccount.destroy();
+});
 
 
 // QUnit.test('protocol DisplayMessage', function(assert) {
