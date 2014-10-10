@@ -19,10 +19,4 @@ QUnit.test('test the protocolHandler module', function(assert) {
     .getService(QUnit.Ci.nsIProtocolHandler);
 
   assert.ok(handler, 'get the handler service');
-
-  var msgServiceID =
-    '@mozilla.org/messenger/messageservice;1?type=exchange-message';
-  var msgService = QUnit.Cc[msgServiceID]
-    .getService(QUnit.Ci.nsIMsgMessageService);
-  assert.ok(msgService, 'get the message service');
 });

@@ -145,92 +145,92 @@ QUnit.test('open inbox folder', function(assert) {
   assert.ok(db, 'get the db');
 });*/
 
-QUnit.test('insert new message', function(assert) {
-  var newAccount = new QUnit.NewExchangeAccount;
-  var server = newAccount.server;
+// QUnit.test('insert new message', function(assert) {
+//   var newAccount = new QUnit.NewExchangeAccount;
+//   var server = newAccount.server;
 
-  var msgId = '@MsgNo.1';
-  var inbox = server.rootFolder.getFolderWithFlags(
-    QUnit.Ci.nsMsgFolderFlags.Inbox);
-  assert.ok(inbox, 'get inbox');
+//   var msgId = '@MsgNo.1';
+//   var inbox = server.rootFolder.getFolderWithFlags(
+//     QUnit.Ci.nsMsgFolderFlags.Inbox);
+//   assert.ok(inbox, 'get inbox');
 
-  var msgStore = server.msgStore;
-  var newHdr = {};
-  var outStream = msgStore.getNewMsgOutputStream(inbox, newHdr, {});
-  newHdr = newHdr.value;
-  assert.ok(newHdr && outStream, 'get new hdr and output stream');
+//   var msgStore = server.msgStore;
+//   var newHdr = {};
+//   var outStream = msgStore.getNewMsgOutputStream(inbox, newHdr, {});
+//   newHdr = newHdr.value;
+//   assert.ok(newHdr && outStream, 'get new hdr and output stream');
 
-  newHdr.author = 'liuxiong332';
-  newHdr.subject = 'test new Message';
-  newHdr.recipients = 'All test Users';
-  newHdr.messageId = msgId;
-  newHdr.accountKey = newAccount.account.key;
-  newHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
-
-
-  var message = 'From: "liuxiong332"\r\n'
-    + 'To: "All test Users"\r\n'
-    + 'Subject: "test new Message"\r\n'
-    + 'Content-Type: text/html\r\n' + '\r\n'
-    + '<html><body>Hello World</body></html>\r\n';
-
-  function convertToUTF8(str) {
-    var converter = QUnit.Cc['@mozilla.org/intl/scriptableunicodeconverter']
-      .getService(QUnit.Ci.nsIScriptableUnicodeConverter);
-    return converter.convertToByteArray(str, {});
-  }
-
-  var binaryStream = QUnit.Cc['@mozilla.org/binaryoutputstream;1']
-    .createInstance(QUnit.Ci.nsIBinaryOutputStream);
-  binaryStream.setOutputStream(outStream);
-
-  var readLineReg = /(.*?)\r\n/g;
-  var matchRes;
-  var isBody = false;
-  var byteSize = 0;
-  var byteArray, bodyLines = 0;
-  while((matchRes = readLineReg.exec(message))) {
-    if(isBody)  ++ bodyLines;
-    byteArray = convertToUTF8(matchRes[0]);
-    byteSize += byteArray.length;
-    binaryStream.writeByteArray(byteArray, byteArray.length);
-    if(matchRes[1] === '')  isBody = true;
-  }
-  newHdr.lineCount = bodyLines;
-  newHdr.messageSize = byteSize;
-  binaryStream.close();
-  outStream.close();
-
-  assert.equal(bodyLines, 1);
-  assert.equal(byteSize, message.length);
-
-  if(inbox.msgDatabase.ContainsKey(newHdr.messageKey))
-    inbox.msgDatabase.DeleteHeader(newHdr, null, true, false);
-  inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
-  inbox.msgDatabase.Commit(QUnit.Ci.nsMsgDBCommitType.kLargeCommit);
-
-  assert.ok(inbox.msgDatabase.GetMsgHdrForKey(newHdr.messageKey));
-
-  var msgUri = inbox.generateMessageURI(newHdr.messageKey);
-  assert.ok(msgUri && /^exchange-message/.test(msgUri));
-  newAccount.destroy();
-});
+//   newHdr.author = 'liuxiong332';
+//   newHdr.subject = 'test new Message';
+//   newHdr.recipients = 'All test Users';
+//   newHdr.messageId = msgId;
+//   newHdr.accountKey = newAccount.account.key;
+//   newHdr.OrFlags(QUnit.Ci.nsMsgMessageFlags.New);
 
 
-QUnit.test('protocol DisplayMessage', function(assert) {
-  var url = {};
-  var newAccount = new QUnit.NewExchangeAccount;
-  var config = newAccount.config;
+//   var message = 'From: "liuxiong332"\r\n'
+//     + 'To: "All test Users"\r\n'
+//     + 'Subject: "test new Message"\r\n'
+//     + 'Content-Type: text/html\r\n' + '\r\n'
+//     + '<html><body>Hello World</body></html>\r\n';
 
-  var msgUri = 'exchange-message://' + config.username + '@' + config.hostname
-    + '/Inbox#110';
+//   function convertToUTF8(str) {
+//     var converter = QUnit.Cc['@mozilla.org/intl/scriptableunicodeconverter']
+//       .getService(QUnit.Ci.nsIScriptableUnicodeConverter);
+//     return converter.convertToByteArray(str, {});
+//   }
 
-  var msgServiceID =
-    '@mozilla.org/messenger/messageservice;1?type=exchange-message';
-  var msgService = QUnit.Cc[msgServiceID]
-    .getService(QUnit.Ci.nsIMsgMessageService);
-  msgService.DisplayMessage(msgUri, null, null, null, null, url);
-  url = url.value;
-  assert.ok(url);
-  newAccount.destroy();
-});
+//   var binaryStream = QUnit.Cc['@mozilla.org/binaryoutputstream;1']
+//     .createInstance(QUnit.Ci.nsIBinaryOutputStream);
+//   binaryStream.setOutputStream(outStream);
+
+//   var readLineReg = /(.*?)\r\n/g;
+//   var matchRes;
+//   var isBody = false;
+//   var byteSize = 0;
+//   var byteArray, bodyLines = 0;
+//   while((matchRes = readLineReg.exec(message))) {
+//     if(isBody)  ++ bodyLines;
+//     byteArray = convertToUTF8(matchRes[0]);
+//     byteSize += byteArray.length;
+//     binaryStream.writeByteArray(byteArray, byteArray.length);
+//     if(matchRes[1] === '')  isBody = true;
+//   }
+//   newHdr.lineCount = bodyLines;
+//   newHdr.messageSize = byteSize;
+//   binaryStream.close();
+//   outStream.close();
+
+//   assert.equal(bodyLines, 1);
+//   assert.equal(byteSize, message.length);
+
+//   if(inbox.msgDatabase.ContainsKey(newHdr.messageKey))
+//     inbox.msgDatabase.DeleteHeader(newHdr, null, true, false);
+//   inbox.msgDatabase.AddNewHdrToDB(newHdr, true);
+//   inbox.msgDatabase.Commit(QUnit.Ci.nsMsgDBCommitType.kLargeCommit);
+
+//   assert.ok(inbox.msgDatabase.GetMsgHdrForKey(newHdr.messageKey));
+
+//   var msgUri = inbox.generateMessageURI(newHdr.messageKey);
+//   assert.ok(msgUri && /^exchange-message/.test(msgUri));
+//   newAccount.destroy();
+// });
+
+
+// QUnit.test('protocol DisplayMessage', function(assert) {
+//   var url = {};
+//   var newAccount = new QUnit.NewExchangeAccount;
+//   var config = newAccount.config;
+
+//   var msgUri = 'exchange-message://' + config.username + '@' + config.hostname
+//     + '/Inbox#110';
+
+//   var msgServiceID =
+//     '@mozilla.org/messenger/messageservice;1?type=exchange-message';
+//   var msgService = QUnit.Cc[msgServiceID]
+//     .getService(QUnit.Ci.nsIMsgMessageService);
+//   msgService.DisplayMessage(msgUri, null, null, null, null, url);
+//   url = url.value;
+//   assert.ok(url);
+//   newAccount.destroy();
+// });

@@ -27,7 +27,6 @@ var components = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/mailServices.js");
-Cu.import("resource://exchangeEws/ecFunctions.js");
 Cu.import("resource://exchangeEws/commonFunctions.js");
 
 Cu.import('resource:///modules/mailServices.js');
@@ -35,6 +34,19 @@ Cu.import('resource:///modules/mailServices.js');
 var folderLog = commonFunctions.Log.getInfoLevelLogger('exchange-folder');
 
 var EXPORTED_SYMBOLS = ["mivExchangeMsgFolder"];
+
+
+function createSimpleEnumerator(aArray) {
+  return {
+    _i: 0,
+    hasMoreElements: function() {
+      return this._i < aArray.length;
+    },
+    getNext: function() {
+      return aArray[this._i++];
+    }
+  };
+}
 
 function FolderAtomList() {
   var atomService = Cc['@mozilla.org/atom-service;1']
@@ -73,9 +85,6 @@ function mivExchangeMsgFolder() {
 mivExchangeMsgFolder.EXCHANGE_SCHEMA = "exchange:/";
 mivExchangeMsgFolder.EXCHANGE_MESSAGE_SCHEMA = "exchange-message:/";
 mivExchangeMsgFolder.INCOMING_SERVER_TYPE = "exchange";
-
-mivExchangeMsgFolder.globalFunc = Cc["@1st-setup.nl/global/functions;1"]
-	.createInstance(Ci.mivFunctions);
 
 mivExchangeMsgFolder.createLocalFile = function(filePath) {
 	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -1410,8 +1419,7 @@ mivExchangeMsgFolder.prototype = {
       });
 			this._initialize = true;
 		}
-		return exchWebService.commonFunctions
-			.CreateSimpleEnumerator(this._subfolders);
+		return createSimpleEnumerator(this._subfolders);
 	},
 
   /**
