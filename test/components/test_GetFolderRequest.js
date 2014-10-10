@@ -1,29 +1,23 @@
 
-QUnit.module('erBrowseFolder test', {
+QUnit.module('GetFolderRequest test', {
   setup: function() {
     QUnit.Cc = Components.classes;
     QUnit.Ci = Components.interfaces;
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
-    // QUnit.Cu.import('resource://exchangeEws/erBrowseFolder.js', QUnit);
+
     QUnit.baseLog = QUnit.commonFunctions.Log
-      .getErrorLevelLogger('test-browse-folder');
+      .getInfoLevelLogger('test_GetFolderRequest');
   },
   teardown: function() {
-    delete QUnit.erBrowseFolderRequest;
+    delete QUnit.GetFolderRequest;
     delete QUnit.commonFunctions;
   }
 });
 
-QUnit.test('soapFunctions test', function() {
-  QUnit.Cu.import('resource://exchangeEws/soapFunctions.js', this);
-  var jxon = this.makeParentFolderIds2('parent', {folderBase: 'Inbox'});
-  var parentElement = jxon.XPath('nsMessages:parent');
-  assert.equal(parentElement.length, 1);
-});
-
-QUnit.asyncTest('request folder find', function(assert) {
+QUnit.asyncTest('get folder info', function(assert) {
   expect(1);
+  QUnit.Cu.import('resource://exchangeEws/GetFolderRequest.js', QUnit);
   var requestConfig = {
     serverUrl: 'https://bjmail.kingsoft.com/EWS/exchange.asmx',
     folderBase: 'inbox',
@@ -31,9 +25,9 @@ QUnit.asyncTest('request folder find', function(assert) {
     password: 'abcd.ABCD'
   };
 
-  function requestOK(request, childFolders) {
+  function requestOK(request, folderInfo) {
     assert.ok(true, 'the find folder request ok!');
-    QUnit.baseLog.info(QUnit.dump.parse(childFolders));
+    QUnit.baseLog.info(QUnit.dump.parse(folderInfo));
     QUnit.start();
   }
   function requestError(request, code, msg) {
@@ -41,6 +35,6 @@ QUnit.asyncTest('request folder find', function(assert) {
     assert.ok(false, 'request failed!');
     QUnit.start();
   }
-  // var folderRequest = new QUnit.erBrowseFolderRequest(requestConfig,
-  //   requestOK, requestError);
+  var folderRequest = new QUnit.GetFolderRequest(requestConfig,
+    requestOK, requestError);
 });

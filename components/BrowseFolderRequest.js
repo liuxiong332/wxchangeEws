@@ -86,7 +86,7 @@ BrowseFolderRequest.prototype = {
 				return;
 			}
 		}
-		this.onSendError('NotFoundElement');
+		this.onSendError(request, 'NotFoundElement');
 	},
 
 	onSendError: function(aExchangeRequest, aCode, aMsg) {

@@ -1,5 +1,5 @@
 
-QUnit.module('erBrowseFolder test', {
+QUnit.module('BrowseFolderRequest test', {
   setup: function() {
     QUnit.Cc = Components.classes;
     QUnit.Ci = Components.interfaces;
