@@ -68,8 +68,8 @@ FindMessagesRequest.prototype = {
 				var msgObjs = rootFolder.XPath("/m:RootFolder/t:Items/t:Message");
 				msgObjs.forEach(function(msg) {
 					messages.push({
-						Id: 	msg.getAttributeByChildTag("t:ItemId", "Id"),
-					  ChangeKey: msg.getAttributeByChildTag("t:ItemId", "ChangeKey"),
+						itemId: 	msg.getAttributeByChildTag("t:ItemId", "Id"),
+					  changeKey: msg.getAttributeByChildTag("t:ItemId", "ChangeKey"),
 					  subject: msg.getChildTagValue("t:Subject")
 					});
 				});
