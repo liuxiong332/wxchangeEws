@@ -7,7 +7,7 @@ QUnit.module('erBrowseFolder test', {
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/BrowseFolderRequest.js', QUnit);
     QUnit.baseLog = QUnit.commonFunctions.Log
-      .getErrorLevelLogger('test_BrowseFolderRequest');
+      .getInfoLevelLogger('test_BrowseFolderRequest');
   },
   teardown: function() {
     delete QUnit.BrowseFolderRequest;
@@ -27,7 +27,7 @@ QUnit.asyncTest('request folder find', function(assert) {
   expect(1);
   var requestConfig = {
     serverUrl: 'https://bjmail.kingsoft.com/EWS/exchange.asmx',
-    folderBase: 'inbox',
+    folderBase: 'msgfolderroot',
     user: 'liuxiong',
     password: 'abcd.ABCD'
   };

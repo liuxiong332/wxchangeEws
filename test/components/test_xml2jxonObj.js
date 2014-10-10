@@ -6,7 +6,7 @@ QUnit.module('MivIxml2jxon test', {
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/Xml2jxonObj.js', QUnit);
-    QUnit.baseLog = QUnit.commonFunctions.baseLog;
+    QUnit.log = QUnit.commonFunctions.Log.getInfoLevelLogger('test_Xml2jxonObj');
   },
   teardown: function() {
     delete QUnit.mivIxml2jxon;
@@ -156,18 +156,40 @@ QUnit.test('Xml2jxonObj processor', function(assert) {
 });
 
 QUnit.test('XPath exchange FindItem Response parser', function(assert) {
-  var findItemResponse = '<soap:Envelope> <soap:Header> </soap:Header>' +
-    + '<soap:Body> <FindFolderResponse > <m:ResponseMessages>'
-    + '<m:FindFolderResponseMessage ResponseClass="Success">'
-    + '<m:ResponseCode>NoError</m:ResponseCode>'
-    + '<m:Folders> </m:Folders>'
-    + '</m:FindFolderResponseMessage> </m:ResponseMessages>'
-    + '</FindFolderResponse > </soap:Body> </soap:Envelope>';
+  var findItemResponse =
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"' +
+    'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+    'xmlns:xsd="http://www.w3.org/2001/XMLSchema">' +
+    '<soap:Header><t:ServerVersionInfo MajorVersion="8"' +
+      'MinorVersion="3" MajorBuildNumber="83" MinorBuildNumber="4"' +
+      'xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />' +
+    '</soap:Header>' +
+    '<soap:Body><m:FindFolderResponse' +
+      ' xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"' +
+      ' xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">'+
+    '<m:ResponseMessages>' +
+      '<m:FindFolderResponseMessage ResponseClass="Success">' +
+        '<m:ResponseCode>NoError</m:ResponseCode>' +
+        '<m:RootFolder TotalItemsInView="0" IncludesLastItemInRange="true">' +
+          '<t:Folders />' +
+        '</m:RootFolder>' +
+      '</m:FindFolderResponseMessage>' +
+    '</m:ResponseMessages>' +
+  '</m:FindFolderResponse></soap:Body></soap:Envelope>';
 
+    // QUnit.log.info('prepare to process the string:' + findItemResponse);
     var bodyStr = '/soap:Envelope/soap:Body/*';
     var envelopeObj = QUnit.Xml2jxonObj.createFromXML(findItemResponse);
     var bodyChildren = envelopeObj.XPath(bodyStr);
-    assert.ok(bodyChildren.length>0);
+    assert.equal(bodyChildren.length, 1);
+    assert.equal(bodyChildren[0].tagName, 'FindFolderResponse');
+
+    var resMsgStr = '/m:FindFolderResponse' +
+      '/m:ResponseMessages/m:FindFolderResponseMessage' +
+      '[@ResponseClass="Success" and m:ResponseCode="NoError"]';
+    var responseMsgObjs = bodyChildren[0].XPath(resMsgStr);
+    assert.equal(responseMsgObjs.length, 1);
+    assert.equal(responseMsgObjs[0].tagName, 'FindFolderResponseMessage');
 });
 
 QUnit.test('XPath Processor test', function(assert) {

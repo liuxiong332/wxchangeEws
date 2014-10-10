@@ -1,6 +1,6 @@
 
 Components.utils.import('resource://exchangeEws/commonFunctions.js');
-var log = commonFunctions.Log.getInfoLevelLogger('Xml2jxonObj');
+var xmlLog = commonFunctions.Log.getInfoLevelLogger('Xml2jxonObj');
 
 var EXPORTED_SYMBOLS = ['Xml2jxonObj', 'XmlProcessor', 'RegStrExecutor',
 	'XPathProcessor'];
@@ -61,8 +61,8 @@ XmlProcessor.prototype = {
 
 	checkTagOrTextContent: function() {
 		var startReg = /\s*((<\/)|(<(?!\/))|[^<])/gy;
-		// log.info('the text is:' +
-      // this.strExecutor.str.substring(this.strExecutor.matchIndex));
+		// xmlLog.info('the text is:' +
+    //   this.strExecutor.str.substring(this.strExecutor.matchIndex));
 		var res = this.strExecutor.tryExecute(startReg);
 		if(!res)	return null;
 		switch(res[1]) {
@@ -75,7 +75,7 @@ XmlProcessor.prototype = {
 	processEndTag: function(xmlObj) {
     // log.info('the text is:' +
     //   this.strExecutor.str.substring(this.strExecutor.matchIndex));
-		var endTagReg = /<\/(?:(\w+):)?(\w+)>/g;
+		var endTagReg = /<\/(?:(\w+):)?(\w+)\s*>/g;
 		var res = this.strExecutor.execute(endTagReg);
     var ns = res[1] || null;
     xmlObj.namespace = xmlObj.namespace || null;
@@ -100,6 +100,8 @@ XmlProcessor.prototype = {
 		var isTagEnd = false;
 
 		this.processTagHeader(xmlObj);
+    // xmlLog.info('process header xmlobj ns:' + xmlObj.namespace +
+      // ',xmlObj tagName:' + xmlObj.tagName);
 		var endRes = this.processTagAttributeAndEnd(xmlObj);
 		if(endRes === XmlProcessor.TAG_END_CLOSED)
 			return xmlObj;

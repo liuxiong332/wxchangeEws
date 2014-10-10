@@ -58,22 +58,22 @@ BrowseFolderRequest.prototype = {
 	onSendOk: function(request, xmlObj) {
 		// Get FolderID and ChangeKey
 		var childFolders = [];
+		var folderInfo = this.folderInfo;
 
-		var rm = xmlObj.XPath('/FindFolderResponse' +
+		var rm = xmlObj.XPath('/m:FindFolderResponse' +
 			'/m:ResponseMessages/m:FindFolderResponseMessage' +
 			'[@ResponseClass="Success" and m:ResponseCode="NoError"]');
 
-		browseLog.info('length:' + rm.length);
 		if(rm.length > 0)	{
 			var rootFolder = rm[0].getChildTag("m:RootFolder");
 			var includeAttr = 'IncludesLastItemInRange';
 			if(rootFolder && rootFolder.getAttribute(includeAttr) === "true") {
 			 	// Process results.
-				var folders = rootFolder.XPath("/t:Folders/*") || [];
+				var folders = rootFolder.XPath("/m:RootFolder/t:Folders/*") || [];
 				folders.forEach(function(folder) {
 					var folderIdTag = folder.getChildTag('t:FolderId');
 					childFolders.push({
-						folderBase: this.argument.folderBase,
+						folderBase: folderInfo.folderBase,
 						folderID: 	folderIdTag.getAttribute("Id"),
 						changeKey:  folderIdTag.getAttribute("ChangeKey"),
 						foldername: folder.getChildTagValue("t:DisplayName", ""),
