@@ -14,7 +14,7 @@ var EXPORTED_SYMBOLS = ["BrowseFolderRequest"];
 
 /*
  *the folderInfo can be the below list
- * serverUrl: ews url
+ * 	 serverUrl: ews url
  *	 folderID: the ID of folder
  *	 changeKey: a string that identifies a version of a folder, optional
  *	 folderBase: folders that can  be referenced by name,
