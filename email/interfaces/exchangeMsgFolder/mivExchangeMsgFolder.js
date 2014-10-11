@@ -30,6 +30,7 @@ Cu.import("resource://gre/modules/mailServices.js");
 Cu.import("resource://exchangeEws/commonFunctions.js");
 
 Cu.import('resource:///modules/mailServices.js');
+Cu.import('resource://exchangeEws/FolderMessageUpdater.js');
 
 var folderLog = commonFunctions.Log.getInfoLevelLogger('exchange-folder');
 
@@ -78,7 +79,7 @@ function mivExchangeMsgFolder() {
 
   this._username = null;
   this._hostname = null;
-
+  this.folderUpdater = new FolderMessageUpdater(this);
   this._listeners = [];
 }
 
@@ -859,7 +860,7 @@ mivExchangeMsgFolder.prototype = {
   //                       in ACString aKeywords,
   //                       in nsIMsgWindow msgWindow,
   //                       in nsIMsgCopyServiceListener listener);
-	copyFileMessage: function _copyFileMessage(file, msgToReplace, isDraft, newMsgFlags, aKeywords,
+	copyFileMessage: function(file, msgToReplace, isDraft, newMsgFlags, aKeywords,
                                                     msgWindow, listener)
 	{
 	},
@@ -886,8 +887,13 @@ mivExchangeMsgFolder.prototype = {
 	},
 
   //  void getNewMessages(in nsIMsgWindow aWindow, in nsIUrlListener aListener);
-	getNewMessages: function _getNewMessages(aWindow, aListener)
-	{
+	getNewMessages: function(aWindow, aListener) {
+    if(this.name === 'Inbox') {
+      var self = this;
+      this.folderUpdater.updateSummaryInfo(function() {
+        self.updateMessage();
+      });
+    }
 	},
 
   /**
@@ -1469,7 +1475,7 @@ mivExchangeMsgFolder.prototype = {
    * @exception NS_ERROR_FAILURE Thrown if the folder with aName does not exist
    */
   //  nsIMsgFolder getChildNamed(in AString aName);
-	getChildNamed: function _getChildNamed(aName) {
+	getChildNamed: function(aName) {
     var subfolders = this._subfolders;
     var length = subfolders.length;
     for(var i = 0; i < length; ++i) {

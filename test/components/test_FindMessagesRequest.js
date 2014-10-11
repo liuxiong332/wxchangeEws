@@ -6,7 +6,7 @@ QUnit.module('FindMessagesRequest test', {
     QUnit.Cu = Components.utils;
     QUnit.Cu.import('resource://exchangeEws/commonFunctions.js', QUnit);
     QUnit.Cu.import('resource://exchangeEws/FindMessagesRequest.js', QUnit);
-    QUnit.Cu.import('resource://exchangeEws/GetMessageRequest.js', QUnit)
+    QUnit.Cu.import('resource://exchangeEws/GetMessageRequest.js', QUnit);
     QUnit.baseLog = QUnit.commonFunctions.Log
       .getInfoLevelLogger('test_FindMessagesRequest');
   },
@@ -28,7 +28,7 @@ QUnit.asyncTest('request messages find', function(assert) {
 
   function getMessages(messages) {
     function msgRequestOK(request, msgInfos) {
-      QUnit.baseLog.info(JSON.stringify(msgInfos, null, 2));
+      // QUnit.baseLog.info(JSON.stringify(msgInfos, null, 2));
       assert.ok(true, 'get the messages');
       QUnit.start();
     }
@@ -46,7 +46,7 @@ QUnit.asyncTest('request messages find', function(assert) {
 
   function requestOK(request, messages) {
     assert.ok(true, 'the find messages request ok!');
-    QUnit.baseLog.info(QUnit.dump.parse(messages));
+    // QUnit.baseLog.info(QUnit.dump.parse(messages));
     getMessages(messages);
     // QUnit.start();
   }

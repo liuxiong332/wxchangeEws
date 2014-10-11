@@ -34,7 +34,7 @@ QUnit.asyncTest('request folder find', function(assert) {
 
   function requestOK(request, childFolders) {
     assert.ok(true, 'the find folder request ok!');
-    QUnit.baseLog.info(QUnit.dump.parse(childFolders));
+    // QUnit.baseLog.info(QUnit.dump.parse(childFolders));
     QUnit.start();
   }
   function requestError(request, code, msg) {

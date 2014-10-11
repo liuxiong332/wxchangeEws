@@ -659,16 +659,17 @@ mivExchangeMsgIncomingServer.prototype = {
 
   /* do a biff */
 //  void performBiff(in nsIMsgWindow aMsgWindow);
-	performBiff: function _performBiff(aMsgWindow)
-	{
-		dump("function performBiff\n");
+	performBiff: function(aMsgWindow) {
+    serverLog.info('performBiff');
+    var inbox = this.rootFolder.getChildNamed('Inbox');
+    inbox.getNewMessages(aMsgWindow, null);
 	},
 
   /* get new messages */
 //  void getNewMessages(in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow,
 //                      in nsIUrlListener aUrlListener);
-	getNewMessages: function _getNewMessages(aFolder, aMsgWindow, aUrlListener)
-	{
+	getNewMessages: function(aFolder, aMsgWindow, aUrlListener) {
+    serverLog.info('getNewMessages');
 		aFolder.getNewMessages(aMsgWindow, aUrlListener);
 	},
 

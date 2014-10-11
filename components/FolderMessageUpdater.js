@@ -2,9 +2,11 @@
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 Cu.import('resource://exchangeEws/ExchangeToRFC822Mail.js');
-Cu.import('resource://exchangeEws/exchangeService.js')
+Cu.import('resource://exchangeEws/exchangeService.js');
+Cu.import('resource://exchangeEws/commonFunctions.js');
+var updateLog = commonFunctions.Log.getInfoLevelLogger('FolderMessageUpdater');
 
-var EXPORTED_SYMBOLS = ["GetFolderRequest"];
+var EXPORTED_SYMBOLS = ["FolderMessageUpdater"];
 
 function LineReader(str) {
 	this.str = str;
@@ -47,8 +49,10 @@ MsgWriter.prototype = {
   writeMsgToStream: function(msgMail, binaryStream) {
     var isBody = false;
     var byteSize = 0, bodyLines = 0;
+
+    var lineStr = '';
     var lineReader = new LineReader(msgMail);
-    while((var lineStr = lineReader.readLine())) {
+    while((lineStr = lineReader.readLine())) {
       if(isBody)  ++bodyLines;
 
       var byteArray = this.convertToUTF8(lineStr);
@@ -90,33 +94,59 @@ function FolderMessageUpdater(folder) {
 	this.folder = folder;
 	this.totalCount = 0;
 	this.hasUpdateCount = 0;
+  this.exchangeService = new ExchangeService;
 }
 
 FolderMessageUpdater.prototype = {
-  updateSummaryInfo: function() {
+  _initExchangeService: function() {
+    var server = this.folder.server;
+    if(server) {
+      this.exchangeService.setCredential(server.username, server.password);
+      this.exchangeService.setEwsUrl(server.ewsUrl);
+    }
+  },
+
+  updateSummaryInfo: function(callback) {
+    updateLog.info('begin update summary info');
     var self = this;
-    exchangeService.getFolder('inbox', function(err, folderInfo) {
-      if(err) return;
-      self.totalCount = folder.totalCount;
+    this._initExchangeService();
+    this.exchangeService.getFolder('inbox', function(err, folderInfo) {
+      if(err) {
+        updateLog.info('update failed:' + err.code);
+        callback(err);
+        return ;
+      }
+      self.totalCount = folderInfo.totalCount;
+      updateLog.info('update totalCount:' + folderInfo.totalCount);
+      callback();
     });
   },
 
-  updateMsgList: function(msgs) {
-    var folder = this.folder;
+  updateMsgList: function(msgs, msgCallback) {
     var self = this;
-    msgs.forEach(function(msg) {
-      exchangeService.getMessage(msg.itemId, function(err, message) {
-        if(err) return ;
-        new MsgWriter(folder).writeMsgIntoDatabase(message);
-        ++ self.hasUpdateCount;
-      });
-    })
+    this.exchangeService.getMessages(msgs, function(err, messages) {
+      if(!err) {
+        messages.forEach(function(message) {
+          msgCallback(message);
+        });
+        self.hasUpdateCount += messages.length;
+      }
+      if( self.hasUpdateCount < self.totalCount)
+        self.updateMessage();
+    });
+  },
+
+  _updateMessage: function(msgCallback) {
+    var self = this;
+    this.exchangeService.findMessagesByFolderName('inbox', this.hasUpdateCount,
+      10, function(err, msgs) {
+      !err && self.updateMsgList(msgs, msgCallback);
+    });
   },
 
   updateMessage: function() {
-    var self = this;
-    exchangeService.findMessagesByFolderName('inbox', 20, function(err, msgs) {
-      !err && self.updateMsgList(msgs);
-    })
+    this._updateMessage(function(message) {
+      new MsgWriter(folder).writeMsgIntoDatabase(message);
+    });
   }
 }

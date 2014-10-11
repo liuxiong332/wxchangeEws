@@ -7,6 +7,8 @@
     "components/test_GetFolderRequest.js",
     "components/test_FindMessagesRequest.js",
     "components/test_incomingServer.js",
-    "components/test_protocolHandler.js"
+    "components/test_protocolHandler.js",
+    "components/test_exchangeService.js",
+    "components/test_FolderMessageUpdater.js"
   ]
 }

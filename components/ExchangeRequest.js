@@ -142,10 +142,6 @@ ExchangeRequest.prototype = {
 
 	onLoad: function(event) {
 		var xmlReq = this.xmlReq;
-		log.info('request Load!' + 'status code:' + xmlReq.status +
-		 ',request status is:' + this.xmlReq.statusText +
- 		 ',contentType:' + xmlReq.getResponseHeader('Content-Type') +
-		 ', the responseText is:' + this.xmlReq.responseText);
 
 		if(this.isHTTPRedirect(event))	return;
 		if(xmlReq.status !== 200) {

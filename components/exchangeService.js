@@ -15,21 +15,18 @@ function ExchangeService() {
   this.ewsUrl = null;
 }
 
-var EXPORTED_SYMBOLS = ['exchangeService'];
+var EXPORTED_SYMBOLS = ['ExchangeService'];
 
 ExchangeService.prototype = {
-  setCredential: function(email, password) {
-    this.email = email;
-    var regRes = /^([^@]+)/.exec(email);
-    if(regRes)  throw new Error('email is invalid');
-    this.userName = regRes[1];
+  setCredential: function(userName, password) {
+    this.userName = userName;
     this.password = password;
   },
 
   setEwsUrl: function(url, callback) {
     this.ewsUrl = url;
     /*generate a find folder operation to validate the ews url*/
-    findFolders('inbox', callback);
+    callback && findFolders('inbox', callback);
   },
 
   setAutodiscoverUrl: function(url, callback) {
@@ -72,7 +69,7 @@ ExchangeService.prototype = {
   },
 
   _findMessages: function(config, callback) {
-    new FindMessagesRequest(requestConfig, function (request, messages) {
+    new FindMessagesRequest(config, function (request, messages) {
       callback(null, messages);
     }, function (request, code, msg) {
       var err = new Error(msg);
@@ -94,27 +91,26 @@ ExchangeService.prototype = {
 
   findMessagesByFolderName: function(folderName,offset, itemCount, callback) {
     var requestConfig = {
+      basePoint: 'End',
+      offset: offset,
       maxReturned: itemCount,
       serverUrl: this.ewsUrl,
-      folderID: folderId,
+      folderBase: folderName,
       user: this.userName,
       password: this.password
     };
     this._findMessages(requestConfig, callback);
   },
 
-  getMessage: function(messageId, callback) {
+  getMessages: function(msgInfos, callback) {
     var requestConfig = {
       serverUrl: this.ewsUrl,
       user: this.userName,
       password: this.password,
-      messages: [messageId]
+      messages: msgInfos
     };
     function onOK(request, messages) {
-      var msg = null;
-      if(messages && messages.length > 0)
-        msg = messages[0];
-      callback(null, msg);
+      callback(null, messages);
     }
     function onError(request, code, msg) {
       var err = new Error(msg);
@@ -124,6 +120,4 @@ ExchangeService.prototype = {
     new GetMessageRequest(requestConfig, onOK, onError);
   }
 };
-
-var exchangeService = new ExchangeService;
 
