@@ -889,9 +889,9 @@ mivExchangeMsgFolder.prototype = {
   //  void getNewMessages(in nsIMsgWindow aWindow, in nsIUrlListener aListener);
 	getNewMessages: function(aWindow, aListener) {
     if(this.name === 'Inbox') {
-      var self = this;
-      this.folderUpdater.updateSummaryInfo(function() {
-        self.updateMessage();
+      var folderUpdater = this.folderUpdater;
+      folderUpdater.updateSummaryInfo(function() {
+        folderUpdater.updateMessage();
       });
     }
 	},

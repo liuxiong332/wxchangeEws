@@ -9,6 +9,8 @@ Cu.import("resource://exchangeEws/ExchangeRequest.js");
 Cu.import("resource://exchangeEws/soapFunctions.js");
 Cu.import('resource://exchangeEws/Xml2jxonObj.js');
 Cu.import('resource://exchangeEws/soapNSDef.js');
+Cu.import('resource://exchangeEws/commonFunctions.js');
+var getLog = commonFunctions.Log.getInfoLevelLogger('GetMessageRequest');
 
 var EXPORTED_SYMBOLS = ["GetMessageRequest"];
 

@@ -53,7 +53,7 @@ QUnit.asyncTest('findMessages and getMessages', function(assert) {
     ex.getMessages(msgInfos, function(err, messages) {
       assert.ok(!err, 'getMessages');
       assert.ok(Array.isArray(messages));
-      // QUnit.baseLog.info(JSON.stringify(messages, null, 2));
+      QUnit.baseLog.info(JSON.stringify(messages, null, 2));
       QUnit.start();
     })
   });

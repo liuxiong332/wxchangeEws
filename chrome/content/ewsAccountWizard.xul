@@ -32,7 +32,7 @@
           <row>
             <label class="label, serverLabel" value="password"
                    control="exchangePassword"  />
-            <textbox id="password" flex="6" type="password" value="abcd"
+            <textbox id="password" flex="6" type="password" value="abcd.ABCD"
                      class="uri-element" placeholder='password'/>
           </row>
 

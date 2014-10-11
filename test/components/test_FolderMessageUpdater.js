@@ -17,6 +17,10 @@ QUnit.module('FolderMessageUpdater test', {
 });
 
 QUnit.asyncTest('updateSummaryInfo', function(assert) {
+  var converter = QUnit.Cc['@mozilla.org/intl/scriptableunicodeconverter']
+    .getService(QUnit.Ci.nsIScriptableUnicodeConverter);
+  converter.convertToByteArray(
+    'Subject: buildbot success in Bolt on bolt \r\n', {});
   var updater = new QUnit.FolderMessageUpdater({
     server: {
       username: 'liuxiong',
