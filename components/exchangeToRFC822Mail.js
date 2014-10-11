@@ -4,6 +4,7 @@
 var EXPORTED_SYMBOLS = ["ExchangeToRFC822Mail"];
 
 function mailboxToStr(mailbox) {
+  if(!mailbox)  return '';
   return mailbox.name + '<' + mailbox.emailAddress + '>';
 }
 

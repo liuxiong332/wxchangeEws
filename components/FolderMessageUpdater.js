@@ -130,12 +130,13 @@ FolderMessageUpdater.prototype = {
     });
   },
 
-  updateMsgList: function(msgs, msgCallback) {
+  updateMsgList: function(msgs, msgCallback, completeCallback) {
     var self = this;
     var msgIndex = msgs.length - 1;
     updateLog.info('get the mesInfos, length is ' + msgs.length);
     function getNextMessage() {
-      updateLog.info('prepare to update index ' + msgIndex);
+      updateLog.info('prepare to update index ' + msgIndex + ', subject:' +
+        msgs[msgIndex].subject);
       var msgInfos = [msgs[msgIndex]];
       self.exchangeService.getMessages(msgInfos, onGetMessage);
     }
@@ -143,24 +144,26 @@ FolderMessageUpdater.prototype = {
     function onGetMessage(err, messages) {
       if(!err) {
         updateLog.info('update message:' + messages[0].subject);
-        messages.forEach(msgCallback);
+        msgCallback && messages.forEach(msgCallback);
         self.hasUpdateCount += messages.length;
         msgIndex -= messages.length;
       }
-      if(msgIndex < 0) {
+      if(msgIndex >= 0) {
         getNextMessage();
       } else if( self.hasUpdateCount < self.totalCount) {
-        self.updateMessage();
+        self._updateMessage(msgCallback, completeCallback);
+      } else {
+        completeCallback && completeCallback();
       }
     }
     getNextMessage();
   },
 
-  _updateMessage: function(msgCallback) {
+  _updateMessage: function(msgCallback, completeCallback) {
     var self = this;
     this.exchangeService.findMessagesByFolderName('inbox', this.hasUpdateCount,
       100, function(err, msgs) {
-      !err && self.updateMsgList(msgs, msgCallback);
+      !err && self.updateMsgList(msgs, msgCallback, completeCallback);
     });
   },
 

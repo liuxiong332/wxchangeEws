@@ -341,7 +341,10 @@ Xml2jxonObj.constructor = function() {
 
 Xml2jxonObj.createFromXML = function(xmlStr) {
   var processor = new XmlProcessor(xmlStr);
-  return processor.processXmlObj(Xml2jxonObj.constructor);
+  try {
+    var obj = processor.processXmlObj(Xml2jxonObj.constructor);
+  } catch(e) {}
+  return obj;
 };
 
 Xml2jxonObj.prototype = {

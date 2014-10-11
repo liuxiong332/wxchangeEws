@@ -82,7 +82,13 @@ ExchangeRequest.prototype = {
 		} catch(err) {
 			return;
 		}
-		this.xmlReq.overrideMimeType('text/xml');
+
+		// this.xmlReq.timeout = 4000;	/*1s timeout*/
+		this.xmlReq.ontimeout = function() {
+			self.onTimeout();
+		};
+
+		this.xmlReq.overrideMimeType('text/plain');
 		this.xmlReq.setRequestHeader("Content-Type", "text/xml");
 		this.xmlReq.setRequestHeader("Connection", "keep-alive");
 
@@ -109,7 +115,7 @@ ExchangeRequest.prototype = {
 			}
 		}
 		if (this.isHTTPRedirect(event)) return;
-		requestError(xmlReq.statusText, xmlReq.responseText);
+		this.requestError(xmlReq.statusText, xmlReq.responseText);
 	},
 
 	onAbort: function() {
@@ -140,7 +146,13 @@ ExchangeRequest.prototype = {
 		return false;
 	},
 
+	onTimeout: function() {
+		log.info('request timeout');
+		this.requestError('RequestTimeOut');
+	},
+
 	onLoad: function(event) {
+		log.info('load successfully');
 		var xmlReq = this.xmlReq;
 
 		if(this.isHTTPRedirect(event))	return;
@@ -173,7 +185,7 @@ ExchangeRequest.prototype = {
 		if (rm.length > 0) {
 			var msgText = rm[0].getChildTagValue('m:MessageText', '');
 			var responseCode = rm[0].getChildTagValue('m:ResponseCode', '');
-			requestError(msgText, responseCode);
+			this.requestError(msgText, responseCode);
 			return true;
 		}
 		return false;
