@@ -9,6 +9,7 @@
     "components/test_incomingServer.js",
     "components/test_protocolHandler.js",
     "components/test_exchangeService.js",
-    "components/test_FolderMessageUpdater.js"
+    "components/test_FolderMessageUpdater.js",
+    "components/test_AutoDiscoverRequest.js"
   ]
 }

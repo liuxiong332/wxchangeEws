@@ -119,7 +119,7 @@ ExchangeRequest.prototype = {
 	},
 
 	onError: function(event) {
-		log.info('request Error!');
+		log.info('request Error! the status is:' + this.xmlReq.status);
 		let xmlReq = this.xmlReq;
 		if ((!this.shutdown) && (xmlReq.readyState == 4) && (xmlReq.status == 0)) {
 			//badCert going to check if it is a cert problem
@@ -169,6 +169,7 @@ ExchangeRequest.prototype = {
 
 	onLoad: function(event) {
 		// log.info('load successfully');
+		log.info('the response is:' + this.xmlReq.responseText);
 		var xmlReq = this.xmlReq;
 
 		if(this.isHTTPRedirect(event))	return;

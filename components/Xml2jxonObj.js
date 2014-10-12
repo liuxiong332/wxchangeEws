@@ -228,7 +228,7 @@ XPathProcessor.prototype = {
 		var logicReg = /((and)|(or))\s+/g;
 		while((filterRes = filterExecutor.execute(filterReg))) {
 			leftOperand = getLogicResult(node, filterRes[1]);
-			logicRes = filterExecutor.execute(logicReg)[1];
+			var logicRes = filterExecutor.execute(logicReg)[1];
 			switch(logicRes) {
 				case 'and': {
 					if(!leftOperand) 	return false; 		//short path calculate

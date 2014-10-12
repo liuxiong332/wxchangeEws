@@ -210,12 +210,12 @@ ExchangeAuthPrompt2.prototype = {
 	},
 
 	generateUUID: function() {
-		this.uuid.generateUUID().toString().replace(/[{}]/g, '');
+		this.uuidGen.generateUUID().toString().replace(/[{}]/g, '');
 	},
 
 	getURLStrFromChannel: function(channel) {
-		return decodeURIComponent(aChannel.URI.scheme + '://' +
-			aChannel.URI.hostPort+aChannel.URI.path);
+		return decodeURIComponent(channel.URI.scheme + '://' +
+			channel.URI.hostPort+channel.URI.path);
 	},
 
 	asyncPromptAuth: function(aChannel, aCallback, aContext, level, authInfo) {

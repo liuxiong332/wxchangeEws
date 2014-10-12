@@ -13,6 +13,8 @@ var EXPORTED_SYMBOLS = ['exchangeCertService'];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import('resource://exchangeEws/commonFunctions.js');
+var certLog = commonFunctions.Log.getInfoLevelLogger('exchangeCertService');
 
 function ExchangeBadCertListener2() {
 	this.targetSites = {};
@@ -22,6 +24,7 @@ function ExchangeBadCertListener2() {
 ExchangeBadCertListener2.prototype = {
 	// note the target site has certification problem
 	notifyCertProblem: function(socketInfo, status, targetSite) {
+		certLog.info('the site:' + targetSite + ', has bad cert');
 		this.targetSites[targetSite] = true;
 		return true;
 	},
