@@ -132,7 +132,7 @@ FolderMessageUpdater.prototype = {
 
   updateMsgList: function(msgs, msgCallback, completeCallback) {
     var self = this;
-    var msgIndex = msgs.length - 1;
+    var msgIndex = 0;
     updateLog.info('get the mesInfos, length is ' + msgs.length);
     function getNextMessage() {
       updateLog.info('prepare to update index ' + msgIndex + ', subject:' +
@@ -146,9 +146,9 @@ FolderMessageUpdater.prototype = {
         updateLog.info('update message:' + messages[0].subject);
         msgCallback && messages.forEach(msgCallback);
         self.hasUpdateCount += messages.length;
-        msgIndex -= messages.length;
+        msgIndex += messages.length;
       }
-      if(msgIndex >= 0) {
+      if(msgIndex < msgs.length) {
         getNextMessage();
       } else if( self.hasUpdateCount < self.totalCount) {
         self._updateMessage(msgCallback, completeCallback);
@@ -161,8 +161,10 @@ FolderMessageUpdater.prototype = {
 
   _updateMessage: function(msgCallback, completeCallback) {
     var self = this;
-    this.exchangeService.findMessagesByFolderName('inbox', this.hasUpdateCount,
-      100, function(err, msgs) {
+    var updateSize = 100;
+    var offset = this.totalCount - this.hasUpdateCount - updateSize;
+    this.exchangeService.findMessagesByFolderName('inbox', offset, updateSize,
+      function(err, msgs) {
       !err && self.updateMsgList(msgs, msgCallback, completeCallback);
     });
   },

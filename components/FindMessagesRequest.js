@@ -25,7 +25,7 @@ function FindMessagesRequest(requestInfo, aCbOk, aCbError) {
 	this.basePoint = requestInfo.basePoint === 'End' ? 'End' : 'Beginning';
 	this.offset = requestInfo.offset || 0;
 
-	this.exchangeRequest = new ExchangeRequest(requestInfo,
+	this.exchangeRequest = new SoapExchangeRequest(requestInfo,
 		this.onSendOk.bind(this), this.onSendError.bind(this));
 	this.execute();
 }

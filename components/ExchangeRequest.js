@@ -14,7 +14,7 @@ Cu.import('resource://exchangeEws/exchangeAuthPromptService.js');
 Cu.import('resource://exchangeEws/commonFunctions.js');
 var log = commonFunctions.Log.getInfoLevelLogger('ExchangeRequest');
 
-var EXPORTED_SYMBOLS = ["ExchangeRequest"];
+var EXPORTED_SYMBOLS = ['ExchangeRequest', 'SoapExchangeRequest'];
 
 /**
  * userInfo can contain the property:
@@ -39,12 +39,12 @@ ExchangeRequest.prototype = {
 		this.xmlReq.abort();
 	},
 
-	sendRequest: function(aData, aUrl) {
-		if (this.shutdown || !aUrl) {
+	sendRequest: function(aData, url) {
+		if (this.shutdown || !url) {
 			return;
 		}
 		this.mData = aData;
-		this.currentUrl = aUrl;
+		this.currentUrl = url;
 		/*user donot resolve the bad certification problem or
 		  user canceled providing a valid password for current url */
 		if (exchangeCertService.userCanceledCertProblem(this.currentUrl) ||
@@ -102,6 +102,22 @@ ExchangeRequest.prototype = {
 		this.xmlReq.send(this.mData);
 	},
 
+	sendRequestForUrlList: function(data, urlList) {
+		var originCbError = this.mCbError;
+		var self = this;
+		function sendOneRequest() {
+			var url = urlList.shift();
+			self.sendRequest(data, url);
+		}
+
+		this.mCbError = function(request, code, msg) {
+			if(urlList.length == 0)
+				return originCbError(request, code, msg);
+			sendOneRequest();
+		}
+		sendOneRequest();
+	},
+
 	onError: function(event) {
 		log.info('request Error!');
 		let xmlReq = this.xmlReq;
@@ -152,7 +168,7 @@ ExchangeRequest.prototype = {
 	},
 
 	onLoad: function(event) {
-		log.info('load successfully');
+		// log.info('load successfully');
 		var xmlReq = this.xmlReq;
 
 		if(this.isHTTPRedirect(event))	return;
@@ -162,14 +178,8 @@ ExchangeRequest.prototype = {
 		var xml = xmlReq.responseText;
 		var newXML = Xml2jxonObj.createFromXML(xml);
 
-		if(this.processSoapErrorMsg(newXML)) return ;
-
-		var bodyObj = newXML.XPath('/soap:Envelope/soap:Body/*');
-		if(bodyObj.length === 0) {
-			return this.requestError('NotBodyFound');
-		}
 		if (this.mCbOk) {
-			this.mCbOk(this, bodyObj[0]);
+			this.mCbOk(this, newXML);
 		}
 	},
 
@@ -178,7 +188,24 @@ ExchangeRequest.prototype = {
 			this.mCbError(this, aCode, aMsg);
 		}
 	},
+};
 
+function SoapExchangeRequest(userInfo, aCbOk, aCbError) {
+	ExchangeRequest.apply(this, arguments);
+	var originCbOk = this.mCbOk;
+
+	this.mCbOk = function(request, xmlObj) {
+		if(this.processSoapErrorMsg(xmlObj)) return ;
+		var bodyObj = xmlObj.XPath('/soap:Envelope/soap:Body/*');
+		if(bodyObj.length === 0) {
+			return this.requestError('NotBodyFound');
+		}
+		//if request is SOAP, return the body child xml2jxonObj
+		originCbOk && originCbOk(this, bodyObj[0]);
+	}
+}
+
+SoapExchangeRequest.prototype = {
 	processSoapErrorMsg: function(aResp) {
 		var rm = aResp.XPath(
 			'/s:Envelope/s:Body/*/m:ResponseMessages/*[@ResponseClass="Error"]');
@@ -189,8 +216,17 @@ ExchangeRequest.prototype = {
 			return true;
 		}
 		return false;
-	}
+	},
 };
+
+function inherit(baseClass, inheritClass) {
+	var methods = inheritClass.prototype;
+	inheritClass.prototype = Object.create(baseClass.prototype);
+	for(var method in methods) {
+		inheritClass.prototype[method] = methods[method];
+	}
+}
+inherit(ExchangeRequest, SoapExchangeRequest);
 
 function RequestNotification(aExchangeRequest) {
 }

@@ -48,4 +48,7 @@ exchangeEws.accountWizard.finishAccount = function() {
   exchangeServer.ewsUrl = this._ewsUrl;
 
   MailServices.accounts.saveAccountInfo();
+  try {
+    Services.prefs.savePrefFile(null);
+  } catch(e) {}
 }

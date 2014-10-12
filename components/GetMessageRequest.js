@@ -22,7 +22,7 @@ function GetMessageRequest(requestInfo, aCbOk, aCbError) {
 	this.messages = requestInfo.messages;
 	this.serverUrl = requestInfo.serverUrl;
 
-	this.exchangeRequest = new ExchangeRequest(requestInfo,
+	this.exchangeRequest = new SoapExchangeRequest(requestInfo,
 		this.onSendOk.bind(this), this.onSendError.bind(this));
 
 	this.execute();

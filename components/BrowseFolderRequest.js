@@ -28,7 +28,7 @@ function BrowseFolderRequest(folderInfo, aCbOk, aCbError) {
 	this.mCbError = aCbError;
 
 	var self = this;
-	this.exchangeRequest = new ExchangeRequest(folderInfo,
+	this.exchangeRequest = new SoapExchangeRequest(folderInfo,
 		this.onSendOk.bind(this),
 		this.onSendError.bind(this));
 

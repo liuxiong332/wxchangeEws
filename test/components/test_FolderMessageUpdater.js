@@ -31,10 +31,19 @@ QUnit.asyncTest('updateSummaryInfo', function(assert) {
   updater.updateSummaryInfo(function(err) {
     assert.ok(!err);
     // QUnit.baseLog.info('the totalCount:' + updater.totalCount);
-    // QUnit.start();
-    updater._updateMessage(null, function() {
-      assert.equal(updater.hasUpdateCount, updater.totalCount);
-      QUnit.start();
-    });
+    QUnit.start();
+    // updater._updateMessage(null, function() {
+    //   assert.equal(updater.hasUpdateCount, updater.totalCount);
+    //   QUnit.start();
+    // });
   });
+});
+
+QUnit.test('FileSerializer', function(assert) {
+  QUnit.Cu.import('resource://exchangeEws/FileSerializer.js', QUnit);
+  var serializer = new QUnit.FileSerializer('C:\\he.txt');
+
+  var str = '盖世英雄';
+  serializer.serialize(str);
+  assert.strictEqual(str, serializer.deserialize());
 });

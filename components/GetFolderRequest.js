@@ -17,7 +17,7 @@ function GetFolderRequest(folderInfo, aCbOk, aCbError) {
 	this.folderInfo = folderInfo;
 	this.serverUrl = folderInfo.serverUrl;
 
-	this.exchangeRequest = new ExchangeRequest(folderInfo,
+	this.exchangeRequest = new SoapExchangeRequest(folderInfo,
 		this.onSendOk.bind(this), this.onSendError.bind(this));
 	this.execute();
 }
