@@ -87,8 +87,8 @@ ExchangeAuthPrompt2.prototype = {
 	},
 
 	getPassword: function(username, aURL, useCached) {
-		authLog.info('get password username:' + username +
-			', useCached: ' + useCached);
+		// authLog.info('get password username:' + username +
+			// ', useCached: ' + useCached);
 		var password = this.getPasswordFromCache(username, aURL);
 		if(!useCached)
 			password = null;
@@ -138,7 +138,7 @@ ExchangeAuthPrompt2.prototype = {
 				continue;
 			}
 
-			authLog.info('the username is:' + username);
+			// authLog.info('the username is:' + username);
 			// Return credentials we have obtained
 			if (authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD) {
 				authInfo.username = username;
