@@ -43,6 +43,7 @@ ExchangeRequest.prototype = {
 		if (this.shutdown || !url) {
 			return;
 		}
+		log.info('send request for url:' + url);
 		this.mData = aData;
 		this.currentUrl = url;
 		/*user donot resolve the bad certification problem or
@@ -71,6 +72,7 @@ ExchangeRequest.prototype = {
 
 		try {
 			if (password) {
+				log.info('open the xmlreq with the password:' + password);
 				this.xmlReq.open("POST", this.currentUrl, true, openUser, password);
 
 				var tok = openUser + ':' + password;
@@ -123,6 +125,7 @@ ExchangeRequest.prototype = {
 		let xmlReq = this.xmlReq;
 		if ((!this.shutdown) && (xmlReq.readyState == 4) && (xmlReq.status == 0)) {
 			//badCert going to check if it is a cert problem
+			log.info('check for bad cert, the status is: ' + xmlReq.statusText);
 			var result = exchangeCertService.checkAndSolveCertProblem(this.currentUrl);
 			if (result.hadProblem && result.solved) {
 					//badCert problem but solved. going to retry url.");
@@ -235,8 +238,10 @@ function RequestNotification(aExchangeRequest) {
 RequestNotification.prototype = {
 	getInterface: function(iid) {
 		if(iid.equals(Ci.nsIAuthPrompt2)) {
+			log.info('get nsIAuthPrompt2 interface');
 			return exchangeAuthPromptService;
 		} else if(iid.equals(Ci.nsIBadCertListener2)) {
+			log.info('get nsIBadCertListener2 interface');
 			return exchangeCertService;
 		} else if(iid.equals(Ci.nsIProgressEventSink)) {
     	return this;

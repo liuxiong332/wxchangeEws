@@ -96,5 +96,3 @@ AutoDiscoverRequest.prototype = {
 		this.mCbError && this.mCbError(this, aCode, aMsg);
 	},
 };
-
-

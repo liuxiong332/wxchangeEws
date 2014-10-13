@@ -34,3 +34,17 @@ QUnit.asyncTest('discover test', function(assert) {
   new QUnit.AutoDiscoverRequest(requestConfig, onOk, onFail);
 });
 
+// QUnit.asyncTest('cert test', function(assert) {
+//   expect(0);
+//   QUnit.Cu.import('resource://exchangeEws/ExchangeRequest.js', QUnit);
+//   var config = {
+//     user: ' ',
+//     password: ' ',
+//   };
+//   var request = new QUnit.ExchangeRequest(config, function() {
+//     QUnit.start();
+//    }, function() {
+//     QUnit.start();
+//    });
+//   request.sendRequest(' ', 'https://localhost:8000');
+// });

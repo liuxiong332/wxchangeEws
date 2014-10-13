@@ -22,30 +22,30 @@ function ExchangeBadCertListener2() {
 }
 
 ExchangeBadCertListener2.prototype = {
-	// note the target site has certification problem
+	// note the target site has certification problem, targetSite is domain
 	notifyCertProblem: function(socketInfo, status, targetSite) {
-		certLog.info('the site:' + targetSite + ', has bad cert');
 		this.targetSites[targetSite] = true;
 		return true;
 	},
 
 	//check the certification has or not problem in the local cache
 	checkCertProblem: function(targetSite) {
+
 		if (!targetSite) return false;
 		var waitingProblem = false;
 		for (var index in this.targetSites) {
 			if (this.targetSites[index]) {
-				var index2 = index;
-				if (index2.indexOf(":") > -1) {
-					index2 = index2.substr(0,index2.indexOf(":"));
+				var host = index;
+				if (index.indexOf(":") > -1) {
+					host = index.substr(0,index.indexOf(":"));
 				}
 				if ((targetSite.indexOf(index) > -1) ||
-					(targetSite.indexOf(index2) > -1)) {
+					(targetSite.indexOf(host) > -1)) {
 					waitingProblem = true;
+					break;
 				}
 			}
 		}
-
 		return waitingProblem;
 	},
 
