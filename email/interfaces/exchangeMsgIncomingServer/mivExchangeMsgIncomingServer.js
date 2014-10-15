@@ -466,7 +466,7 @@ mivExchangeMsgIncomingServer.prototype = {
 	},
 
 	createRootFolder: function() {
-		var folder = Cc["@kingsoft.com/exchange-folder;1"]
+		var folder = Cc["@mozilla.org/rdf/resource-factory;1?name=exchange"]
       .createInstance(Ci.mivExchangeMsgFolder);
     folder || serverLog.error('cannot create root folder');
     folder.initWithIncomingServer(this.serverURI, this);

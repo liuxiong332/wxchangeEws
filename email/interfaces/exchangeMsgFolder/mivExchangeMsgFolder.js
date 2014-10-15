@@ -130,6 +130,14 @@ mivExchangeMsgFolder.prototype = {
 		return ifaces;
 	},
 
+  //nsIRDFResource implementation
+  get Value() {
+    return this._uri;
+  },
+
+  Init: function(uri) {
+  },
+
   initWithIncomingServer: function(baseUri, server) {
     this._uri = baseUri;
     this._server = server;

@@ -12,7 +12,46 @@ Cu.import("resource://exchangeEws/Xml2jxonObj.js");
 Cu.import('resource://exchangeEws/exchangeCertService.js');
 Cu.import('resource://exchangeEws/exchangeAuthPromptService.js');
 Cu.import('resource://exchangeEws/commonFunctions.js');
+
+Cu.import("resource:///modules/gloda/log4moz.js");
 var log = commonFunctions.Log.getInfoLevelLogger('ExchangeRequest');
+
+function FileWriter(filePath) {
+	var file = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+	file.initWithPath(filePath);
+	!file.exists() && file.create(file.NORMAL_FILE_TYPE, 0666);
+	this.file = file;
+}
+FileWriter.prototype.addFileLine = function(string) {
+	var jsFrame = Components.stack.caller.caller;
+	try {
+    var filename = jsFrame.filename.slice(
+      jsFrame.filename.lastIndexOf('/')+1);
+    var prefixStr = '\n' + filename + ':' + jsFrame.name +
+      ':' + jsFrame.lineNumber + '\n';
+	} catch(e) {}
+	return prefixStr + string + '\n';
+};
+
+FileWriter.prototype.writeIntoFile = function(string) {
+	string = this.addFileLine(string);
+	var charset = 'UTF-8';
+	var fileStream = Cc['@mozilla.org/network/file-output-stream;1']
+		.createInstance(Ci.nsIFileOutputStream);
+	fileStream.init(this.file, 2, 0x200, false);
+	var converterStream = Cc['@mozilla.org/intl/converter-output-stream;1']
+		.createInstance(Ci.nsIConverterOutputStream);
+	converterStream.init(fileStream, charset, 0,
+		Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+	converterStream.writeString(string);
+	converterStream.close();
+	fileStream.close();
+};
+
+function fileWriter(string) {
+	(new FileWriter('d:\\ExchangeRequest.log')).writeIntoFile(string);
+}
 
 var EXPORTED_SYMBOLS = ['ExchangeRequest', 'SoapExchangeRequest'];
 
@@ -178,6 +217,7 @@ ExchangeRequest.prototype = {
 			return this.requestError(xmlReq.statusText, xmlReq.responseText);
 		}
 		var xml = xmlReq.responseText;
+		fileWriter(xml);
 		var newXML = Xml2jxonObj.createFromXML(xml);
 
 		if (this.mCbOk) {

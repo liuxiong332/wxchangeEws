@@ -31,11 +31,14 @@ function MsgWriter(folder) {
 }
 MsgWriter.prototype = {
   initNewHdr: function(newHdr, msgTransfer) {
+    updateLog.info('the date is:' + msgTransfer.getSentTimeInMilliSeconds());
     var converter = this.converter;
     newHdr.author = converter.ConvertFromUnicode(msgTransfer.getFrom());
     newHdr.subject = converter.ConvertFromUnicode(msgTransfer.getSubject());
     newHdr.recipients =
       converter.ConvertFromUnicode(msgTransfer.getToRecipients());
+    //date is microseconds
+    newHdr.date = msgTransfer.getSentTimeInMilliSeconds() * 1000;
     newHdr.messageId = converter.ConvertFromUnicode(msgTransfer.getMsgId());
     newHdr.OrFlags(Ci.nsMsgMessageFlags.New);
   },
@@ -82,7 +85,7 @@ MsgWriter.prototype = {
     newHdr = newHdr.value;//utf16
     this.initNewHdr(newHdr, msgTransfer);
 
-    var byteInfo = this.writeMsgToStream(msgTransfer.getMsgMail(), binaryStream);
+    var byteInfo = this.writeMsgToStream(message.mimeContent, binaryStream);
     newHdr.lineCount = byteInfo.bodyLines;
     newHdr.messageSize = byteInfo.byteSize;
 
@@ -92,6 +95,7 @@ MsgWriter.prototype = {
     var msgDatabase = this.folder.msgDatabase;
     msgDatabase.AddNewHdrToDB(newHdr, true);
     msgDatabase.Commit(Ci.nsMsgDBCommitType.kLargeCommit);
+    msgStore.finishNewMessage(outStream, newHdr);
   }
 };
 

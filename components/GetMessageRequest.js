@@ -35,7 +35,7 @@ GetMessageRequest.prototype = {
 		req.addNamespace('nsTypes', soapNSDef.nsTypesStr);
 
 		var itemShape = req.addChildTag("ItemShape", "nsMessages", null);
-		itemShape.addChildTag("BaseShape", "nsTypes", "Default");
+		itemShape.addChildTag("BaseShape", "nsTypes", "AllProperties");
 		itemShape.addChildTag('IncludeMimeContent', 'nsTypes', 'true');
 
 		var itemids = req.addChildTag("ItemIds", "nsMessages", null);
@@ -69,6 +69,39 @@ GetMessageRequest.prototype = {
 		};
 	},
 
+	getBodyType: function(msg) {
+		var bodyType = msg.getAttributeByChildTag('t:Body', 'BodyType', 'Text');
+		var mimeType = 'text/plain';
+		switch(bodyType) {
+			case 'Text': 	mimeType = 'text/plain';	break;
+			case 'HTML': 	mimeType = 'text/html'; 	break;
+		}
+		return mimeType;
+	},
+
+	getSentDateTime: function(msg) {
+		var dateTime = msg.getChildTagValue('t:DateTimeSent');
+		var dtReg = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z/;
+		var regRes = dtReg.exec(dateTime);
+		if(regRes) {
+			var milliSeconds =  Date.UTC(parseInt(regRes[1]), parseInt(regRes[2]) - 1,
+				parseInt(regRes[3]), parseInt(regRes[4]), parseInt(regRes[5]),
+				parseInt(regRes[6]));
+			return new Date(milliSeconds);
+		}
+		return Date.now();
+	},
+
+	getMimeContent: function(msg) {
+		var content = msg.getChildTagValue('t:MimeContent');
+		var hShellService = Cc["@mozilla.org/appshell/appShellService;1"].
+			getService(Components.interfaces.nsIAppShellService);
+
+		var HiddenWindow = hShellService.hiddenDOMWindow;
+
+		return HiddenWindow.atob(content);
+	},
+
 	onSendOk: function(request, xmlObj) {
 		var self = this;
 		var responseMsg = xmlObj.XPath('/m:GetItemResponse/m:ResponseMessages' +
@@ -78,14 +111,15 @@ GetMessageRequest.prototype = {
 			var msgs = responseMsg[0].XPath('/m:GetItemResponseMessage/m:Items/*');
 			var messages = [];
 			msgs.forEach(function(msg) {
-				var toRecipients =
+				var mimeContent = self.getMimeContent(msg);
+				getLog.info(mimeContent);
 				messages.push({
-					itemId: 		msg.getAttributeByChildTag("t:ItemId", "Id"),
-				  changeKey: 	msg.getAttributeByChildTag("t:ItemId", "ChangeKey"),
+					itemId: 		msg.getChildTagValue('t:InternetMessageId'),
 				  subject: 		msg.getChildTagValue("t:Subject"),
-				  body: 			msg.getChildTagValue('t:Body'),
 				  toRecipients: 	self.getToRecipients(msg),
 				  from: 			self.getFrom(msg),
+				  dateTimeSent: 	self.getSentDateTime(msg),
+				  mimeContent: 		self.getMimeContent(msg)
 				});
 			});
 			this.mCbOk && this.mCbOk(this, messages);
