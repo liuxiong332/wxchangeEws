@@ -234,3 +234,36 @@ QUnit.testSkip('insert new message', function(assert) {
 //   assert.ok(url);
 //   newAccount.destroy();
 // });
+
+// QUnit.asyncTest('http test', function(assert) {
+//   function HttpUtil(hostname, timeout) {
+
+//     var xmlReq = QUnit.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+//     xmlReq.timeout = timeout * 1000;
+
+//     xmlReq.addEventListener("error", function(event) {
+//       QUnit.log.info('error, the status code:' + xmlReq.statusText);
+//       QUnit.start();
+//     });
+//     xmlReq.addEventListener("abort", function(event) {
+//       QUnit.log.info('abort');
+//       QUnit.start();
+//     });
+//     xmlReq.addEventListener("load", function(event) {
+//       QUnit.log.info('load the status text:' + xmlReq.statusText + ', the response:'
+//         + xmlReq.responseText);
+//       QUnit.start();
+//     });
+//     xmlReq.ontimeout = function() {
+//       QUnit.log.info('timeout');
+//       QUnit.start();
+//     };
+
+//     var ewsUrl = "https://" + hostname + "/EWS/exchange.asmx";
+//     xmlReq.open("POST", ewsUrl, true);
+//     xmlReq.send();
+//     QUnit.log.info('post to ' + ewsUrl);
+//   }
+
+//   HttpUtil('snt405-m.hotmail.com', 10);
+// })

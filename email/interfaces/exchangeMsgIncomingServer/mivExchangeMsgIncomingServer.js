@@ -8,6 +8,7 @@ var components = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://exchangeEws/commonFunctions.js");
+Cu.import('resource://exchangeEws/exchangeService.js');
 
 var serverLog = commonFunctions.Log.getInfoLevelLogger('exchange-server');
 
@@ -33,6 +34,7 @@ function mivExchangeMsgIncomingServer() {
 	this.resetPrefBranch();
 	this._defaultPrefBranch = mivExchangeMsgIncomingServer.getBranch(
 		"mail.server.default.");
+  this.exchangeService = new ExchangeService;
 }
 
 var mivExchangeMsgIncomingServerGUID = "79d87edc-020e-48d4-8c04-b894edab4bd2";
@@ -112,6 +114,7 @@ mivExchangeMsgIncomingServer.prototype = {
 
 	set ewsUrl(value) {
 		this._ewsUrl = value;
+    this.exchangeService.setEwsUrl(value);
 	},
   /**
    * pretty name - should be "userid on hostname"
@@ -270,8 +273,12 @@ mivExchangeMsgIncomingServer.prototype = {
 	set password(aValue)
 	{
 		this._password = aValue;
+    this.exchangeService.setCredential(this.username, this._password);
 	},
 
+  getExchangeService: function() {
+    return this.exchangeService;
+  },
   /**
    * Attempts to get the password first from the password manager, if that
    * fails it will attempt to get it from the user if aMsgWindow is supplied.
@@ -652,9 +659,16 @@ mivExchangeMsgIncomingServer.prototype = {
    * @return - the url that we run.
    */
   //  nsIURI verifyLogon(in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
-	verifyLogon: function _verifyLogon(aUrlListener, aMsgWindow)
+	verifyLogon: function(aUrlListener, aMsgWindow)
 	{
-		dump("function verifyLogon\n");
+    var ewsUrl = this.ewsUrl;
+    aUrlListener.OnStartRunningUrl(ewsUrl);
+    this.exchangeService.verifyCredential(function(err) {
+      var res = Cr.NS_OK;
+      if(err)
+        res = Cr.NS_ERROR_FAILURE;
+      aUrlListener.OnStopRunningUrl(ewsUrl, Cr.NS_OK);
+    });
 	},
 
   /* do a biff */

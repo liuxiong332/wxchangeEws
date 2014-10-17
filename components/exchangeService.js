@@ -29,8 +29,11 @@ ExchangeService.prototype = {
     callback && findFolders('inbox', callback);
   },
 
-  setAutodiscoverUrl: function(url, callback) {
+  verifyCredential: function(callback) {
+    this.setEwsUrl(this.ewsUrl, callback);
+  },
 
+  setAutodiscoverUrl: function(url, callback) {
   },
   /**
     folderName [string]: the parent folder name, such as inbox
