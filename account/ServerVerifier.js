@@ -4,21 +4,24 @@ Cu.import('resource://accountConfig/SocketUtil.js');
 Cu.import('resource://exchangeEws/commonFunctions.js');
 var verifyLog = commonFunctions.Log.getInfoLevelLogger('ServerVerifier');
 
-var EXPORTED_SYMBOLS = ['AccountVerifier'];
+var EXPORTED_SYMBOLS = ['ServerVerifier'];
 
-function AccountVerifier(config, successCallback, failCallback) {
+function ServerVerifier(config, successCallback, failCallback) {
+  if(!(this instanceof ServerVerifier)) {
+    var verifier = new ServerVerifier(config, successCallback, failCallback);
+    return verifier.beginSocketVerify();
+  }
   this.config = config;
   this.successCallback = successCallback;
   this.failCallback = failCallback;
-  this.beginSocketVerify();
 }
 
-AccountVerifier.OK = 0;
-AccountVerifier.FAIL = 1;
-AccountVerifier.RETRY = 2;
+ServerVerifier.OK = 0;
+ServerVerifier.FAIL = 1;
+ServerVerifier.RETRY = 2;
 
 var TLS = 3;
-AccountVerifier.prototype = {
+ServerVerifier.prototype = {
   beginSocketVerify: function() {
     var CMDS = {
       'imap': ["1 CAPABILITY\r\n", "2 LOGOUT\r\n"],
@@ -37,8 +40,8 @@ AccountVerifier.prototype = {
       verifyLog.info('the result data is:' + wiredata);
       var res = self._processResult(wiredata);
       switch(res) {
-        case AccountVerifier.OK:    self.successCallback(); break;
-        case AccountVerifier.FAIL:  onFail();   break;
+        case ServerVerifier.OK:    self.successCallback(self); break;
+        case ServerVerifier.FAIL:  onFail();   break;
       }
     }
     function onFail(e) {// error callback
@@ -57,7 +60,7 @@ AccountVerifier.prototype = {
         .clearValidityOverride(config.hostname, config.port);
 
       if (this._gotCertError == Ci.nsICertOverrideService.ERROR_MISMATCH) {
-        return AccountVerifier.FAIL;
+        return ServerVerifier.FAIL;
       }
 
       if (this._gotCertError == Ci.nsICertOverrideService.ERROR_UNTRUSTED ||
@@ -65,24 +68,24 @@ AccountVerifier.prototype = {
         this._gotCertError = false;
         config.selfSignedCert = true; // _next_ run gets this exception
         this.beginSocketVerify();
-        return AccountVerifier.RETRY;
+        return ServerVerifier.RETRY;
       }
     }
     verifyLog.info('the data is:' + !wiredata);
     if(!wiredata) {
-      return AccountVerifier.FAIL;
+      return ServerVerifier.FAIL;
     }
     config.authMethods = this._advertisesAuthMethods(config.type, wiredata);
     verifyLog.info('the auth methods is:' + config.authMethods);
     if (config.ssl == TLS && !this._hasTLS(wiredata)) {
       // this._log.info("STARTTLS wanted, but not offered");
-      return AccountVerifier.FAIL;
+      return ServerVerifier.FAIL;
     }
     // this._log.info("success with " + thisTry.hostname + ":" +
     //     thisTry.port + " " + protocolToString(thisTry.protocol) +
     //     " ssl " + thisTry.ssl +
     //     (thisTry.selfSignedCert ? " (selfSignedCert)" : ""));
-    return AccountVerifier.OK;
+    return ServerVerifier.OK;
   },
 
   /**
@@ -227,3 +230,4 @@ SSLErrorHandler.prototype = {
     return false;
   },
 }
+
