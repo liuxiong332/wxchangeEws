@@ -70,14 +70,22 @@ QUnit.test('accountConfigConstructor test', function(assert) {
 
 QUnit.asyncTest('ServerVerifier test', function(assert) {
   var serverInfo = {
-    type: 'smtp',
-    hostname: 'smtp.qq.com',
-    ssl: 2,
-    port: 465
+    incoming: {
+      type: 'imap',
+      hostname: 'imap.qq.com',
+      ssl: 2,
+      port: 993
+    },
+    outgoing: {
+      type: 'smtp',
+      hostname: 'smtp.qq.com',
+      ssl: 2,
+      port: 465
+    }
   };
 
   QUnit.Cu.import('resource://accountConfig/ServerVerifier.js', QUnit);
-  QUnit.ServerVerifier(serverInfo, function() {
+  QUnit.InOutServerVerifier(serverInfo, function() {
     assert.ok(true);
     QUnit.start();
   }, function() {

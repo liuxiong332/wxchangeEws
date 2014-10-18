@@ -4,7 +4,7 @@ Cu.import('resource://accountConfig/SocketUtil.js');
 Cu.import('resource://exchangeEws/commonFunctions.js');
 var verifyLog = commonFunctions.Log.getInfoLevelLogger('ServerVerifier');
 
-var EXPORTED_SYMBOLS = ['ServerVerifier'];
+var EXPORTED_SYMBOLS = ['ServerVerifier', 'InOutServerVerifier'];
 
 function ServerVerifier(config, successCallback, failCallback) {
   if(!(this instanceof ServerVerifier)) {
@@ -45,7 +45,7 @@ ServerVerifier.prototype = {
       }
     }
     function onFail(e) {// error callback
-      self.failCallback(e);
+      self.failCallback(this, e);
     }
 
     return SocketUtil(serverInfo, CMDS[config.type],
@@ -231,3 +231,45 @@ SSLErrorHandler.prototype = {
   },
 }
 
+function InOutServerVerifier(config, successCallback, failCallback) {
+  if(!(this instanceof InOutServerVerifier)) {
+    var verifier =
+      new InOutServerVerifier(config, successCallback, failCallback);
+    return verifier.beginSocketVerify();
+  }
+  this.config = config;
+  this.successCallback = successCallback;
+  this.failCallback = failCallback;
+}
+
+InOutServerVerifier.prototype = {
+  beginSocketVerify: function() {
+    var self = this;
+    var config = this.config;
+    function onSuccess(verifier) {
+      if(verifier.config === config.incoming) {
+        self.inRes = true;
+      } else {
+        self.outRes = true;
+      }
+      if(self.inRes && self.outRes)
+        self.successCallback(self);
+    }
+
+    function onFail(verifier, e) {
+      if(!self.failed) {
+        self.failCallback(self, e);
+      }
+      self.failed = true;
+    }
+
+    var inCancel = ServerVerifier(config.incoming, onSuccess, onFail);
+    var outCancel = ServerVerifier(config.outgoing, onSuccess, onFail);
+    return {
+      cancel: function() {
+        inCancel.cancel();
+        outCancel.cancel();
+      }
+    };
+  },
+};

@@ -25,6 +25,10 @@ AccountConfig.prototype = {
     return ServerVerifier(this.outgoing, successCallback, failCallback);
   },
 
+  startVerify: function(successCallback, failCallback) {
+    return InOutServerVerifier(this, successCallback, failCallback);
+  },
+
   getSocketType: function(configFlag) {
     // { enum: 1 = plain, 2 = SSL/TLS, 3 = STARTTLS always, 0 = not inited }
     if(configFlag & dbConfigFlags.FLAG_TLS) {
