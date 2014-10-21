@@ -288,11 +288,13 @@ function inherit(baseClass, inheritClass) {
 inherit(ExchangeRequest, SoapExchangeRequest);
 
 function RequestNotification(aExchangeRequest, notAuthPrompt) {
+	this.notAuthPrompt = notAuthPrompt;
 }
 
 RequestNotification.prototype = {
 	getInterface: function(iid) {
-		if(iid.equals(Ci.nsIAuthPrompt2) && !notAuthPrompt) {
+		if(iid.equals(Ci.nsIAuthPrompt2) && !this.notAuthPrompt) {
+			log.info('auth prompt');
 			return exchangeAuthPromptService;
 		} else if(iid.equals(Ci.nsIBadCertListener2)) {
 			return exchangeCertService;
