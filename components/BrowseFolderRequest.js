@@ -10,7 +10,7 @@ Cu.import('resource://exchangeEws/ExchangeRequest.js');
 Cu.import('resource://exchangeEws/commonFunctions.js');
 var browseLog = commonFunctions.Log.getInfoLevelLogger('BrowseFolderRequest');
 
-var EXPORTED_SYMBOLS = ["BrowseFolderRequest"];
+var EXPORTED_SYMBOLS = ['BrowseFolderRequest', 'TryBrowseFolderRequest'];
 
 /*
  *the folderInfo can be the below list
@@ -40,7 +40,7 @@ function BrowseFolderRequest(folderInfo, aCbOk, aCbError) {
 
 BrowseFolderRequest.prototype = {
 
-	execute: function() {
+	generateReqData: function() {
 		var req = new Xml2jxonObj('nsMessages:FindFolder');
 		req.addNamespace('nsMessages', soapNSDef.nsMessagesStr);
 		req.addNamespace('nsTypes', soapNSDef.nsTypesStr);
@@ -51,8 +51,10 @@ BrowseFolderRequest.prototype = {
 
 		var parentFolder = makeParentFolderIds("ParentFolderIds", this.folderInfo);
 		req.addChildTagObject(parentFolder);
-
-   	this.exchangeRequest.sendRequest(makeSoapMessage(req), this.serverUrl);
+		return makeSoapMessage(req);
+	},
+	execute: function() {
+   	this.exchangeRequest.sendRequest(this.generateReqData(), this.serverUrl);
 	},
 
 	onSendOk: function(request, xmlObj) {
@@ -94,4 +96,13 @@ BrowseFolderRequest.prototype = {
 	},
 };
 
+function TryBrowseFolderRequest(folderInfo, aCbOk, aCbError) {
+	BrowseFolderRequest.apply(this, arguments);
+}
 
+TryBrowseFolderRequest.prototype = {
+	__proto__ : BrowseFolderRequest.prototype,
+	execute: function() {
+		this.exchangeRequest.trySendRequest(this.generateReqData(), this.serverUrl);
+	}
+}

@@ -26,7 +26,7 @@ ExchangeService.prototype = {
   setEwsUrl: function(url, callback) {
     this.ewsUrl = url;
     /*generate a find folder operation to validate the ews url*/
-    callback && findFolders('inbox', callback);
+    callback && this.tryFindFolders('inbox', callback);
   },
 
   verifyCredential: function(callback) {
@@ -47,6 +47,22 @@ ExchangeService.prototype = {
       password: this.password
     };
     new BrowseFolderRequest(requestConfig, function (request, childFolders) {
+      callback(null, childFolders);
+    }, function (request, code, msg) {
+      var err = new Error(msg);
+      err.code = code;
+      callback(err);
+    });
+  },
+
+  tryFindFolders: function(folderName, callback) {
+    var requestConfig = {
+      serverUrl: this.ewsUrl,
+      folderBase: folderName,
+      user: this.userName,
+      password: this.password
+    };
+    new TryBrowseFolderRequest(requestConfig, function (request, childFolders) {
       callback(null, childFolders);
     }, function (request, code, msg) {
       var err = new Error(msg);

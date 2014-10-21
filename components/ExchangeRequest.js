@@ -78,7 +78,7 @@ ExchangeRequest.prototype = {
 		this.xmlReq.abort();
 	},
 
-	sendRequest: function(aData, url) {
+	prepareSendRequest: function(aData, url) {
 		if (this.shutdown || !url) {
 			return;
 		}
@@ -133,13 +133,30 @@ ExchangeRequest.prototype = {
 		this.xmlReq.setRequestHeader("Content-Type", "text/xml");
 		this.xmlReq.setRequestHeader("Connection", "keep-alive");
 
-		/* set channel notifications for password processing */
-		this.xmlReq.channel.notificationCallbacks = new RequestNotification(this);
+
 		this.xmlReq.channel.loadGroup = null;
 
 		var httpChannel = this.xmlReq.channel.QueryInterface(Ci.nsIHttpChannel);
 		// httpChannel.redirectionLimit = 0;
 		httpChannel.allowPipelining = false;
+	},
+
+	sendRequest: function(aData, url) {
+		this.prepareSendRequest(aData, url);
+		/* set channel notifications for password processing */
+		this.xmlReq.channel.notificationCallbacks = new RequestNotification(this);
+		this.xmlReq.send(this.mData);
+	},
+
+	/**
+	 * send request but don't ask for user to get the password when the
+	 *  authenticate failed
+	 */
+	trySendRequest: function(aData, url) {
+		this.prepareSendRequest(aData, url);
+		/* set channel notifications for password processing */
+		this.xmlReq.channel.notificationCallbacks =
+			new RequestNotification(this, true);
 		this.xmlReq.send(this.mData);
 	},
 
@@ -270,12 +287,12 @@ function inherit(baseClass, inheritClass) {
 }
 inherit(ExchangeRequest, SoapExchangeRequest);
 
-function RequestNotification(aExchangeRequest) {
+function RequestNotification(aExchangeRequest, notAuthPrompt) {
 }
 
 RequestNotification.prototype = {
 	getInterface: function(iid) {
-		if(iid.equals(Ci.nsIAuthPrompt2)) {
+		if(iid.equals(Ci.nsIAuthPrompt2) && !notAuthPrompt) {
 			return exchangeAuthPromptService;
 		} else if(iid.equals(Ci.nsIBadCertListener2)) {
 			return exchangeCertService;

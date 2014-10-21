@@ -1,5 +1,5 @@
 
-QUnit.module('GetFolderRequest test', {
+QUnit.module('ExchangeService test', {
   setup: function() {
     QUnit.Cc = Components.classes;
     QUnit.Ci = Components.interfaces;
@@ -32,6 +32,23 @@ QUnit.asyncTest('findFolders', function(assert) {
   var ex = prepareExchangeService();
   ex.findFolders('inbox', function(err, folder) {
     assert.ok(!err, 'findFolders');
+    QUnit.start();
+  });
+});
+
+QUnit.asyncTest('verifyCredential', function(assert) {
+  var ex = prepareExchangeService();
+  ex.verifyCredential(function(err) {
+    assert.ok(!err, 'verifyCredential');
+    QUnit.start();
+  });
+});
+
+QUnit.asyncTest('verifyCredential Failed', function(assert) {
+  var ex = prepareExchangeService();
+  ex.setCredential('nothing', 'nothing');
+  ex.verifyCredential(function(err) {
+    assert.ok(err, 'verifyCredential fail with err code:' + err.code);
     QUnit.start();
   });
 });

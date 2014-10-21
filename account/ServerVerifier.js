@@ -66,17 +66,15 @@ ServerVerifier.prototype = {
       if (this._gotCertError == Ci.nsICertOverrideService.ERROR_UNTRUSTED ||
           this._gotCertError == Ci.nsICertOverrideService.ERROR_TIME) {
         this._gotCertError = false;
-        config.selfSignedCert = true; // _next_ run gets this exception
+        config.badCert = true; // _next_ run gets this exception
         this.beginSocketVerify();
         return ServerVerifier.RETRY;
       }
     }
-    verifyLog.info('the data is:' + !wiredata);
     if(!wiredata) {
       return ServerVerifier.FAIL;
     }
-    config.authMethods = this._advertisesAuthMethods(config.type, wiredata);
-    verifyLog.info('the auth methods is:' + config.authMethods);
+    this.setAuthConfig(config, wiredata);
     if (config.ssl == TLS && !this._hasTLS(wiredata)) {
       // this._log.info("STARTTLS wanted, but not offered");
       return ServerVerifier.FAIL;
@@ -88,6 +86,14 @@ ServerVerifier.prototype = {
     return ServerVerifier.OK;
   },
 
+  setAuthConfig: function(config, wiredata) {
+    var authMethods = this._advertisesAuthMethods(config.type, wiredata);
+    if(authMethods.length >= 1)
+      config.auth = authMethods.shift();
+    else
+      config.auth = Ci.nsMsgAuthMethod.passwordCleartext;
+    config.authAlternatives = authMethods;
+  },
   /**
    * Which auth mechanism the server claims to support.
    * (That doesn't necessarily reflect reality, it is more an upper bound.)

@@ -4,6 +4,7 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 
 Cu.import("resource://accountConfig/accountConfig.js");
+var EXPORTED_SYMBOLS = ['DBReader'];
 
 function DBRowInfo(row) {
   this.domain = row.domain_;
