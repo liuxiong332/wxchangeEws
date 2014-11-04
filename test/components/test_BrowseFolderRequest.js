@@ -26,10 +26,10 @@ QUnit.test('soapFunctions test', function(assert) {
 QUnit.asyncTest('request folder find', function(assert) {
   expect(1);
   var requestConfig = {
-    serverUrl: 'https://bjmail.kingsoft.com/EWS/exchange.asmx',
+    serverUrl: 'https://<domain>/EWS/exchange.asmx',
     folderBase: 'msgfolderroot',
-    user: 'liuxiong',
-    password: 'abcd.ABCD'
+    user: '<username>',
+    password: '<password>'
   };
 
   function requestOK(request, childFolders) {

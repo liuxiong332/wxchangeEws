@@ -25,14 +25,14 @@
         <rows>
           <row>
             <label class="label, serverLabel"  id="emailFieldLabel" value="email" control="email"/>
-            <textbox mailtype="identity" name="email" value="liuxiong@kingsoft.com"
+            <textbox mailtype="identity" name="email" value="<username>"
                      placeholder="email address"
                      id="email" flex="6" class="uri-element"/>
           </row>
           <row>
             <label class="label, serverLabel" value="password"
                    control="exchangePassword"  />
-            <textbox id="password" flex="6" type="password" value="abcd"
+            <textbox id="password" flex="6" type="password" value="<password>"
                      class="uri-element" placeholder='password'/>
           </row>
 

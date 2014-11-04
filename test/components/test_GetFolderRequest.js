@@ -19,10 +19,10 @@ QUnit.asyncTest('get folder info', function(assert) {
   expect(1);
   QUnit.Cu.import('resource://exchangeEws/GetFolderRequest.js', QUnit);
   var requestConfig = {
-    serverUrl: 'https://bjmail.kingsoft.com/EWS/exchange.asmx',
+    serverUrl: 'https://domain.com/EWS/exchange.asmx',
     folderBase: 'inbox',
-    user: 'liuxiong',
-    password: 'abcd.ABCD'
+    user: '<username>',
+    password: '<password>'
   };
 
   function requestOK(request, folderInfo) {

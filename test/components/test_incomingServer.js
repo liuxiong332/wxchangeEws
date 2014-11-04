@@ -22,11 +22,11 @@ QUnit.NewExchangeAccount = function() {
 }
 QUnit.NewExchangeAccount.prototype.create = function() {
   var config = {
-    username: 'liuxiong',
-    hostname: 'kingsoft.com',
-    email: 'liuxiong@kingsoft.com',
+    username: '<username>',
+    hostname: '<domain>',
+    email: '<email>',
     type: 'exchange',
-    password: 'abcd.ABCD'
+    password: '<password>'
   };
   this.config = config;
 

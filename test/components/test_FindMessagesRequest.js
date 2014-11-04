@@ -21,8 +21,8 @@ QUnit.asyncTest('request messages find', function(assert) {
     maxReturned: 10,
     serverUrl: 'https://bjmail.kingsoft.com/EWS/exchange.asmx',
     folderBase: 'inbox',
-    user: 'liuxiong',
-    password: 'abcd.ABCD'
+    user: '<username>',
+    password: '<password>'
   };
 
   function getMessages(messages) {
